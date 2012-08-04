@@ -33,7 +33,7 @@ private:
 			fprintf(stderr, "Error(s) compiling shader %s:\n %s\n", name, errString);
 			exit(1);
 		}
-		delete prog;
+		delete [] prog;
 	}
 	const GLContext& gl;
 	GLuint v_id, f_id;

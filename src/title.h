@@ -10,7 +10,7 @@
 class Title : public Gamestate {
 public:
 	Title(StateMgr& mgr) : Gamestate(mgr), text(160, 8, 8, 8, "Sprites: %5d", balls.size()),
-		fps(160, 232, 8, 8, "FPS: %2d", 0), timer(0) { 
+		fps(160, 232, 8, 8, "FPS: %2d", 0), timer(0), frames(0) { 
 		for(int i = 0; i < 50; ++i){
 			balls.push_back(new Ball());
 		}

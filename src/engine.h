@@ -4,6 +4,7 @@
 #include "statemgr.h"
 #include "renderer.h"
 #include "input.h"
+#include "console.h"
 #include <vector>
 	
 class Engine {
@@ -15,6 +16,7 @@ private:
 	Renderer& renderer;
 	StateMgr statemgr;
 	Input input;
+	Console console;
 	
 	bool running;
 	SDL_Event e;

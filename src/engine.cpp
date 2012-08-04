@@ -4,7 +4,7 @@
 #include "title.h"
 
 Engine::Engine() : running(true), time(SDL_GetTicks()), delta(0),
-	renderer(Renderer::get()) {
+	renderer(Renderer::get()), console(statemgr) {
 	indices.reserve(1024);	
 	statemgr.push(new Title(statemgr));
 }
@@ -45,6 +45,9 @@ void Engine::handleKeyPress(Uint8 toggle){
 	switch(e.key.keysym.sym) {
 		case SDLK_ESCAPE:
 			running = false;
+			break;
+		case SDLK_BACKQUOTE:
+			if(toggle) console.toggle();
 			break;
 		case SDLK_RETURN: 
 			if(toggle && (e.key.keysym.mod & KMOD_ALT)) {

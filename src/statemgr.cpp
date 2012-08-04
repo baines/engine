@@ -2,22 +2,20 @@
 #include "gamestate.h"
 #include "input.h"
 #include "util.h"
+#include <algorithm>
 
 StateMgr::StateMgr() : states(), nextStates(), popAmount(0){}
 
 StateMgr::~StateMgr(){
-	while (!states.empty()){
-		delete states.back();
-    	states.pop_back();
-	}
+	std::for_each(states.begin(), states.end(), [](state_ptr& p){
+		printf("%ld\n", p.use_count());
+	});
+	states.clear();
 }
 
 void StateMgr::update(Input& input, Uint32 delta){
-
-	while(popAmount > 0){
-		delete states.back();
+	for(; popAmount > 0; --popAmount){
 		states.pop_back();
-		--popAmount;
 	}
 
 	while(!nextStates.empty()){
@@ -33,8 +31,12 @@ void StateMgr::draw(std::vector<uint32_t>& indices){
 	}
 }
 
-void StateMgr::push(Gamestate* state){
+void StateMgr::push(const std::shared_ptr<Gamestate>& state){
 	nextStates.push(state);
+}
+
+void StateMgr::push(Gamestate* state){
+	nextStates.push(std::move(std::shared_ptr<Gamestate>(state)));
 }
 
 void StateMgr::pop(int amount){

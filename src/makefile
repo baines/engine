@@ -18,7 +18,7 @@ else
 endif
 
 LDFLAGS += -lSDL -lSDL_image -lSDL_mixer
-CXXFLAGS += -ffast-math -fno-rtti -fno-exceptions
+CXXFLAGS += -std=c++0x -ffast-math -fno-rtti -fno-exceptions
 
 ifdef RELEASE
     CXXFLAGS += -O3 -fno-stack-protector -U_FORTIFY_SOURCE

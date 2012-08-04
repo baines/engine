@@ -1,8 +1,9 @@
 #ifndef _GAMESTATE_H_
 #define _GAMESTATE_H_
 #include "input.h"
-#include "statemgr.h"
 #include "sprite.h"
+
+class StateMgr;
 
 class Gamestate {
 public:

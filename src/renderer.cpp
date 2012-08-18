@@ -36,7 +36,7 @@ void Renderer::reload(int w, int h, int flags){
 		exit(1);
 	}
 	gl.createContext(w, h);
-	Shader s(gl, "./data/txt/rotate.vs", "./data/txt/rotate.fs");
+	Shader s("./data/txt/rotate.vs", "./data/txt/rotate.fs");
 	Texture::reload();
 	
 	vsync = 0;

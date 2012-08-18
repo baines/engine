@@ -1,11 +1,10 @@
 #ifndef _SHADER_H_
 #define _SHADER_H_
 #include "glcontext.h"
-#include "opengl.h"
 
 class Shader {
 public:
-	Shader(const GLContext& gl, const char* vsname, const char* fsname) : gl(gl){
+	Shader(const char* vsname, const char* fsname) {
 		load(vsname, v_id, GL_VERTEX_PROGRAM_ARB);
 		load(fsname, f_id, GL_FRAGMENT_PROGRAM_ARB);
 	}
@@ -35,7 +34,6 @@ private:
 		}
 		delete [] prog;
 	}
-	const GLContext& gl;
 	GLuint v_id, f_id;
 };
 #endif

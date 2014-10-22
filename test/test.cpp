@@ -1,5 +1,5 @@
 #include "include/config.h"
-#include "include/shader_uniforms.h"
+#include "include/renderer/shader_uniforms.h"
 #include <iostream>
 
 using namespace std;
@@ -82,7 +82,9 @@ void testShaderUniforms(void){
 	su.setUniform(1, { v });
 	su.setUniform(2, { f });
 	
-	for(auto& f : su.float_uniforms){
+	for(auto& v : su.uniforms){
+		float f = 0;
+		memcpy(&f, &v, 4);
 		printf("%.2f\n", f);
 	}
 	
@@ -90,9 +92,9 @@ void testShaderUniforms(void){
 
 int main(void){
 
-	//testShaderUniforms();
+	testShaderUniforms();
 	//testPrefixExtend();
-	testTabComplete();
+	//testTabComplete();
 	
 	return 0;
 }

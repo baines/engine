@@ -22,12 +22,12 @@ struct ShaderUniforms {
 	}
 	
 	// for setUniform({ glm::{i}vec{2,3,4}, ... });
-	template<template<class> class V, class T>
-	typename std::enable_if<glm::detail::is_vector<V<T>>::_YES>::type
-	setUniform(unsigned loc, std::initializer_list<V<T>> vals){
+	template<template<class, glm::precision> class V, class T, glm::precision P>
+	typename std::enable_if<is_glm_vector<V, T>::value>::type
+	setUniform(unsigned loc, std::initializer_list<V<T, P>> vals){
 		_setUniform(
 			loc,
-			V<T>::value_size(),
+			vals.begin()->length(),
 			1,
 			vals.size(),
 			get_glenum<T>::value,
@@ -36,13 +36,13 @@ struct ShaderUniforms {
 	}
 	
 	// for setUniform({ glm::mat{2,3,4}{x{2,3,4}}, ... });
-	template<template<class> class M, class T>
-	typename std::enable_if<glm::detail::is_vector<typename M<T>::col_type>::_YES>::type
-	setUniform(unsigned loc, std::initializer_list<M<T>> vals){
+	template<template<class, glm::precision> class M, class T, glm::precision P>
+	typename std::enable_if<is_glm_matrix<M, T>::value>::type
+	setUniform(unsigned loc, std::initializer_list<M<T, P>> vals){
 		_setUniform(
 			loc,
-			M<T>::row_size(),
-			M<T>::col_size(),
+			typename M<T, P>::row_type().length(),
+			typename M<T, P>::col_type().length(),
 			vals.size(),
 			get_glenum<T>::value,
 			reinterpret_cast<const T*>(vals.begin())
@@ -54,10 +54,10 @@ struct ShaderUniforms {
 
 //private:
 
-	void _setUniform(unsigned loc, int rows, int cols, int n, GLenum type, void* ptr){
+	void _setUniform(unsigned loc, int rows, int cols, int n, GLenum type, const void* ptr){
 		int num = rows * cols * n;
 		for(int i = 0; i < num; ++i){
-			uniforms.push_back(reinterpret_cast<decltype(uniforms)::pointer>(ptr)[i]);
+			uniforms.push_back(reinterpret_cast<decltype(uniforms)::const_pointer>(ptr)[i]);
 		}
 		uniform_info.push_back({ type, loc, rows, cols, n });
 	}

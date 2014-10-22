@@ -81,6 +81,9 @@ GLFUNC(void, UniformMatrix4x2fv, (GLint, GLsizei, GLboolean, const GLfloat*), 21
 GLFUNC(void, UniformMatrix3x4fv, (GLint, GLsizei, GLboolean, const GLfloat*), 21)
 GLFUNC(void, UniformMatrix4x3fv, (GLint, GLsizei, GLboolean, const GLfloat*), 21)
 
+GLFUNC(void, BlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum))
+GLFUNC(void, BlendEquationSeparate, (GLenum, GLenum))
+
 #ifdef UNDEF_GLFUNC
 	#undef GLFUNC
 	#undef UNDEF_GLFUNC

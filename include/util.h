@@ -90,4 +90,33 @@ constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... ar
 	return make_array<str_const>(std::forward<Args>(args)...);
 }
 
+/* GLM stuff */
+
+#include <glm/glm.hpp>
+
+template<template<class, glm::precision> class V, class T>
+struct is_glm_vector {
+	static const bool value =
+		std::is_same<V<T, glm::highp>, typename glm::detail::tvec2<T, glm::highp>>::value ||
+		std::is_same<V<T, glm::highp>, typename glm::detail::tvec3<T, glm::highp>>::value ||
+		std::is_same<V<T, glm::highp>, typename glm::detail::tvec4<T, glm::highp>>::value
+	;
+};
+
+template<template<class, glm::precision> class M, class T>
+struct is_glm_matrix {
+	static const bool value =
+		std::is_same<M<T, glm::highp>, glm::detail::tmat2x2<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat2x3<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat2x4<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat3x2<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat3x3<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat3x4<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat4x2<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat4x3<T, glm::highp>>::value ||
+		std::is_same<M<T, glm::highp>, glm::detail::tmat4x4<T, glm::highp>>::value
+	;
+};
+
+
 #endif

@@ -3,41 +3,21 @@
 #include "gl_context.h"
 #include "vertex_buffer.h"
 #include "index_buffer.h"
+#include "render_state.h"
+#include <bitset>
 
 struct VertexState {
-
-	VertexState(){
-		gl.GenVertexArrays(1, &id);
-	}
-
-	void setAttribData(int index, VertexBuffer* buff, int buff_index){
-		gl.BindVertexArray(id);
-		
-		gl.EnableVertexAttribArray(index);
-		buff->applyFormat(index, buff_index);
-		gl.VertexAttribBinding(index, buff->getID());
-	}
-	
-	void setAttribIndices(int index, IndexBuffer* buff){
-		gl.BindVertexArray(id);
-		
-		/*attrib[index].index_buff = buff;
-		buff->bind();*/
-	}
-	
-	IndexBuffer* getIndexBuffer(void){
-		return ib;
-	}
-	
-	void bind(RenderState& rs){
-		if(rs.vao != id){
-			gl.BindVertexArray(id);
-			rs.vao = id;
-		}
-	}
+	VertexState();
+	void setVertexBuffers(std::initializer_list<VertexBuffer*> buffers);
+	void setIndexBuffer(IndexBuffer* buff);
+	IndexBuffer* getIndexBuffer(void);
+	void enableBuffersForAttribs(const ShaderAttribs& attrs);
+	void bind(RenderState& rs);
 private:
-	VertexBuffer* vb;
-	IndexBuffer* ib;
+	std::bitset<16> enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
+	ShaderAttribs active_attrs;
+	std::vector<VertexBuffer*> vertex_buffers;
+	IndexBuffer* index_buffer;
 	GLuint id;
 };
 

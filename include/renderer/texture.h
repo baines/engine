@@ -15,7 +15,7 @@ struct Texture {
 struct Texture2D : Texture {
 	Texture2D();
 	
-	void load(const std::shared_ptr<Buffer>& img);
+	void load(const ResourceHandle& img);
 	GLenum getType(void);
 	bool isValid(void);
 	bool bind(size_t tex_unit, RenderState& rs);

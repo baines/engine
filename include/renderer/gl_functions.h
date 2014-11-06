@@ -17,10 +17,12 @@ GLFUNC(void, FramebufferTexture2D, (GLenum, GLenum, GLuint, GLint), ARBCORE | EX
 GLFUNC(void, GenBuffers, (GLsizei, GLuint*))
 GLFUNC(void, BindBuffer, (GLenum, GLuint))
 GLFUNC(void, BufferData, (GLenum, GLsizeiptr, const GLvoid*, GLenum))
+GLFUNC(void, DeleteBuffers, (GLsizei, GLuint*))
 GLFUNC(void, InvalidateBufferData, (GLuint), ARBCORE | 43, "invalidate_subdata")
 
 GLFUNC(void, GenVertexArrays, (GLsizei, GLuint*), ARBCORE | 30, "vertex_array_object")
 GLFUNC(void, BindVertexArray, (GLuint), ARBCORE | 30, "vertex_array_object")
+GLFUNC(void, BindVertexBuffer, (GLuint, GLuint, GLintptr, GLsizei), ARBCORE | 43, "vertex_attrib_binding")
 GLFUNC(void, VertexAttribFormat, (GLuint, GLint, GLenum, GLboolean, GLuint), ARBCORE | 43, "vertex_attrib_binding")
 GLFUNC(void, VertexAttribIFormat, (GLuint, GLint, GLenum, GLuint), ARBCORE | 43, "vertex_attrib_binding")
 GLFUNC(void, VertexAttribBinding, (GLuint, GLuint), ARBCORE | 43, "vertex_attrib_binding")
@@ -54,6 +56,9 @@ GLFUNC(void, GetProgramiv, (GLuint, GLenum, GLint*))
 GLFUNC(void, GetProgramInfoLog, (GLuint, GLsizei, GLsizei*, GLchar*))
 GLFUNC(void, UseProgram, (GLuint))
 GLFUNC(void, DeleteProgram, (GLuint))
+
+GLFUNC(void, GetActiveAttrib, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
+GLFUNC(void, GetActiveUniform, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
 
 GLFUNC(void, Uniform1fv, (GLint, GLsizei, const GLfloat*))
 GLFUNC(void, Uniform2fv, (GLint, GLsizei, const GLfloat*))

@@ -3,17 +3,46 @@
 #include <memory>
 #include <string>
 #include <map>
+#include "common.h"
 #include "util.h"
 
-struct Buffer {
-	Buffer(size_t s, uint8_t* d) : size(s), data(d){}
-	const size_t size;
-	const uint8_t* const data;
+struct ResourceHandle {
+	ResourceHandle()
+	: data_handle(nullptr, ArrayDeleter())
+	, _size(0) {
+	
+	}
+	
+	ResourceHandle(uint8_t* ptr, size_t sz)
+	: data_handle(ptr, ArrayDeleter())
+	, _size(sz) {
+	
+	}
+	
+	size_t size() const {
+		return _size;
+	}
+	
+	uint8_t* data() const {
+		return data_handle.get();
+	}
+	
+	operator bool() const {
+		return data_handle.get() != nullptr;
+	}
+
+	std::shared_ptr<uint8_t>* operator->(){ return &data_handle; }
+private:
+	struct ArrayDeleter {
+		void operator()(const uint8_t* arr) const { delete [] arr; }
+	};
+	std::shared_ptr<uint8_t> data_handle;
+	size_t _size;
 };
 
 struct ResourceSystem {
 
-	std::shared_ptr<Buffer> load(const char* name);
+	ResourceHandle load(const char* name);
 	size_t getUseCount(const char* name);
 	
 	template<class T>
@@ -41,8 +70,8 @@ struct ResourceSystem {
 	}
 
 private:
-	std::shared_ptr<Buffer> loadFromFile(const char* name, std::weak_ptr<Buffer>& ptr);
-	std::map<std::string, std::weak_ptr<Buffer>> resources;
+	ResourceHandle import(const char* name);
+	std::map<std::string, ResourceHandle> resources;
 };
 
 #endif

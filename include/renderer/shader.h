@@ -3,12 +3,13 @@
 #include "gl_context.h"
 #include "resource_system.h"
 #include "shader_uniforms.h"
+#include "shader_attribs.h"
 #include "render_state.h"
 #include <vector>
 
 struct ShaderBase {
 	ShaderBase(GLenum type);
-	bool load(const std::shared_ptr<Buffer>& data);
+	bool load(const ResourceHandle& data);
 	GLuint getID() const;
 	virtual ~ShaderBase();
 private:
@@ -36,7 +37,8 @@ private:
 	const FragShader& fs;
 	GLuint program_id;
 
-	ShaderUniforms current_uniforms;
+	ShaderUniforms uniforms;
+	ShaderAttribs  attribs;
 };
 
 #endif

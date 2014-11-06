@@ -62,7 +62,24 @@ constexpr size_t djb2(const char* str){
 	return *str ? djb2(str+1) * 33 + *str : 5381;
 }
 
+uint32_t djb2(const char* str, size_t len){
+	uint32_t hash = 5381;
+	
+	while(len--){
+		hash = hash * 33 + str[len];
+	}
+	
+	return hash;
+}
+
 struct str_const {
+	constexpr str_const()
+	: str(nullptr)
+	, size(0)
+	, hash(djb2(nullptr)){
+	
+	}
+
 	template<size_t N>
 	constexpr str_const(const char(&s)[N])
 	: str(s)
@@ -77,7 +94,7 @@ struct str_const {
 		
 	const char* const str;
 	const size_t size;
-	const size_t hash;
+	const uint32_t hash;
 };
 
 template<class T, class... Args>

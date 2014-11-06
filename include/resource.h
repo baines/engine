@@ -9,7 +9,7 @@ struct Resource {
 	, t(*reinterpret_cast<T*>(t_storage))
 	, loaded(false)
 	, res_name(name)
-	, res_data() {
+	, res_handle() {
 
 	}
 
@@ -24,8 +24,8 @@ struct Resource {
 		} else {
 			new(&t_storage) T();
 			
-			res_data = e.res.load(res_name);
-			if(t.load(res_data)){
+			res_handle = e.res.load(res_name);
+			if(t.load(res_handle)){
 				loaded = true;
 				e.res.cache<T>().add(res_name, t);
 			}
@@ -59,7 +59,7 @@ private:
 	T& t;
 	bool loaded;
 	const char* res_name
-	shared_ptr<Buffer> res_data;
+	ResourceHandle res_handle;
 };
 
 };

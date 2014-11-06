@@ -10,11 +10,11 @@ ShaderBase::ShaderBase(GLenum type)
 
 }
 
-bool ShaderBase::load(const shared_ptr<Buffer>& data){
+bool ShaderBase::load(const ResourceHandle& res){
 	id = gl.CreateShader(type);
 
-	const GLchar* str = reinterpret_cast<const GLchar*>(data->data);
-	const GLint str_sz = data->size;
+	const GLchar* str = reinterpret_cast<const GLchar*>(res.data());
+	const GLint str_sz = res.size();
 
 	gl.ShaderSource(id, 1, &str, &str_sz);
 	gl.CompileShader(id);
@@ -46,7 +46,9 @@ ShaderBase::~ShaderBase(){
 ShaderProgram::ShaderProgram(const VertShader& v, const FragShader& f)
 : vs(v)
 , fs(f)
-, program_id(0){
+, program_id(0)
+, uniforms()
+, attribs() {
 
 }
 
@@ -73,6 +75,33 @@ bool ShaderProgram::link(void){
 		return false;
 	}
 	
+	GLint amount = 0;
+	char name_buf[256];
+	
+	gl.GetProgramiv(program_id, GL_ACTIVE_UNIFORMS, &amount);
+		
+	for(GLint i = 0; i < amount; ++i){
+		GLint size = 0;
+		GLenum type = 0;
+		
+		gl.GetActiveUniform(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
+		
+		uint32_t hash = djb2(name_buf);
+		uniforms.initUniform(hash, type, size, i);
+	}
+	
+	gl.GetProgramiv(program_id, GL_ACTIVE_ATTRIBUTES, &amount);
+	
+	for(GLint i = 0; i < amount; ++i){
+		GLint size = 0;
+		GLenum type = 0;
+		
+		gl.GetActiveAttrib(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
+		
+		uint32_t hash = djb2(name_buf);
+		attribs.initAttrib(hash, i);
+	}
+	
 	return true;
 }
 
@@ -84,9 +113,9 @@ bool ShaderProgram::bind(RenderState& render_state){
 	return program_id != 0;
 }
 
-void ShaderProgram::setUniforms(const ShaderUniforms& uniforms){
-	uniforms.bind(program_id, current_uniforms);
-	current_uniforms = uniforms;
+void ShaderProgram::setUniforms(const ShaderUniforms& su){
+	su.bind(program_id, uniforms);
+	uniforms = su;
 }
 
 ShaderProgram::~ShaderProgram(){

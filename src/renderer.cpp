@@ -1,13 +1,10 @@
 #include "renderer.h"
 #include "engine.h"
 #include <climits>
-
-constexpr auto buff_orphan_enum = make_enum(
-	"BUFFER_DATA_NULL", "MAP_INVALIDATE", "INVALIDATE_SUBDATA"
-);
+#include "enums.h"
 
 Renderer::Renderer(Engine& e, const char* name)
-: buff_orphan_mode (e.cfg.addVar("vid_buff_orphan_mode", CVarEnum(buff_orphan_enum, 0)))
+: buff_orphan_mode (e.cfg.addVar("vid_gl_orphan_mode", CVarEnum(gl_orphan_enum, 0)))
 , libgl            (e.cfg.addVar("vid_libgl", CVarString("")))
 , window_width     (e.cfg.addVar("vid_width" , CVarInt(640, 320, INT_MAX)))
 , window_height    (e.cfg.addVar("vid_height", CVarInt(480, 240, INT_MAX)))
@@ -77,7 +74,7 @@ void Renderer::drawFrame(){
 		v->bind(render_state);
 		
 		if(IndexBuffer* ib = v->getIndexBuffer()){
-			gl.DrawElements(r->prim_type, r->count, ib->type, reinterpret_cast<GLvoid*>(r->offset));
+			gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
 		} else {
 			gl.DrawArrays(r->prim_type, r->offset, r->count);
 		}

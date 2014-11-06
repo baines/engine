@@ -1,56 +1,38 @@
 #ifndef VERTEX_BUFFER_H_
 #define VERTEX_BUFFER_H_
 #include "gl_context.h"
+#include "resource_system.h"
+#include "shader_attribs.h"
 
 struct VertexBuffer {
-	virtual void applyFormat(int attr, int buffer_index) = 0;
-	virtual GLuint getID(void) = 0;
+	virtual bool containsAttrib(uint32_t attr_hash) const = 0;
+	virtual bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const = 0;
+	virtual GLuint getID(void) const = 0;
+	virtual GLint getStride(void) const = 0;
 };
 
-// e.g. "1bI:2BN:2s:4S:4fN" caps = unsigned
-
 struct StaticVertexBuffer : VertexBuffer {
-	StaticVertexBuffer(const char* fmt, Buffer& data){
-		gl.GenBuffers(1, &id);
-		gl.BindBuffer(GL_ARRAY_BUFFER, id);
-		gl.BufferData(GL_ARRAY_BUFFER, data.size, data.data, GL_STATIC_DRAW);
-	}
-	virtual void applyFormat(int attr, int buffer_index){
-		size_t i = buffer_index;
-		assert(i < attrs.size());
-		
-		if(attrs[i].integral){
-			gl.VertexAttribIFormat(attr, attrs[i].size, attrs[i].type, attrs[i].off);
-		} else {
-			gl.VertexAttribFormat(attr, attrs[i].size, attrs[i].type, attrs[i].normalised, attrs[i].off);
-		}
-	}
-	virtual void invalidate(void){
-		
-	}
-	virtual GLuint getID(void){
-		return id;
-	}
+	StaticVertexBuffer();
+	StaticVertexBuffer(ResourceHandle& data, const char* fmt);
+	virtual bool containsAttrib(uint32_t attr_hash) const;
+	virtual bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const;
+	virtual void invalidate(void);
+	virtual GLuint getID(void) const;
+	virtual GLint getStride(void) const;
 private:
-	struct attr {
-		int size, off;
-		GLenum type;
-		bool normalised, integral;
-	};
-	std::vector<attr> attrs;
+	void parseAttribs(const char* fmt);
+	ShaderAttribs attrs;
+	ResourceHandle data;
+	GLint stride;
 	GLuint id;
-	size_t size;
 };
 
 struct DynamicVertexBuffer : VertexBuffer {
 
-	void applyFormat(int attr, int buffer_index){
-	
-	}
-	GLuint getID(void){
-		return 0;
-	}
-
+	bool containsAttrib(uint32_t attr_hash) const;
+	bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const;
+	GLuint getID(void) const;
+	GLint getStride(void) const;
 };
 
 #endif

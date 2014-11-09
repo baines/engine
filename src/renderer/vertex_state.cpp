@@ -45,9 +45,9 @@ void VertexState::enableBuffersForAttribs(const ShaderAttribs& attrs){
 		}
 	}
 
-	auto enabled_array_diff = (enabled_arrays | new_enabled_arrays) ^ new_enabled_arrays;
+	auto enabled_array_diff = enabled_arrays & ~new_enabled_arrays;
 	
-	for(GLint i = 0; i < 16; ++i){
+	for(GLint i = 0; i < enabled_array_diff.size(); ++i){
 		if(enabled_array_diff[i]){
 			gl.DisableVertexAttribArray(i);
 		}

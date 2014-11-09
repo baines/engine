@@ -107,6 +107,10 @@ constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... ar
 	return make_array<str_const>(std::forward<Args>(args)...);
 }
 
+struct ArrayDeleter {
+	void operator()(const uint8_t* arr) const { delete [] arr; }
+};
+
 /* GLM stuff */
 
 #include <glm/glm.hpp>

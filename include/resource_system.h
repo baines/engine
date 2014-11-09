@@ -33,9 +33,6 @@ struct ResourceHandle {
 
 	std::shared_ptr<uint8_t>* operator->(){ return &data_handle; }
 private:
-	struct ArrayDeleter {
-		void operator()(const uint8_t* arr) const { delete [] arr; }
-	};
 	std::shared_ptr<uint8_t> data_handle;
 	size_t _size;
 };
@@ -44,6 +41,13 @@ struct ResourceSystem {
 
 	ResourceHandle load(const char* name);
 	size_t getUseCount(const char* name);
+	
+	template<size_t N>
+	void addImmediate(const char* name, char (&data)[N]){
+		uint8_t* new_data = new uint8_t[N];
+		memcpy(new_data, data, N);
+		resources.emplace(name, ResourceHandle(new_data, N));
+	}
 	
 	template<class T>
 	struct Cache {

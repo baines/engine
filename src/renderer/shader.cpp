@@ -86,6 +86,8 @@ bool ShaderProgram::link(void){
 		
 		gl.GetActiveUniform(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
 		
+		assert(size >= 0);
+		
 		uint32_t hash = djb2(name_buf);
 		uniforms.initUniform(hash, size, i);
 	}

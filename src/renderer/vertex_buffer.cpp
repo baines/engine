@@ -72,7 +72,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 
 	enum { GET_NAME, GET_NELEM, GET_TYPE, GET_EXTRA } state;
 	
-	ShaderAttribs::Attrib current_attr;
+	ShaderAttribs::Attrib current_attr{};
 	stride = 0;
 	
 	auto add_attr = [&](ShaderAttribs::Attrib& at){

@@ -49,9 +49,8 @@ struct ShaderUniforms {
 		);
 	}
 	
-	void initUniform(uint32_t hash, GLint size, GLuint loc);
+	void initUniform(uint32_t hash, GLuint count, GLuint loc);
 	
-	bool bind(GLuint program_id) const;
 	bool bind(GLuint program_id, const ShaderUniforms& current) const;
 
 private:

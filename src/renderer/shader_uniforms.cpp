@@ -1,14 +1,30 @@
 #include "shader_uniforms.h"
 #include <algorithm>
 
-bool ShaderUniforms::bind(GLuint program_id) const {
-	decltype(uniforms)::const_pointer p = uniforms.data();
+bool ShaderUniforms::bind(GLuint program_id, const ShaderUniforms& active) const {
+	const ustorage* p = uniforms.data();
 	
 	for(auto& i : uniform_info){
+		if(i.storage_index == -1){
+			continue;
+		}
+		
+		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
+		if(ai != active.uniform_info.end() && ai->storage_index >= 0){
+			assert(i.rows == ai->rows);
+			assert(i.cols == ai->cols);
+			assert(i.count == ai->count);
+			
+			if(memcmp(uniforms.data() + i.storage_index
+					, active.uniforms.data() + ai->storage_index
+					, i.rows * i.cols * i.count) == 0){
+				continue;
+			}
+		}
 		
 		if(i.type == GL_INT){
 			assert(i.rows == 1);
-			const GLint* ip = reinterpret_cast<const GLint*>(p);
+			const GLint* ip = reinterpret_cast<const GLint*>(p+i.storage_index);
 			switch(i.cols){
 				case 1: gl.Uniform1iv(i.loc, i.count, ip); break;
 				case 2: gl.Uniform2iv(i.loc, i.count, ip); break;
@@ -18,7 +34,7 @@ bool ShaderUniforms::bind(GLuint program_id) const {
 		} else 
 		if(i.type == GL_UNSIGNED_INT){
 			assert(i.rows == 1);
-			const GLuint* up = reinterpret_cast<const GLuint*>(p);
+			const GLuint* up = reinterpret_cast<const GLuint*>(p+i.storage_index);
 			switch(i.cols){
 				case 1: gl.Uniform1uiv(i.loc, i.count, up); break;
 				case 2: gl.Uniform2uiv(i.loc, i.count, up); break;
@@ -27,7 +43,7 @@ bool ShaderUniforms::bind(GLuint program_id) const {
 			}
 		} else {
 			assert(i.type == GL_FLOAT);
-			const GLfloat* fp = reinterpret_cast<const GLfloat*>(p);
+			const GLfloat* fp = reinterpret_cast<const GLfloat*>(p+i.storage_index);
 			     if(i.rows == 1 && i.cols == 1) gl.Uniform1fv(i.loc, i.count, fp);
 			else if(i.rows == 1 && i.cols == 2) gl.Uniform2fv(i.loc, i.count, fp);
 			else if(i.rows == 1 && i.cols == 3) gl.Uniform3fv(i.loc, i.count, fp);
@@ -42,17 +58,11 @@ bool ShaderUniforms::bind(GLuint program_id) const {
 			else if(i.rows == 3 && i.cols == 4) gl.UniformMatrix3x4fv(i.loc, i.count, GL_FALSE, fp);
 			else if(i.rows == 4 && i.cols == 3) gl.UniformMatrix4x3fv(i.loc, i.count, GL_FALSE, fp);		
 		}
-		p += i.rows * i.cols * i.count;
 	}
 	return true;
 }
 
-bool ShaderUniforms::bind(GLuint program_id, const ShaderUniforms& other) const {
-	//TODO
-	return bind(program_id);
-}
-
-void ShaderUniforms::initUniform(uint32_t hash, GLint count, GLuint loc){
+void ShaderUniforms::initUniform(uint32_t hash, GLuint count, GLuint loc){
 	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
 
 	if(it != uniform_info.end()){
@@ -86,7 +96,7 @@ void ShaderUniforms::_setUniform(uint32_t hash, int rows, int cols, int count, G
 		assert(it->rows == rows && it->cols == cols && it->count == count && it->type == type);
 		
 		for(int i = 0; i < num; ++i){
-			uniforms[it->storage_index + i] = *storage_ptr;
+			uniforms[it->storage_index + i] = storage_ptr[i];
 		}
 	}
 }

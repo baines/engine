@@ -49,29 +49,28 @@ struct ShaderUniforms {
 		);
 	}
 	
-	void initUniform(uint32_t hash, GLenum type, GLint size, GLuint loc);
+	void initUniform(uint32_t hash, GLint size, GLuint loc);
 	
 	bool bind(GLuint program_id) const;
 	bool bind(GLuint program_id, const ShaderUniforms& current) const;
 
-//private:
+private:
 
-	void _setUniform(uint32_t hash, int rows, int cols, int n, GLenum type, const void* ptr){
-		int num = rows * cols * n;
-		for(int i = 0; i < num; ++i){
-			uniforms.push_back(reinterpret_cast<decltype(uniforms)::const_pointer>(ptr)[i]);
-		}
-		uniform_info.push_back({ type, hash, rows, cols, n });
-	}
+	void _setUniform(uint32_t hash, int rows, int cols, int n, GLenum type, const void* ptr);
+
+	typedef variant<GLint, GLuint, GLfloat>::type ustorage;
+	static_assert(sizeof(ustorage) == 4, "ustorage should be 4 bytes");
 
 	struct uinfo {
+		uint32_t name_hash, rows, cols, count;
+		int storage_index;
 		GLenum type;
-		uint32_t name_hash;
-		int rows, cols, count;
 		GLuint loc;
+
+		bool operator==(uint32_t h) const { return name_hash == h; }
 	};
 
-	std::vector<variant<GLint, GLuint, GLfloat>::type> uniforms;
+	std::vector<ustorage> uniforms;
 	std::vector<uinfo> uniform_info;
 };
 

@@ -1,4 +1,5 @@
 #include "shader_uniforms.h"
+#include <algorithm>
 
 bool ShaderUniforms::bind(GLuint program_id) const {
 	decltype(uniforms)::const_pointer p = uniforms.data();
@@ -50,4 +51,44 @@ bool ShaderUniforms::bind(GLuint program_id, const ShaderUniforms& other) const 
 	//TODO
 	return bind(program_id);
 }
+
+void ShaderUniforms::initUniform(uint32_t hash, GLint count, GLuint loc){
+	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
+
+	if(it != uniform_info.end()){
+		assert(hash  == it->name_hash);
+		assert(count == it->count);
+		assert(loc   == it->loc);
+	} else {
+		//TODO: calculate rows & cols upfront from glGetActiveUniform type.
+		uniform_info.push_back({ hash, 0, 0, count, -1, 0, loc });
+	}
+}
+
+void ShaderUniforms::_setUniform(uint32_t hash, int rows, int cols, int count, GLenum type, const void* ptr){
+	const ustorage* storage_ptr = reinterpret_cast<const ustorage*>(ptr);
+	int num = rows * cols * count;
+
+	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
+
+	assert(it != uniform_info.end());
+
+	if(it->storage_index == -1){
+		it->rows = rows;
+		it->cols = cols;
+		it->type = type;
+		it->storage_index = uniforms.size();
+
+		for(int i = 0; i < num; ++i){
+			uniforms.push_back(storage_ptr[i]);
+		}
+	} else {
+		assert(it->rows == rows && it->cols == cols && it->count == count && it->type == type);
+		
+		for(int i = 0; i < num; ++i){
+			uniforms[it->storage_index + i] = *storage_ptr;
+		}
+	}
+}
+
 

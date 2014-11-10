@@ -1,5 +1,8 @@
-#include "include/config.h"
-#include "include/renderer/shader_uniforms.h"
+//hack for testing purposes
+#define private public
+
+#include "config.h"
+#include "shader_uniforms.h"
 #include <iostream>
 
 using namespace std;
@@ -78,16 +81,26 @@ void testShaderUniforms(void){
 	glm::vec2 v(4.0, 5.0);
 	float f = 6.0;
 	
-	su.setUniform(0, { m });
-	su.setUniform(1, { v });
-	su.setUniform(2, { f });
+	constexpr str_const test1("test1"), test2("test2"), test3("test3");
 	
+	// usually done internally by Shader
+	su.initUniform(test1.hash, 1, 0);
+	su.initUniform(test2.hash, 1, 1);
+	su.initUniform(test3.hash, 1, 2);
+	
+	su.setUniform("test1", { m });
+	su.setUniform("test2", { v });
+	su.setUniform("test3", { f });
+	
+	int counter = 0;
 	for(auto& v : su.uniforms){
 		float f = 0;
 		memcpy(&f, &v, 4);
+		
+		assert((int)f == counter++);
+		
 		printf("%.2f\n", f);
 	}
-	
 }
 
 int main(void){

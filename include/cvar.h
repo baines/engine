@@ -116,6 +116,4 @@ struct CVar {
 	variant<CVarInt, CVarFloat, CVarString, CVarEnum, CVarBool>::type value;
 };
 
-template<> CVar* CVar::get<CVar>(void){ return this; }
-
 #endif

@@ -14,6 +14,11 @@ template<> struct get_glenum<unsigned>{ static const GLenum value = GL_UNSIGNED_
 struct ShaderUniforms {
 	ShaderUniforms(){}
 	
+	template<class T>
+	void setUniform(const str_const& str, std::initializer_list<T>&& t){
+		setUniform(str.hash, std::forward<std::initializer_list<T>>(t));
+	}
+	
 	// for setUniform({ float, int, ... });
 	template<class T>
 	typename std::enable_if<std::is_scalar<T>::value>::type

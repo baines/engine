@@ -58,11 +58,11 @@ static unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
-constexpr size_t djb2(const char* str){
+static constexpr uint32_t djb2(const char* str){
 	return *str ? djb2(str+1) * 33 + *str : 5381;
 }
 
-uint32_t djb2(const char* str, size_t len){
+static uint32_t djb2(const char* str, size_t len){
 	uint32_t hash = 5381;
 	
 	while(len--){

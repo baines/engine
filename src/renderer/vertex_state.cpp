@@ -22,21 +22,24 @@ void VertexState::setIndexBuffer(IndexBuffer* buff){
 	index_buffer = buff;
 }
 
-void VertexState::enableBuffersForAttribs(const ShaderAttribs& attrs){
+void VertexState::setAttribArrays(const ShaderAttribs& new_attrs){
 	gl.BindVertexArray(id);
 	
 	std::bitset<16> new_enabled_arrays;
 	
-	for(const auto& a : attrs){
-		if(active_attrs.getAttrib(a.name_hash)) continue;
+	for(const auto& a : new_attrs){
+		if(active_attrs.containsAttrib(a.name_hash, a.index)) continue;
 		
 		GLint vbo_bind_point = 0;
 		for(auto* vb : vertex_buffers){
-			if(vb->containsAttrib(a.name_hash)){
-				vb->applyAttribFormat(a.name_hash, a.index);
-				gl.VertexAttribBinding(a.index, vbo_bind_point);
+			const ShaderAttribs& vb_attrs = vb->getShaderAttribs();
+			
+			if(vb_attrs.containsAttrib(a.name_hash, a.index)){
+				vb_attrs.bind(a.name_hash);
 				
+				gl.VertexAttribBinding(a.index, vbo_bind_point);
 				gl.EnableVertexAttribArray(a.index);
+				
 				new_enabled_arrays[a.index] = 1;
 				
 				break;
@@ -53,7 +56,7 @@ void VertexState::enableBuffersForAttribs(const ShaderAttribs& attrs){
 		}
 	}
 	
-	active_attrs = attrs;
+	active_attrs = new_attrs;
 	enabled_arrays = new_enabled_arrays;
 }
 

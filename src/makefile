@@ -10,7 +10,7 @@ CXXFLAGS := $(includes) -std=c++11 -ffast-math -fno-rtti -fno-exceptions
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE
 else
-    CXXFLAGS += -O0 -g
+    CXXFLAGS += -Og -g
 endif
 
 all: $(output)

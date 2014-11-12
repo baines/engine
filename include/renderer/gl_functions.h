@@ -60,6 +60,14 @@ GLFUNC(void, DeleteProgram, (GLuint))
 GLFUNC(void, GetActiveAttrib, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
 GLFUNC(void, GetActiveUniform, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
 
+GLFUNC(void, GetUniformfv, (GLuint, GLint, GLfloat*))
+GLFUNC(void, GetUniformiv, (GLuint, GLint, GLint*))
+GLFUNC(void, GetUniformuiv, (GLuint, GLint, GLuint*), 30)
+
+GLFUNC(void, GetnUniformfv, (GLuint, GLint, GLsizei, GLfloat*), ARB | EXT | 45, "robustness")
+GLFUNC(void, GetnUniformiv, (GLuint, GLint, GLsizei, GLint*), ARB | EXT | 45, "robustness")
+GLFUNC(void, GetnUniformuiv, (GLuint, GLint, GLsizei, GLuint*), ARB | 45, "robustness")
+
 GLFUNC(void, Uniform1fv, (GLint, GLsizei, const GLfloat*))
 GLFUNC(void, Uniform2fv, (GLint, GLsizei, const GLfloat*))
 GLFUNC(void, Uniform3fv, (GLint, GLsizei, const GLfloat*))

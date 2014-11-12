@@ -54,7 +54,7 @@ struct ShaderUniforms {
 		);
 	}
 	
-	void initUniform(uint32_t hash, GLuint count, GLuint loc);
+	void initUniform(const char* name, GLuint prog, GLuint idx, GLuint size, GLenum full_type);
 	
 	bool bind(GLuint program_id, const ShaderUniforms& current) const;
 
@@ -67,9 +67,9 @@ private:
 
 	struct uinfo {
 		uint32_t name_hash, rows, cols, count;
-		int storage_index;
+		size_t storage_index;
 		GLenum type;
-		GLuint loc;
+		GLuint idx;
 
 		bool operator==(uint32_t h) const { return name_hash == h; }
 	};

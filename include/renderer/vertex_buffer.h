@@ -5,8 +5,7 @@
 #include "shader_attribs.h"
 
 struct VertexBuffer {
-	virtual bool containsAttrib(uint32_t attr_hash) const = 0;
-	virtual bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const = 0;
+	virtual const ShaderAttribs& getShaderAttribs(void) const = 0;
 	virtual GLuint getID(void) const = 0;
 	virtual GLint getStride(void) const = 0;
 };
@@ -14,8 +13,7 @@ struct VertexBuffer {
 struct StaticVertexBuffer : VertexBuffer {
 	StaticVertexBuffer();
 	StaticVertexBuffer(ResourceHandle& data, const char* fmt);
-	virtual bool containsAttrib(uint32_t attr_hash) const;
-	virtual bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const;
+	virtual const ShaderAttribs& getShaderAttribs(void) const;
 	virtual void invalidate(void);
 	virtual GLuint getID(void) const;
 	virtual GLint getStride(void) const;
@@ -29,8 +27,7 @@ private:
 
 struct DynamicVertexBuffer : VertexBuffer {
 
-	bool containsAttrib(uint32_t attr_hash) const;
-	bool applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const;
+	const ShaderAttribs& getShaderAttribs(void) const;
 	GLuint getID(void) const;
 	GLint getStride(void) const;
 };

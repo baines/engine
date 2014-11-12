@@ -58,7 +58,7 @@ static unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
-static constexpr uint32_t djb2(const char* str){
+inline constexpr uint32_t djb2(const char* str){
 	return *str ? djb2(str+1) * 33 + *str : 5381;
 }
 
@@ -73,22 +73,16 @@ static uint32_t djb2(const char* str, size_t len){
 }
 
 struct str_const {
-	constexpr str_const()
-	: str(nullptr)
-	, size(0)
-	, hash(djb2(nullptr)){
-	
-	}
 
 	template<size_t N>
 	constexpr str_const(const char(&s)[N])
 	: str(s)
-	, size(N)
+	, size(N-1)
 	, hash(djb2(s)){
 	
 	}
 	
-	constexpr bool operator==(const str_const& other){
+	constexpr bool operator==(const str_const& other) const {
 		return hash == other.hash;
 	}
 		

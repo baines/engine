@@ -72,7 +72,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 
 	enum { GET_NAME, GET_NELEM, GET_TYPE, GET_EXTRA } state;
 	
-	ShaderAttribs::Attrib current_attr{};
+	ShaderAttribs::Attrib current_attr{ };
 	stride = 0;
 	
 	auto add_attr = [&](ShaderAttribs::Attrib& at){
@@ -86,7 +86,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 			at.off = stride + aligned_sz;
 			stride += at.off;
 		
-			attrs.setAttrib(at);
+			attrs.setAttribFormat(at.name_hash, at.type, at.nelem, at.off, at.flags);
 		}
 	};
 	
@@ -119,29 +119,17 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 				}
 			}
 			if(state == GET_EXTRA){
-				if(*p == 'N') current_attr.normalised = true;
-				if(*p == 'I') current_attr.integral = true;
-				if(*p == '/') current_attr.divisor = 1;
+				if(*p == 'N') current_attr.flags |= ATR_NORM;
+				if(*p == 'I') current_attr.flags |= ATR_INT;
+				if(*p == '/') current_attr.flags |= ATR_INSTANCED;
 			}
 		}
 	}
 	add_attr(current_attr);
 }
 
-bool StaticVertexBuffer::containsAttrib(uint32_t attr_hash) const {
-	return attrs.getAttrib(attr_hash) != nullptr;
-}
-
-bool StaticVertexBuffer::applyAttribFormat(uint32_t attr_hash, GLuint binding_point) const {
-	if(const auto* a = attrs.getAttrib(attr_hash)){
-		if(a->integral){
-			gl.VertexAttribIFormat(binding_point, a->nelem, a->type, a->off);
-		} else {
-			gl.VertexAttribFormat(binding_point, a->nelem, a->type, a->normalised, a->off);
-		}
-		return true;
-	}
-	return false;
+const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
+	return attrs;
 }
 
 void StaticVertexBuffer::invalidate(void){

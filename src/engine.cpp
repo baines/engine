@@ -1,5 +1,5 @@
 #include "engine.h"
-#include "gamestate.h"
+#include "game_state.h"
 
 Engine::Engine(int argc, char** argv, const char* name)
 : cfg()
@@ -8,29 +8,45 @@ Engine::Engine(int argc, char** argv, const char* name)
 , renderer(*this, name)
 , res()
 , max_fps(cfg.addVar("max_fps", CVarInt(200, 1, 1000)))
-, running(true) {
+, running(true)
+, prev_ticks(0)
+, root_state(*this) {
 	cfg.load(argc, argv);
-//	state.add(&root_state);
+	input.bindRaw(SDL_SCANCODE_ESCAPE, "QUIT");
+	
+	states.push_back(&root_state);
 }
 
 void Engine::addState(GameState* s){
-//	gamestate.add(s);
+	states.push_back(s);
 }
 
 bool Engine::run(void){
-/*
-	SDL_Event e;
+
+	const int min_delta = 1000 / std::max(1, max_fps->val);
+	if(int delta = (SDL_GetTicks() - prev_ticks) < min_delta){
+		SDL_Delay(min_delta - delta);
+		prev_ticks += delta;
+	}
 	
-	//if(delta < max_fps e.t.c. delay
+	SDL_Event e;
 	
 	while(SDL_PollEvent(&e)){
 		switch(e.type){
 			case SDL_KEYDOWN:
-			case SDL_KEYUP:
-				state.onKeyEvent(e.key);
+			case SDL_KEYUP: {
+				int action = 0;
+				for(size_t i = states.size()-1; i >= 0; --i){
+					if(input.getKeyAction(states[i], e.key.keysym.scancode, action)){
+						if(states[i]->onInput(action, e.key.state)){
+							break;
+						}
+					}
+				}
 				break;
+			}
 			case SDL_MOUSEMOTION:
-				state.onMouseMotion(e.motion);
+				//TODO
 				break;
 			case SDL_WINDOWEVENT:
 				renderer.onWindowEvent(e.window);
@@ -41,8 +57,12 @@ bool Engine::run(void){
 				break;
 		}	
 	}
-*/
+
 	return running;
+}
+
+void Engine::quit(){
+	running = false;
 }
 
 void Engine::showError(const char* text){

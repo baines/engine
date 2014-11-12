@@ -1,7 +1,7 @@
 #ifndef INPUT_H_
 #define INPUT_H_
 #include <SDL2/SDL.h>
-#include "gamestate.h"
+#include "game_state.h"
 #include <map>
 #include <string>
 

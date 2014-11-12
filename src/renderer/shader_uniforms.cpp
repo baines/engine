@@ -83,9 +83,6 @@ bool ShaderUniforms::bind(GLuint program_id, const ShaderUniforms& active) const
 	const ustorage* p = uniforms.data();
 	
 	for(auto& i : uniform_info){
-		if(i.storage_index == -1){
-			continue;
-		}
 		
 		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
 		if(ai != active.uniform_info.end() && ai->storage_index >= 0){
@@ -187,12 +184,13 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLuint idx, GLui
 	}
 
 	const int limit = rows * cols;
+	const size_t storage_idx = uniforms.size();
 	
 	for(int i = 0; i < limit; ++i){
 		uniforms.push_back(buf[i]);
 	}
 	
-	uniform_info.push_back({ hash, rows, cols, 1, uniforms.size()-1, subtype, idx });
+	uniform_info.push_back({ hash, rows, cols, 1, storage_idx, subtype, idx });
 }
 
 void ShaderUniforms::_setUniform(uint32_t hash, int rows, int cols, int count, GLenum type, const void* ptr){

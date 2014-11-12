@@ -5,14 +5,15 @@
 #include "input.h"
 #include "renderer.h"
 #include "resource_system.h"
-
-struct GameState;
+#include "game_state.h"
+#include "root_state.h"
 
 struct Engine {
 
 	Engine(int argc, char** argv, const char* name);
 	void addState(GameState* s);
 	bool run(void);
+	void quit(void);
 //	void log(const char* text);
 	void showError(const char* text);
 	~Engine();
@@ -25,9 +26,11 @@ struct Engine {
 //	StateSystem    gamestate;
 	
 private:
-//	RootState root_state;
+	std::vector<GameState*> states;
 	CVarInt* max_fps;
 	bool running;
+	uint32_t prev_ticks;
+	RootState root_state;
 };
 
 #endif

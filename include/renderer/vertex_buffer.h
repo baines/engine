@@ -8,6 +8,7 @@ struct VertexBuffer {
 	virtual const ShaderAttribs& getShaderAttribs(void) const = 0;
 	virtual GLuint getID(void) const = 0;
 	virtual GLint getStride(void) const = 0;
+	virtual ~VertexBuffer(){};
 };
 
 struct StaticVertexBuffer : VertexBuffer {

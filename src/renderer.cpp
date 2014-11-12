@@ -10,7 +10,8 @@ Renderer::Renderer(Engine& e, const char* name)
 , window_height    (e.cfg.addVar("vid_height", CVarInt(480, 240, INT_MAX)))
 , window_title     (name)
 , window           (nullptr) {
-
+	SDL_InitSubSystem(SDL_INIT_VIDEO);
+	reload(e);
 }
 
 void Renderer::reload(Engine& e){
@@ -85,10 +86,10 @@ void Renderer::drawFrame(){
 	renderables.clear();
 }
 
-void addRenderable(Renderable& r){
-
+void Renderer::addRenderable(Renderable& r){
+	renderables.push_back(&r);
 }
 
-void delRenderable(Renderable& r){
+void Renderer::delRenderable(Renderable& r){
 
 }

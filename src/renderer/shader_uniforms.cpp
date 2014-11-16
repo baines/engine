@@ -79,65 +79,69 @@ tuple<GLenum, uint32_t, uint32_t> get_full_type_info(GLenum type){
 
 }
 
-bool ShaderUniforms::bind(GLuint program_id, const ShaderUniforms& active) const {
+bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	const ustorage* p = uniforms.data();
 	
 	for(auto& i : uniform_info){
 		
 		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
-		if(ai != active.uniform_info.end() && ai->storage_index >= 0){
-			assert(i.rows == ai->rows);
-			assert(i.cols == ai->cols);
-			assert(i.count == ai->count);
-			
-			if(memcmp(uniforms.data() + i.storage_index
-					, active.uniforms.data() + ai->storage_index
-					, i.rows * i.cols * i.count) == 0){
-				continue;
-			}
+		if(ai == active.uniform_info.end() || i.type != ai->type 
+		|| i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
+			continue;
 		}
+		
+		const size_t sz = i.rows & i.cols * i.count;
+			
+		if(memcmp(p + i.storage_index, active.uniforms.data() + ai->storage_index, sz) == 0){
+			continue;
+		}
+		
+		memcpy(active.uniforms.data() + ai->storage_index, p + i.storage_index, sz);
+		
+		const GLint idx = ai->idx;
+		assert(idx > 0);
 		
 		if(i.type == GL_INT){
 			assert(i.rows == 1);
 			const GLint* ip = reinterpret_cast<const GLint*>(p+i.storage_index);
 			switch(i.cols){
-				case 1: gl.Uniform1iv(i.idx, i.count, ip); break;
-				case 2: gl.Uniform2iv(i.idx, i.count, ip); break;
-				case 3: gl.Uniform3iv(i.idx, i.count, ip); break;
-				case 4: gl.Uniform4iv(i.idx, i.count, ip); break;
+				case 1: gl.Uniform1iv(idx, i.count, ip); break;
+				case 2: gl.Uniform2iv(idx, i.count, ip); break;
+				case 3: gl.Uniform3iv(idx, i.count, ip); break;
+				case 4: gl.Uniform4iv(idx, i.count, ip); break;
 			}
 		} else 
 		if(i.type == GL_UNSIGNED_INT){
 			assert(i.rows == 1);
 			const GLuint* up = reinterpret_cast<const GLuint*>(p+i.storage_index);
 			switch(i.cols){
-				case 1: gl.Uniform1uiv(i.idx, i.count, up); break;
-				case 2: gl.Uniform2uiv(i.idx, i.count, up); break;
-				case 3: gl.Uniform3uiv(i.idx, i.count, up); break;
-				case 4: gl.Uniform4uiv(i.idx, i.count, up); break;
+				case 1: gl.Uniform1uiv(idx, i.count, up); break;
+				case 2: gl.Uniform2uiv(idx, i.count, up); break;
+				case 3: gl.Uniform3uiv(idx, i.count, up); break;
+				case 4: gl.Uniform4uiv(idx, i.count, up); break;
 			}
 		} else {
 			assert(i.type == GL_FLOAT);
 			const GLfloat* fp = reinterpret_cast<const GLfloat*>(p+i.storage_index);
-			     if(i.rows == 1 && i.cols == 1) gl.Uniform1fv(i.idx, i.count, fp);
-			else if(i.rows == 1 && i.cols == 2) gl.Uniform2fv(i.idx, i.count, fp);
-			else if(i.rows == 1 && i.cols == 3) gl.Uniform3fv(i.idx, i.count, fp);
-			else if(i.rows == 1 && i.cols == 4) gl.Uniform4fv(i.idx, i.count, fp);
-			else if(i.rows == 2 && i.cols == 2) gl.UniformMatrix2fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 3 && i.cols == 3) gl.UniformMatrix3fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 4 && i.cols == 4) gl.UniformMatrix4fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 2 && i.cols == 3) gl.UniformMatrix2x3fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 3 && i.cols == 2) gl.UniformMatrix3x2fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 2 && i.cols == 4) gl.UniformMatrix2x4fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 4 && i.cols == 2) gl.UniformMatrix4x2fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 3 && i.cols == 4) gl.UniformMatrix3x4fv(i.idx, i.count, GL_FALSE, fp);
-			else if(i.rows == 4 && i.cols == 3) gl.UniformMatrix4x3fv(i.idx, i.count, GL_FALSE, fp);		
+			     if(i.rows == 1 && i.cols == 1) gl.Uniform1fv(idx, i.count, fp);
+			else if(i.rows == 1 && i.cols == 2) gl.Uniform2fv(idx, i.count, fp);
+			else if(i.rows == 1 && i.cols == 3) gl.Uniform3fv(idx, i.count, fp);
+			else if(i.rows == 1 && i.cols == 4) gl.Uniform4fv(idx, i.count, fp);
+			else if(i.rows == 2 && i.cols == 2) gl.UniformMatrix2fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 3 && i.cols == 3) gl.UniformMatrix3fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 4 && i.cols == 4) gl.UniformMatrix4fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 2 && i.cols == 3) gl.UniformMatrix2x3fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 3 && i.cols == 2) gl.UniformMatrix3x2fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 2 && i.cols == 4) gl.UniformMatrix2x4fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 4 && i.cols == 2) gl.UniformMatrix4x2fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 3 && i.cols == 4) gl.UniformMatrix3x4fv(idx, i.count, GL_FALSE, fp);
+			else if(i.rows == 4 && i.cols == 3) gl.UniformMatrix4x3fv(idx, i.count, GL_FALSE, fp);		
 		}
 	}
 	return true;
 }
 
-void ShaderUniforms::initUniform(const char* name, GLuint prog, GLuint idx, GLuint size, GLenum full_type){
+void ShaderUniforms::initUniform(const char* name, GLuint prog, GLint idx, GLuint size, GLenum full_type){
 	//TODO: arrays: name will not have [n], size > 0. 
 	assert(size == 1 && "Arrays are NYI :(");
 
@@ -193,20 +197,28 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLuint idx, GLui
 	uniform_info.push_back({ hash, rows, cols, 1, storage_idx, subtype, idx });
 }
 
-void ShaderUniforms::_setUniform(uint32_t hash, int rows, int cols, int count, GLenum type, const void* ptr){
-	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
-
-	assert(it != uniform_info.end());
-	assert(rows == it->rows);
-	assert(cols == it->cols);
-	assert(count == it->count);
-	assert(type == it->type);
-
+void ShaderUniforms::_setUniform(uint32_t hash, uint32_t rows, uint32_t cols, uint32_t count, GLenum type, const void* ptr){
 	const ustorage* storage_ptr = reinterpret_cast<const ustorage*>(ptr);
 	const int limit = rows * cols * count;
+	
+	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
+
+	if(it == uniform_info.end()){
+		const size_t storage_idx = uniforms.size();
+		for(int i = 0; i < limit; ++i){
+			uniforms.push_back(storage_ptr[i]);
+		}
 		
-	for(int i = 0; i < limit; ++i){
-		uniforms[it->storage_index + i] = storage_ptr[i];
+		uniform_info.push_back({ hash, rows, cols, count, storage_idx, type, -1 });
+	} else {
+		assert(rows == it->rows);
+		assert(cols == it->cols);
+		assert(count == it->count);
+		assert(type == it->type);
+		
+		for(int i = 0; i < limit; ++i){
+			uniforms[it->storage_index + i] = storage_ptr[i];
+		}
 	}
 }
 

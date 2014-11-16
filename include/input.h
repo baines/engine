@@ -15,8 +15,7 @@ struct Input {
 
 	void watchAction(GameState* s, const char* action, int action_id);
 
-	void addDevice(int id);
-	void delDevice(int id);
+	void onDeviceChange(SDL_ControllerDeviceEvent& event);
 
 	bool getKeyAction(GameState* s, SDL_Scancode key, int& action_id);
 	bool getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id);

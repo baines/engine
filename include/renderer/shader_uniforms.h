@@ -54,13 +54,13 @@ struct ShaderUniforms {
 		);
 	}
 	
-	void initUniform(const char* name, GLuint prog, GLuint idx, GLuint size, GLenum full_type);
-	
-	bool bind(GLuint program_id, const ShaderUniforms& current) const;
+	void initUniform(const char* name, GLuint prog, GLint idx, GLuint size, GLenum full_type);
+		
+	bool bind(GLuint program_id, ShaderUniforms& current) const;
 
 private:
 
-	void _setUniform(uint32_t hash, int rows, int cols, int n, GLenum type, const void* ptr);
+	void _setUniform(uint32_t hash, uint32_t rows, uint32_t cols, uint32_t n, GLenum type, const void* ptr);
 
 	typedef variant<GLint, GLuint, GLfloat>::type ustorage;
 	static_assert(sizeof(ustorage) == 4, "ustorage should be 4 bytes");
@@ -69,7 +69,7 @@ private:
 		uint32_t name_hash, rows, cols, count;
 		size_t storage_index;
 		GLenum type;
-		GLuint idx;
+		GLint idx;
 
 		bool operator==(uint32_t h) const { return name_hash == h; }
 	};

@@ -6,7 +6,7 @@ RootState::RootState(Engine& e)
 	e.input.watchAction(this, "QUIT", 1);
 }
 
-void RootState::update(Engine& e){
+void RootState::update(Engine& e, uint32_t delta){
 
 }
 

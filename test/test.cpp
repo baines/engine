@@ -1,6 +1,7 @@
 //hack for testing purposes
 #define private public
 
+#include "engine.h"
 #include "config.h"
 #include "shader_uniforms.h"
 #include <iostream>
@@ -84,9 +85,9 @@ void testShaderUniforms(void){
 	constexpr str_const test1("test1"), test2("test2"), test3("test3");
 	
 	// usually done internally by Shader
-	su.initUniform(test1.hash, 1, 0);
-	su.initUniform(test2.hash, 1, 1);
-	su.initUniform(test3.hash, 1, 2);
+	//su.initUniform(test1.hash, 1, 0);
+	//su.initUniform(test2.hash, 1, 1);
+	//su.initUniform(test3.hash, 1, 2);
 	
 	su.setUniform("test1", { m });
 	su.setUniform("test2", { v });
@@ -103,9 +104,16 @@ void testShaderUniforms(void){
 	}
 }
 
-int main(void){
+void testEngine(int argc, char** argv){
+	Engine e(argc, argv, "Test");
+	
+	while(e.run());
+}
 
-	testShaderUniforms();
+int main(int argc, char** argv){
+
+	testEngine(argc, argv);
+	//testShaderUniforms();
 	//testPrefixExtend();
 	//testTabComplete();
 	

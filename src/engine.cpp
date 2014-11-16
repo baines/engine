@@ -24,12 +24,14 @@ void Engine::addState(GameState* s){
 bool Engine::run(void){
 
 	const int min_delta = 1000 / std::max(1, max_fps->val);
-	const int delta = SDL_GetTicks() - prev_ticks; //XXX: high res timer?
+	int delta = SDL_GetTicks() - prev_ticks; //XXX: high res timer?
 	
 	if(delta < min_delta){
 		SDL_Delay(min_delta - delta);
 		prev_ticks += delta;
 	}
+	
+	delta = std::min(delta, 100);
 	
 	SDL_Event e;
 	
@@ -71,6 +73,10 @@ bool Engine::run(void){
 
 void Engine::quit(){
 	running = false;
+}
+
+Engine::~Engine(){
+
 }
 
 void Engine::showError(const char* text){

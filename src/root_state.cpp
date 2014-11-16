@@ -1,8 +1,7 @@
 #include "engine.h"
 
 RootState::RootState(Engine& e)
-: GameState(e)
-, engine(e) {
+: engine(e) {
 	e.input.watchAction(this, "QUIT", 1);
 }
 

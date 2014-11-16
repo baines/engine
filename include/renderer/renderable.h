@@ -9,32 +9,30 @@
 
 struct Renderable {
 
-	Renderable();
-
-	bool isValid(){
-		// num tex == num samp, has v state e.t.c.
+	Renderable()
+	: textures()
+	, samplers()
+	, vertex_state(nullptr)
+	, shader(nullptr)
+	, uniforms(nullptr)
+	, blend_mode()
+	, prim_type(GL_TRIANGLES)
+	, count(0)
+	, offset(0) {
+	
 	}
 	
-	size_t          getNumTextures();
-	Texture*        getTexture(size_t index);
-	Sampler*        getSampler(size_t index);
-	VertexState*    getVertexState();
-	ShaderProgram*  getShader();
-	ShaderUniforms* getUniforms();
+	std::array<Texture*, 8> textures;
+	std::array<Sampler*, 8> samplers;
 	
-	void setTexture(Texture* t, size_t index);
-	void setSampler(Sampler* s, size_t index);
-	void setVertexState(VertexState* state);
-	void setShader(ShaderProgram* shader);
-	void setUniforms(ShaderUniforms* uniforms);
-	
-	void bind(Renderable* current);
+	VertexState*    vertex_state;
+	ShaderProgram*  shader;
+	ShaderUniforms* uniforms;
 	
 	BlendMode blend_mode;
-	
-	GLenum prim_type;
-	GLsizei count;
-	GLint offset;
+	GLenum    prim_type;
+	GLsizei   count;
+	GLint     offset;
 	
 };
 

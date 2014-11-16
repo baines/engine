@@ -5,7 +5,6 @@ struct Engine;
 struct Renderer;
 
 struct GameState {
-	GameState(Engine& e);
 	
 	virtual bool onInit(Engine& e){ return true; }
 	virtual int  onQuit(Engine& e){ return 0; }

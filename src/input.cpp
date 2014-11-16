@@ -43,6 +43,11 @@ void Input::unbindRaw(SDL_Scancode key){
 	}
 }
 
+void Input::onDeviceChange(SDL_ControllerDeviceEvent& event){
+//TODO
+
+}
+
 void Input::watchAction(GameState* s, const char* action, int action_id){
 
 	watches.emplace(action, StateAction{s, action_id});

@@ -20,12 +20,12 @@ void Renderer::reload(Engine& e){
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE            , 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE           , 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER         , 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	
 	int ctx_flags = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG | SDL_GL_CONTEXT_DEBUG_FLAG;
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	
 	window = SDL_CreateWindow(
 		window_title,
@@ -51,23 +51,23 @@ void Renderer::onWindowEvent(SDL_WindowEvent& ev){
 void Renderer::drawFrame(){
 
 	for(auto& r : renderables){
-		VertexState* v = r->getVertexState();
+		VertexState* v = r->vertex_state;
 		if(!v) continue;
 		
 		r->blend_mode.set(render_state);
 		
-		if(ShaderProgram* s = r->getShader()){
+		if(ShaderProgram* s = r->shader){
 			s->bind(render_state);
-			if(ShaderUniforms* u = r->getUniforms()){
+			if(ShaderUniforms* u = r->uniforms){
 				s->setUniforms(*u);
 			}
 		}
 		
-		for(size_t i = 0; i < r->getNumTextures(); ++i){
-			if(Texture* t = r->getTexture(i)){
+		for(size_t i = 0; i < r->textures.size(); ++i){
+			if(Texture* t = r->textures[i]){
 				t->bind(i, render_state);
 			}
-			if(Sampler* s = r->getSampler(i)){
+			if(Sampler* s = r->samplers[i]){
 				s->bind(i, render_state);
 			}
 		}

@@ -46,9 +46,10 @@ void StateSystem::onMotion(Engine& e, SDL_Event& ev){
 }
 
 void StateSystem::update(Engine& e, uint32_t delta){
-	GameState* current_state = states.back();
+	GameState* current_state = states.empty() ? nullptr : states.back();
 	
-	while(pop_num--){
+	while(pop_num > 0 && !states.empty()){
+		pop_num--;
 		states.back()->onQuit(e);
 		states.pop_back();
 	}
@@ -63,11 +64,13 @@ void StateSystem::update(Engine& e, uint32_t delta){
 	assert(!states.empty());
 	
 	if(current_state != states.back()){
-		current_state->onStateChange(e, false);
+		if(current_state){
+			current_state->onStateChange(e, false);
+		}
 		current_state = states.back();
 		current_state->onStateChange(e, true);
 	}
-	
+
 	current_state->update(e, delta);
 }
 

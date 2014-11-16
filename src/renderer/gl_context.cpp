@@ -7,12 +7,7 @@ GLContext gl;
 
 namespace {
 
-	struct Str {
-		template<size_t N>
-		Str(const char (&s)[N]) : name(s), len(N-1){}
-		const char* name;
-		size_t len;
-	} prefix_names[] = { "ARB_", "ARB_", "EXT_", "AMD_", "NV_" };
+	constexpr str_const prefix_names[] = { "ARB_", "ARB_", "EXT_", "AMD_", "NV_" };
 
 	enum {
 		ARBCORE = 1 << 16,
@@ -40,19 +35,19 @@ namespace {
 			for(int i = 0; i < SDL_arraysize(prefix_names) && !ptr; ++i){
 				if(!(req_vers & (1 << (16+i)))) continue;
 				
-				size_t sz = prefix_names[i].len;
+				size_t sz = prefix_names[i].size;
 				char* ebuf = SDL_stack_alloc(char, esz + sz);
-				memcpy(ebuf, prefix_names[i].name, sz);
+				memcpy(ebuf, prefix_names[i].str, sz);
 				memcpy(ebuf + sz, ext, esz);
 			
 				if(gl.hasExtension(ebuf)){
-					if(i == 0){ // ARBCORE doesn't append to func names
+					if(i == 0){ // ARBCORE doesn't prepend to func names
 						loadFunc(name, ptr);
 					} else {
 						char* nbuf = SDL_stack_alloc(char, nsz + sz - 1);
 				
 						memcpy(nbuf, name, nsz - 1);
-						memcpy(nbuf + nsz - 1, prefix_names[i].name, sz - 1);
+						memcpy(nbuf + nsz - 1, prefix_names[i].str, sz - 1);
 						nbuf[nsz+sz-2] = 0;
 				
 						loadFunc(nbuf, ptr);
@@ -89,6 +84,7 @@ GLContext::GLContext()
 
 bool GLContext::createContext(SDL_Window* w){
 	sdl_context = SDL_GL_CreateContext(w);
+	if(!sdl_context) puts(SDL_GetError());
 	return sdl_context != nullptr && loadAllFuncs();
 }
 
@@ -102,7 +98,9 @@ void GLContext::deleteContext(void){
 
 bool GLContext::hasExtension(const char* ext){
 	if(ext[0] == 'G' && ext[1] == 'L' && ext[2] == '_') ext += 3;
-	return extensions.find(ext) != extensions.end();
+	bool ok = extensions.find(ext) != extensions.end();
+	printf("Checking GL Extension \"%s\" : %s.\n", ext, ok ? "Yes" : "No");
+	return ok;
 }
 bool GLContext::loadAllFuncs(void){
 	GetString   = (decltype(GetString))  SDL_GL_GetProcAddress("glGetString");
@@ -127,6 +125,9 @@ bool GLContext::loadAllFuncs(void){
 		ret = ret && loadFunc(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__);
 	#include "gl_functions.h"
 	#undef GLFUNC
+	if(ret){
+		puts("All OpenGL functions loaded successfully!");
+	}
 	return ret;
 }
 

@@ -122,7 +122,7 @@ bool GLContext::loadAllFuncs(void){
 
 	bool ret = true;
 	#define GLFUNC(type, name, args, ...) \
-		ret = ret && loadFunc(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__);
+		ret = ret & loadFunc(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__);
 	#include "gl_functions.h"
 	#undef GLFUNC
 	if(ret){

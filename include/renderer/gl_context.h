@@ -16,6 +16,7 @@ struct GLContext {
 	
 	int base_w, base_h, version;
 
+	GLenum         (APIENTRY* GetError)(void);
 	const GLubyte* (APIENTRY* GetString)(GLenum);
 	const GLubyte* (APIENTRY* GetStringi)(GLenum, GLuint);
 	void           (APIENTRY* GetIntegerv)(GLenum, GLint*);

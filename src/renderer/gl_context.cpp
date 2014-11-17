@@ -103,6 +103,7 @@ bool GLContext::hasExtension(const char* ext){
 	return ok;
 }
 bool GLContext::loadAllFuncs(void){
+	GetError    = (decltype(GetError))   SDL_GL_GetProcAddress("glGetError");
 	GetString   = (decltype(GetString))  SDL_GL_GetProcAddress("glGetString");
 	GetIntegerv = (decltype(GetIntegerv))SDL_GL_GetProcAddress("glGetIntegerv");
 	
@@ -120,18 +121,23 @@ bool GLContext::loadAllFuncs(void){
 	
 	loadExtensions();
 
-	bool ret = true;
+	size_t total = 0, loaded = 0;
 	#define GLFUNC(type, name, args, ...) \
-		ret = ret & loadFunc(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__);
+		total++; \
+		if(loadFunc(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__)){ \
+			loaded++; \
+		} else { \
+			printf("Func %s is not available.\n", GL_STRINGIFY(name)); \
+		}
 	#include "gl_functions.h"
 	#undef GLFUNC
-	if(ret){
-		puts("All OpenGL functions loaded successfully!");
-	}
-	return ret;
+	printf("Loaded %d/%d OpenGL functions.\n", loaded, total);
+
+	return loaded == total;
 }
 
 void GLContext::loadExtensions(){
+
 	if(version >= 30){
 		GLint num_ext = 0;
 		GetIntegerv(GL_NUM_EXTENSIONS, &num_ext);
@@ -145,11 +151,11 @@ void GLContext::loadExtensions(){
 	} else {
 		const char* exts = reinterpret_cast<const char*>(GetString(GL_EXTENSIONS));
 		if(exts){
-			const char* c, *prev_c = exts+3;
-			
-			while((c = strchrnul(prev_c, ','), *c)){
+			const char* c = nullptr, *prev_c = exts+3;
+
+			while(c = strchr(prev_c, ' ')){
 				extensions.emplace(prev_c, c);
-				prev_c = c+3;
+				prev_c = c+4;
 			}
 		}
 	}

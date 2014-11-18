@@ -25,6 +25,8 @@ struct Renderer {
 	SDL_Window* getWindow() const {
 		return window;
 	}
+	
+	~Renderer();
 private:
 	std::vector<Renderable*> renderables;
 	RenderState render_state;

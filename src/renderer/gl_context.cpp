@@ -89,7 +89,10 @@ bool GLContext::createContext(SDL_Window* w){
 }
 
 void GLContext::deleteContext(void){
-	if(sdl_context) SDL_GL_DeleteContext(sdl_context);
+	if(sdl_context){
+		SDL_GL_DeleteContext(sdl_context);
+		sdl_context = nullptr;
+	}
 	#define GLFUNC(type, name, args, ...) \
 		name = nullptr;
 	#include "gl_functions.h"
@@ -102,6 +105,11 @@ bool GLContext::hasExtension(const char* ext){
 	printf("Checking Ext: %-32s [%s]\n", ext, ok ? "Available." : "Unavailable.");
 	return ok;
 }
+
+bool GLContext::initialized(){
+	return sdl_context != nullptr;
+}
+
 bool GLContext::loadAllFuncs(void){
 	GetError    = (decltype(GetError))   SDL_GL_GetProcAddress("glGetError");
 	GetString   = (decltype(GetString))  SDL_GL_GetProcAddress("glGetString");

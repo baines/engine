@@ -53,6 +53,8 @@ void Renderer::onWindowEvent(SDL_WindowEvent& ev){
 
 void Renderer::drawFrame(){
 
+	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 	for(auto& r : renderables){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
@@ -98,3 +100,15 @@ void Renderer::addRenderable(Renderable& r){
 void Renderer::delRenderable(Renderable& r){
 
 }
+
+Renderer::~Renderer(){
+	gl.deleteContext();
+	SDL_GL_UnloadLibrary();
+	
+	if(window){
+		SDL_DestroyWindow(window);
+	}
+	
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+

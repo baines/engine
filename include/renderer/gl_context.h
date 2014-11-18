@@ -13,6 +13,7 @@ struct GLContext {
 	bool createContext(SDL_Window* w);
 	void deleteContext(void);
 	bool hasExtension(const char* ext);
+	bool initialized();
 	
 	int base_w, base_h, version;
 

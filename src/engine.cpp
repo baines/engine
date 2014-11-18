@@ -76,7 +76,7 @@ void Engine::quit(){
 }
 
 Engine::~Engine(){
-
+	SDL_Quit();
 }
 
 void Engine::showError(const char* text){

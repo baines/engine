@@ -5,6 +5,14 @@
 
 using namespace std;
 
+static const char* shader_name(GLenum type){
+	switch(type){
+		case GL_VERTEX_SHADER:   return "vertex";
+		case GL_FRAGMENT_SHADER: return "fragment";
+		default: return "unknown";
+	}
+}
+
 ShaderBase::ShaderBase(GLenum type)
 : type(type)
 , id(0){
@@ -26,7 +34,7 @@ bool ShaderBase::load(const ResourceHandle& res){
 	if(!compiled_ok){
 		GLchar buffer[1024];
 		gl.GetShaderInfoLog(id, sizeof(buffer), nullptr, buffer);
-		fprintf(stderr, "Error compiling shader:\n%s\n", buffer);
+		fprintf(stderr, "Error compiling %s shader:\n%s\n", shader_name(type), buffer);
 
 		gl.DeleteShader(id);
 		id = 0;
@@ -41,7 +49,7 @@ GLuint ShaderBase::getID(void) const {
 }
 
 ShaderBase::~ShaderBase(){
-	if(id) gl.DeleteShader(id);
+	if(gl.initialized() && id) gl.DeleteShader(id);
 }
 
 ShaderProgram::ShaderProgram(const VertShader& v, const FragShader& f)

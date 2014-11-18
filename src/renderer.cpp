@@ -4,7 +4,9 @@
 #include "enums.h"
 
 Renderer::Renderer(Engine& e, const char* name)
-: buff_orphan_mode (e.cfg.addVar("vid_gl_orphan_mode", CVarEnum(gl_orphan_enum, 0)))
+: renderables()
+, render_state()
+, buff_orphan_mode (e.cfg.addVar("vid_gl_orphan_mode", CVarEnum(gl_orphan_enum, 0)))
 , libgl            (e.cfg.addVar("vid_libgl", CVarString("")))
 , window_width     (e.cfg.addVar("vid_width" , CVarInt(640, 320, INT_MAX)))
 , window_height    (e.cfg.addVar("vid_height", CVarInt(480, 240, INT_MAX)))
@@ -42,6 +44,7 @@ void Renderer::reload(Engine& e){
 	}
 	
 	gl.createContext(window);
+	gl.Viewport(0, 0, window_width->val, window_height->val);
 }
 
 void Renderer::onWindowEvent(SDL_WindowEvent& ev){
@@ -58,6 +61,8 @@ void Renderer::drawFrame(){
 		
 		if(ShaderProgram* s = r->shader){
 			s->bind(render_state);
+			s->setAttribs(render_state, *v);
+			
 			if(ShaderUniforms* u = r->uniforms){
 				s->setUniforms(*u);
 			}

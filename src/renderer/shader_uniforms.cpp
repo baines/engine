@@ -85,21 +85,25 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	for(auto& i : uniform_info){
 		
 		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
-		if(ai == active.uniform_info.end() || i.type != ai->type 
-		|| i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
+		if(ai == active.uniform_info.end()){
+			continue;
+		} else if(i.type != ai->type || i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
+			DEBUGF("uniform incompatible:\nt: %#x\t%#x\nr: %d\t%d\nc: %d\t%d\nn: %d\t%d\n",
+			i.type, ai->type, i.rows, ai->rows, i.cols, ai->cols, i.count, ai->count);
 			continue;
 		}
-		
+				
 		const size_t sz = i.rows & i.cols * i.count;
 			
 		if(memcmp(p + i.storage_index, active.uniforms.data() + ai->storage_index, sz) == 0){
 			continue;
 		}
 		
+		DEBUGF("updating uniform\n");
 		memcpy(active.uniforms.data() + ai->storage_index, p + i.storage_index, sz);
 		
 		const GLint idx = ai->idx;
-		assert(idx > 0);
+		assert(idx >= 0);
 		
 		if(i.type == GL_INT){
 			assert(i.rows == 1);

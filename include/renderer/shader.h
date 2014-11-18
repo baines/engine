@@ -7,6 +7,8 @@
 #include "render_state.h"
 #include <vector>
 
+struct VertexState;
+
 struct ShaderBase {
 	ShaderBase(GLenum type);
 	bool load(const ResourceHandle& data);
@@ -30,6 +32,7 @@ struct ShaderProgram {
 	bool link(void);
 	bool bind(RenderState& rs);
 	void setUniforms(const ShaderUniforms& uniforms);
+	void setAttribs(RenderState& rs, VertexState& vstate);
 
 	~ShaderProgram();
 private:

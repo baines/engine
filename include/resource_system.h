@@ -37,16 +37,21 @@ private:
 	size_t _size;
 };
 
+template<class T>
+ResourceHandle make_resource(const T& data){
+	uint8_t* new_data = new uint8_t[sizeof(data)];
+	memcpy(new_data, data, sizeof(data));
+	return ResourceHandle(new_data, sizeof(data));
+}
+
 struct ResourceSystem {
 
 	ResourceHandle load(const char* name);
 	size_t getUseCount(const char* name);
 	
 	template<size_t N>
-	void addImmediate(const char* name, char (&data)[N]){
-		uint8_t* new_data = new uint8_t[N];
-		memcpy(new_data, data, N);
-		resources.emplace(name, ResourceHandle(new_data, N));
+	void addImmediate(const char* name, const char (&data)[N]){
+		resources.emplace(name, make_resource(data));
 	}
 	
 	template<class T>
@@ -77,5 +82,7 @@ private:
 	ResourceHandle import(const char* name);
 	std::map<std::string, ResourceHandle> resources;
 };
+
+template<class T> std::map<std::string, T> ResourceSystem::Cache<T>::entries{};
 
 #endif

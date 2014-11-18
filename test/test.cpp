@@ -4,6 +4,7 @@
 #include "engine.h"
 #include "config.h"
 #include "shader_uniforms.h"
+#include "test_state.h"
 #include <iostream>
 
 using namespace std;
@@ -106,6 +107,9 @@ void testShaderUniforms(void){
 
 void testEngine(int argc, char** argv){
 	Engine e(argc, argv, "Test");
+	TestState ts(e);
+	
+	e.addState(&ts);
 	
 	while(e.run());
 }

@@ -13,7 +13,7 @@ struct VertexBuffer {
 
 struct StaticVertexBuffer : VertexBuffer {
 	StaticVertexBuffer();
-	StaticVertexBuffer(ResourceHandle& data, const char* fmt);
+	StaticVertexBuffer(const ResourceHandle& data, const char* fmt);
 	virtual const ShaderAttribs& getShaderAttribs(void) const;
 	virtual void invalidate(void);
 	virtual GLuint getID(void) const;

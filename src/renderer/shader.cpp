@@ -1,5 +1,6 @@
 #include "shader.h"
 #include "gl_context.h"
+#include "vertex_state.h"
 #include <algorithm>
 
 using namespace std;
@@ -85,10 +86,11 @@ bool ShaderProgram::link(void){
 		GLenum type = 0;
 		
 		gl.GetActiveUniform(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
-		
 		if(!*name_buf) continue;
 		
-		uniforms.initUniform(name_buf, program_id, i, size, type);
+		GLint index = gl.GetUniformLocation(program_id, name_buf);
+		
+		uniforms.initUniform(name_buf, program_id, index, size, type);
 	}
 	
 	gl.GetProgramiv(program_id, GL_ACTIVE_ATTRIBUTES, &amount);
@@ -98,9 +100,12 @@ bool ShaderProgram::link(void){
 		GLenum type = 0;
 		
 		gl.GetActiveAttrib(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
+		if(!*name_buf) continue;
+		
+		GLint index = gl.GetAttribLocation(program_id, name_buf);
 		
 		uint32_t hash = djb2(name_buf);
-		attribs.initAttrib(hash, i);
+		attribs.initAttrib(hash, index);
 	}
 	
 	return true;
@@ -117,6 +122,10 @@ bool ShaderProgram::bind(RenderState& render_state){
 void ShaderProgram::setUniforms(const ShaderUniforms& su){
 	su.bind(program_id, uniforms);
 	uniforms = su;
+}
+
+void ShaderProgram::setAttribs(RenderState& rs, VertexState& vstate){
+	vstate.setAttribArrays(rs, attribs);
 }
 
 ShaderProgram::~ShaderProgram(){

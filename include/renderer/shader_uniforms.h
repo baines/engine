@@ -1,5 +1,6 @@
 #ifndef SHADER_UNIFORMS_
 #define SHADER_UNIFORMS_
+#include "common.h"
 #include "gl_context.h"
 #include "util.h"
 #include <glm/glm.hpp>

@@ -13,7 +13,7 @@ enum AttribFlags : uint32_t {
 struct ShaderAttribs {
 	struct Attrib {
 		uint32_t name_hash;
-		GLuint index;
+		GLint index;
 		
 		GLenum type;
 		int nelem, off;
@@ -24,11 +24,11 @@ struct ShaderAttribs {
 	
 	ShaderAttribs();
 	
-	void initAttrib(uint32_t name_hash, GLuint index);
+	void initAttrib(uint32_t name_hash, GLint index);
 	void setAttribFormat(uint32_t hash, GLenum type, int nelem, int off, uint32_t flags);
-	bool bind(uint32_t hash) const;
+	bool bind(uint32_t hash, GLuint index) const;
 	
-	bool containsAttrib(uint32_t hash, ssize_t at_index = -1) const ;
+	bool containsAttrib(uint32_t hash, GLint at_index = -1) const;
 	
 	const Attrib* begin() const;
 	const Attrib* end() const;

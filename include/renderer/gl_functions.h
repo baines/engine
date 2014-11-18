@@ -7,6 +7,7 @@
 #define MIN_GL_VERSION 2.0
 
 GLFUNC(void, Clear, (GLbitfield flags))
+GLFUNC(void, Viewport, (GLint, GLint, GLsizei, GLsizei))
 
 GLFUNC(void, DrawArrays, (GLenum, GLint, GLsizei))
 GLFUNC(void, DrawElements, (GLenum, GLsizei, GLenum, const GLvoid*))
@@ -58,7 +59,9 @@ GLFUNC(void, UseProgram, (GLuint))
 GLFUNC(void, DeleteProgram, (GLuint))
 
 GLFUNC(void, GetActiveAttrib, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
+GLFUNC(GLint, GetAttribLocation, (GLuint, const GLchar*))
 GLFUNC(void, GetActiveUniform, (GLuint, GLuint, GLsizei, GLsizei*, GLint*, GLenum*, GLchar*))
+GLFUNC(GLint, GetUniformLocation, (GLuint, const GLchar*))
 
 GLFUNC(void, GetUniformfv, (GLuint, GLint, GLfloat*))
 GLFUNC(void, GetUniformiv, (GLuint, GLint, GLint*))

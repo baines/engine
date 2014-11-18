@@ -18,7 +18,7 @@ namespace {
 	};
 
 	bool loadFunc(const char* name, void*& ptr){
-		printf("Loading Func: %s = %p\n", name, (ptr = SDL_GL_GetProcAddress(name)));
+		printf("Loading Func: %-32s [%p]\n", name, (ptr = SDL_GL_GetProcAddress(name)));
 		return ptr != nullptr;
 	}
 	
@@ -41,7 +41,7 @@ namespace {
 				memcpy(ebuf + sz, ext, esz);
 			
 				if(gl.hasExtension(ebuf)){
-					if(i == 0){ // ARBCORE doesn't prepend to func names
+					if(i == 0){ // ARBCORE doesn't append to func names
 						loadFunc(name, ptr);
 					} else {
 						char* nbuf = SDL_stack_alloc(char, nsz + sz - 1);
@@ -99,7 +99,7 @@ void GLContext::deleteContext(void){
 bool GLContext::hasExtension(const char* ext){
 	if(ext[0] == 'G' && ext[1] == 'L' && ext[2] == '_') ext += 3;
 	bool ok = extensions.find(ext) != extensions.end();
-	printf("Checking GL Extension \"%s\" : %s.\n", ext, ok ? "Yes" : "No");
+	printf("Checking Ext: %-32s [%s]\n", ext, ok ? "Available." : "Unavailable.");
 	return ok;
 }
 bool GLContext::loadAllFuncs(void){
@@ -131,7 +131,7 @@ bool GLContext::loadAllFuncs(void){
 		}
 	#include "gl_functions.h"
 	#undef GLFUNC
-	printf("Loaded %d/%d OpenGL functions.\n", loaded, total);
+	printf("Loaded %lu/%lu OpenGL functions.\n", loaded, total);
 
 	return loaded == total;
 }

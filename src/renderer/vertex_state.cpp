@@ -46,7 +46,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		
 		GLint vbo_bind_point = 0;
 		for(auto* vb : vertex_buffers){
-			DEBUGF("checking buffer");
+			DEBUGF("checking buffer\n");
 			const ShaderAttribs& vb_attrs = vb->getShaderAttribs();
 			
 			DEBUGF("attrs in buffer: %ld\n", std::distance(vb_attrs.begin(), vb_attrs.end()));

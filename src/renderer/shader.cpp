@@ -38,6 +38,7 @@ bool ShaderBase::load(const ResourceHandle& res){
 
 		gl.DeleteShader(id);
 		id = 0;
+		abort(); //XXX: handle error?
 		return false;
 	} else {
 		return true;
@@ -81,6 +82,7 @@ bool ShaderProgram::link(void){
 		
 		gl.DeleteProgram(program_id);
 		program_id = 0;
+		abort(); //XXX: handle error?
 		return false;
 	}
 	
@@ -129,7 +131,6 @@ bool ShaderProgram::bind(RenderState& render_state){
 
 void ShaderProgram::setUniforms(const ShaderUniforms& su){
 	su.bind(program_id, uniforms);
-	uniforms = su;
 }
 
 void ShaderProgram::setAttribs(RenderState& rs, VertexState& vstate){

@@ -28,9 +28,8 @@ bool Engine::run(void){
 	
 	if(delta < min_delta){
 		SDL_Delay(min_delta - delta);
-		prev_ticks += delta;
 	}
-	
+	prev_ticks += delta;
 	delta = std::min(delta, 100);
 	
 	SDL_Event e;

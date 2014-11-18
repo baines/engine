@@ -75,7 +75,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 	ShaderAttribs::Attrib current_attr{ };
 	stride = 0;
 	
-	DEBUGF("staring to parse format:");
+	DEBUGF("staring to parse format:\n");
 	
 	auto add_attr = [&](ShaderAttribs::Attrib& at){
 		if(at.nelem != 0 && at.type != 0){
@@ -89,7 +89,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 			stride += aligned_sz;
 		
 			attrs.setAttribFormat(at.name_hash, at.type, at.nelem, at.off, at.flags);
-			DEBUGF("---- Attrib added.");
+			DEBUGF("---- Attrib added.\n");
 		}
 	};
 	

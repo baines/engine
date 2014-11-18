@@ -18,7 +18,8 @@ static const constexpr struct {
 struct TestState : public GameState {
 
 	TestState(Engine& e)
-	: vbo(make_resource(vertices), "a_pos:2f|a_col:4BN")
+	: timer(0)
+	, vbo(make_resource(vertices), "a_pos:2f|a_col:4BN")
 	, vs("test.vs")
 	, fs("test.fs")
 	, shader(*vs, *fs)
@@ -26,11 +27,12 @@ struct TestState : public GameState {
 	, drawme() {
 		e.res.addImmediate("test.vs",
 			"#version 330 core\n"
+			"uniform float timer = 1.0f;\n"
 			"in vec2 a_pos;\n"
 			"in vec4 a_col;\n"
 			"out vec3 pass_col;\n"
 			"void main(){\n"
-			"	gl_Position = vec4(a_pos.x, a_pos.y, 0, 1);\n"
+			"	gl_Position = vec4(vec2(a_pos.xy * timer), 0, 1);\n"
 			"	pass_col = a_col.xyz;\n"
 			"}\n"
 		);
@@ -45,6 +47,7 @@ struct TestState : public GameState {
 		
 		drawme.vertex_state = &vstate;
 		drawme.shader = &shader;
+		drawme.uniforms = &uniforms;
 		drawme.prim_type = GL_TRIANGLES;
 		drawme.count = 3;
 	}
@@ -59,17 +62,21 @@ struct TestState : public GameState {
 	}
 	
 	void update(Engine& e, uint32_t delta){
-	
+		timer = (timer + delta / 2) % 628;
+		float f_timer = 1.0f + sin(timer / 100.0f);
+		uniforms.setUniform("timer", { f_timer });
 	}
 	
 	void draw(Renderer& r){
 		r.addRenderable(drawme);
 	}
 private:
+	int timer;
 	StaticVertexBuffer vbo;
 	Resource<VertShader> vs;
 	Resource<FragShader> fs;
 	ShaderProgram shader;
+	ShaderUniforms uniforms;
 	VertexState vstate;
 	Renderable drawme;
 };

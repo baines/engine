@@ -99,7 +99,7 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 			continue;
 		}
 		
-		DEBUGF("updating uniform\n");
+		DEBUGF("updating uniform...\n");
 		memcpy(active.uniforms.data() + ai->storage_index, p + i.storage_index, sz);
 		
 		const GLint idx = ai->idx;

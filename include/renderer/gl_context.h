@@ -30,7 +30,7 @@ struct GLContext {
 private:
 	bool loadAllFuncs(void);
 	void loadExtensions(void);
-	std::unordered_set<std::string> extensions;
+	std::unordered_set<uint32_t> extensions;
 	SDL_GLContext sdl_context;
 };
 

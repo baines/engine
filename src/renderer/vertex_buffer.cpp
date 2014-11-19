@@ -102,16 +102,14 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 			name_start = p + 1;
 			state = GET_NAME;
 		} else {
-			if(state == GET_NAME){
-				if(*p == ':'){
-					std::string s(name_start, p);
-					DEBUGF("\tattrib name: %s\n", s.c_str());
-					current_attr.name_hash = djb2(name_start, p - name_start);
-					state = GET_NELEM;
-				}
+			if(state == GET_NAME && *p == ':'){
+				const int len = p - name_start;
+				DEBUGF("\tattrib name: %.*s\n", len, name_start);
+				current_attr.name_hash = djb2(name_start, len);
+				state = GET_NELEM;
 			} else
 			if(state == GET_NELEM){
-				int n = *p - 48;
+				const int n = *p - 48;
 				if(n > 0 && n <= 4){
 					current_attr.nelem = n;
 					DEBUGF("\tattrib no. elements: %d\n", n);

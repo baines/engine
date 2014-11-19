@@ -5,6 +5,9 @@
 #include "config.h"
 #include "shader_uniforms.h"
 #include "test_state.h"
+
+#if 0
+
 #include <iostream>
 
 using namespace std;
@@ -104,6 +107,8 @@ void testShaderUniforms(void){
 		printf("%.2f\n", f);
 	}
 }
+
+#endif
 
 void testEngine(int argc, char** argv){
 	Engine e(argc, argv, "Test");

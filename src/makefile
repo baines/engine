@@ -8,7 +8,7 @@ includes := $(foreach dir,$(dirs),-I../include/$(dir))
 CXXFLAGS := $(includes) -std=c++11 -ffast-math -fno-rtti -fno-exceptions
 
 ifdef RELEASE
-    CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE
+    CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer
 else
     CXXFLAGS += -Og -g -DDEBUG
 endif

@@ -13,7 +13,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , root_state (*this) {
 
 	cfg.load(argc, argv);
-	input.bindRaw(SDL_SCANCODE_ESCAPE, "QUIT");
+	input.bindRaw(SDL_SCANCODE_ESCAPE, "menu");
 	state.push(&root_state);
 }
 

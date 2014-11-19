@@ -101,7 +101,7 @@ void GLContext::deleteContext(void){
 
 bool GLContext::hasExtension(const char* ext){
 	if(ext[0] == 'G' && ext[1] == 'L' && ext[2] == '_') ext += 3;
-	bool ok = extensions.find(ext) != extensions.end();
+	bool ok = extensions.find(djb2(ext)) != extensions.end();
 	printf("Checking Ext: %-32s [%s]\n", ext, ok ? "Available." : "Unavailable.");
 	return ok;
 }
@@ -153,7 +153,7 @@ void GLContext::loadExtensions(){
 		for(GLint i = 0; i < num_ext; ++i){
 			const char* ext = reinterpret_cast<const char*>(GetStringi(GL_EXTENSIONS, i));
 			if(ext){
-				extensions.emplace(ext+3);
+				extensions.insert(djb2(ext+3));
 			}
 		}
 	} else {
@@ -162,7 +162,7 @@ void GLContext::loadExtensions(){
 			const char* c = nullptr, *prev_c = exts+3;
 
 			while(c = strchr(prev_c, ' ')){
-				extensions.emplace(prev_c, c);
+				extensions.insert(djb2(prev_c, c - prev_c));
 				prev_c = c+4;
 			}
 		}

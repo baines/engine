@@ -25,26 +25,6 @@ struct TestState : public GameState {
 	, shader(*vs, *fs)
 	, vstate()
 	, drawme() {
-		e.res.addImmediate("test.vs",
-			"#version 330 core\n"
-			"uniform float timer = 1.0f;\n"
-			"in vec2 a_pos;\n"
-			"in vec4 a_col;\n"
-			"out vec3 pass_col;\n"
-			"void main(){\n"
-			"	gl_Position = vec4(vec2(a_pos.xy * timer), 0, 1);\n"
-			"	pass_col = a_col.xyz;\n"
-			"}\n"
-		);
-		e.res.addImmediate("test.fs",
-			"#version 330 core\n"
-			"in vec3 pass_col;\n"
-			"out vec3 color;\n"
-			"void main(){\n"
-			"	color = pass_col;\n"
-			"}\n"
-		);
-		
 		drawme.vertex_state = &vstate;
 		drawme.shader = &shader;
 		drawme.uniforms = &uniforms;

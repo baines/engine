@@ -5,6 +5,8 @@ headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources))
 includes := $(foreach dir,$(dirs),-I../include/$(dir))
+includes += -I../build/
+embeds := $(wildcard ../build/embed_data/*)
 CXXFLAGS := $(includes) -std=c++11 -ffast-math -fno-rtti -fno-exceptions
 
 ifdef RELEASE
@@ -18,11 +20,14 @@ all: $(output)
 $(output): $(objects)
 	$(AR) rcs $@ $^
 
-$(builddir)/%.o: %.cpp $(headers)
+$(builddir)/%.o: %.cpp $(headers) ../build/internal.zip
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+../build/internal.zip: $(embeds)
+	zip -j $@ $^
+
 clean:
-	rm -f $(objects) $(output) *~
+	rm -f ../build/internal.zip $(objects) $(output) *~
 
 .PHONY: all clean
 

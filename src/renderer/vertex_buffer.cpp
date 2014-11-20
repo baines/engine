@@ -75,7 +75,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 	ShaderAttribs::Attrib current_attr{ };
 	stride = 0;
 	
-	DEBUGF("staring to parse format:\n");
+	DEBUGF("starting to parse format:\n");
 	
 	auto add_attr = [&](ShaderAttribs::Attrib& at){
 		if(at.nelem != 0 && at.type != 0){

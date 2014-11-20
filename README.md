@@ -6,3 +6,9 @@ and other stuff is still available in the master branch of this repo.
 
 License: WTFPL (http://www.wtfpl.net/)
 
+Dependencies:
+	SDL2
+	glm
+	boost-preprocessor
+	physfs-devel
+

@@ -46,7 +46,10 @@ ResourceHandle make_resource(const T& data){
 
 struct ResourceSystem {
 
+	ResourceSystem(const char* argv0);
+
 	ResourceHandle load(const char* name);
+
 	size_t getUseCount(const char* name);
 	
 	template<size_t N>

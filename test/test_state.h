@@ -20,8 +20,8 @@ struct TestState : public GameState {
 	TestState(Engine& e)
 	: timer(0)
 	, vbo(make_resource(vertices), "a_pos:2f|a_col:4BN")
-	, vs("test.vs")
-	, fs("test.fs")
+	, vs("test.glslv")
+	, fs("test.glslf")
 	, shader(*vs, *fs)
 	, vstate()
 	, drawme() {

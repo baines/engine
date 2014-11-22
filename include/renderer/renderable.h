@@ -6,8 +6,27 @@
 #include "shader.h"
 #include "shader_uniforms.h"
 #include "blend_mode.h"
+#include "util.h"
+
+struct RCount { GLsizei value; };
+struct RType  { GLenum  value; };
+struct ROff   { GLint   value; };
 
 struct Renderable {
+
+	void set(VertexState* vs){ vertex_state = vs; }
+	void set(ShaderProgram* sp){ shader = sp; }
+	void set(ShaderUniforms* su){ uniforms = su; }
+	void set(BlendMode& bm){ blend_mode = bm; }
+	void set(RCount c){ count = c.value; }
+	void set(RType t){ prim_type = t.value; }
+	void set(ROff o){ offset = o.value; }
+
+	template<class T, class... Args>
+	void set(T&& t, Args&&... args){
+		set(std::forward<T>(t));
+		set(std::forward<Args>(args)...);
+	}
 
 	Renderable()
 	: textures()
@@ -20,6 +39,11 @@ struct Renderable {
 	, count(0)
 	, offset(0) {
 	
+	}
+	
+	template<class... Args>
+	Renderable(Args&&... args) : Renderable() {
+		set(std::forward<Args>(args)...);
 	}
 	
 	std::array<Texture*, 8> textures;

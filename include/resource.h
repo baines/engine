@@ -1,5 +1,6 @@
 #ifndef RESOURCE_H_
 #define RESOURCE_H_
+#include "common.h"
 #include "resource_system.h"
 #include <utility>
 

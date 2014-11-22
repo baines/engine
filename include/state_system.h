@@ -1,11 +1,8 @@
 #ifndef STATE_SYSTEM_H_
 #define STATE_SYSTEM_H_
+#include "common.h"
 #include <SDL2/SDL.h>
 #include <vector>
-
-struct GameState;
-struct Engine;
-struct Renderer;
 
 struct StateSystem {
 	StateSystem();

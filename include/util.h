@@ -1,5 +1,6 @@
 #ifndef UTIL_H_
 #define UTIL_H_
+#include "common.h"
 #include <memory>
 #include <cstring>
 #include <array>
@@ -30,7 +31,6 @@ template<class R, class C, class... Args>
 struct mf_arity<R(C::*)(Args...)> {
 	static const size_t value = sizeof...(Args);
 };
-
 
 template<class T, class... Ts>
 struct variant {

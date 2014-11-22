@@ -1,5 +1,6 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
+#include "common.h"
 #include <SDL2/SDL.h>
 #include <vector>
 #include "renderer/shader.h"
@@ -9,9 +10,6 @@
 #include "renderer/renderable.h"
 #include "renderer/render_state.h"
 #include "cvar.h"
-
-struct Engine;
-struct Renderable;
 
 struct Renderer {
 	Renderer(Engine& e, const char* name);

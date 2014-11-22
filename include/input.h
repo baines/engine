@@ -1,5 +1,6 @@
 #ifndef INPUT_H_
 #define INPUT_H_
+#include "common.h"
 #include <SDL2/SDL.h>
 #include "game_state.h"
 #include <map>

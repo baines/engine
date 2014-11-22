@@ -1,8 +1,6 @@
 #ifndef GAME_STATE_H_
 #define GAME_STATE_H_
-
-struct Engine;
-struct Renderer;
+#include "common.h"
 
 struct GameState {
 	
@@ -15,8 +13,13 @@ struct GameState {
 	// window focus gained / lost
 	virtual void onFocus(Engine& e, bool gained){}
 	
-	virtual bool onInput(int action_id, bool pressed){ return false; }
-	virtual bool onMotion(int axis_id, int rel_x, int rel_y){ return false; }
+	virtual bool onInput(Engine& e, int action, bool pressed){ 
+		return false;
+	}
+	
+	virtual bool onMotion(Engine& e, int axis_id, int rel_x, int rel_y){
+		return false;
+	}
 	
 	virtual void update(Engine& e, uint32_t delta) = 0;
 	virtual void draw(Renderer& r) = 0;

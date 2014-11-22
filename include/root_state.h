@@ -6,9 +6,7 @@ struct RootState : public GameState {
 	RootState(Engine& e);
 	void update(Engine& e, uint32_t delta);
 	void draw(Renderer& r);
-	bool onInput(int action_id, bool pressed);
-private:
-	Engine& engine;
+	bool onInput(Engine& e, int action_id, bool pressed);
 };
 
 #endif

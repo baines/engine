@@ -1,9 +1,9 @@
 #ifndef RESOURCE_SYSTEM_H_
 #define RESOURCE_SYSTEM_H_
+#include "common.h"
 #include <memory>
 #include <string>
 #include <map>
-#include "common.h"
 #include "util.h"
 
 struct ResourceHandle {

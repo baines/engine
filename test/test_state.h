@@ -24,12 +24,8 @@ struct TestState : public GameState {
 	, fs("test.glslf")
 	, shader(*vs, *fs)
 	, vstate()
-	, drawme() {
-		drawme.vertex_state = &vstate;
-		drawme.shader = &shader;
-		drawme.uniforms = &uniforms;
-		drawme.prim_type = GL_TRIANGLES;
-		drawme.count = 3;
+	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3}) {
+
 	}
 	
 	bool onInit(Engine& e){
@@ -43,8 +39,7 @@ struct TestState : public GameState {
 	
 	void update(Engine& e, uint32_t delta){
 		timer = (timer + delta / 2) % 628;
-		float f_timer = 1.0f + sin(timer / 100.0f);
-		uniforms.setUniform("timer", { f_timer });
+		uniforms.setUniform("timer", { 1.0f + sinf(timer / 100.0f) });
 	}
 	
 	void draw(Renderer& r){

@@ -3,18 +3,22 @@
 
 Engine::Engine(int argc, char** argv, const char* name)
 : cfg        ()
-, cli        ()
 , input      ()
 , renderer   (*this, name)
 , res        (argv[0])
+, state      ()
+, cli        (*this)
 , max_fps    (cfg.addVar("max_fps", CVarInt(200, 1, 1000)))
 , running    (true)
 , prev_ticks (0)
 , root_state (*this) {
 
 	cfg.load(argc, argv);
-	input.bindRaw(SDL_SCANCODE_ESCAPE, "menu");
 	state.push(&root_state);
+	
+	//move to a default config file?
+	input.bindRaw(SDL_SCANCODE_ESCAPE, "menu");
+	input.bindRaw(SDL_SCANCODE_GRAVE, "console");
 }
 
 void Engine::addState(GameState* s){

@@ -9,5 +9,10 @@
 	#define DEBUGF(fmt, ...) do { } while(0)
 #endif
 
+struct Engine;
+struct Renderable;
+struct Renderer;
+struct GameState;
+
 #endif
 

@@ -1,5 +1,6 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
+#include "common.h"
 #include "config.h"
 #include "cli.h"
 #include "input.h"
@@ -21,11 +22,11 @@ struct Engine {
 	~Engine();
 
 	Config         cfg;
-	CLI            cli;
 	Input          input;
 	Renderer       renderer;
 	ResourceSystem res;
 	StateSystem    state;
+	CLI            cli;
 	
 private:
 	std::vector<GameState*> states;

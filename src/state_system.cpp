@@ -24,14 +24,14 @@ void StateSystem::onInput(Engine& e, SDL_Event& ev){
 	if(ev.type == SDL_KEYDOWN || SDL_KEYUP){
 		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
 			if(e.input.getKeyAction(*i, ev.key.keysym.scancode, action_id)
-			&& (*i)->onInput(action_id, ev.key.state)){
+			&& (*i)->onInput(e, action_id, ev.key.state)){
 				break;
 			}
 		}
 	} else if(ev.type == SDL_CONTROLLERBUTTONDOWN || ev.type == SDL_CONTROLLERBUTTONUP){
 		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
 			if(e.input.getPadAction(*i, ev.cbutton.which, ev.cbutton.button, action_id)
-			&& (*i)->onInput(action_id, ev.cbutton.state)){
+			&& (*i)->onInput(e, action_id, ev.cbutton.state)){
 				break;
 			}
 		}

@@ -1,3 +1,6 @@
+#ifndef CAMERA_H_
+#define CAMERA_H_
+#include "common.h"
 
 struct Camera {
 
@@ -14,3 +17,6 @@ struct Camera {
 	bool isBoxVisible();
 
 };
+
+#endif
+

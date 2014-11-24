@@ -57,28 +57,35 @@ struct ResourceSystem {
 		resources.emplace(name, make_resource(data));
 	}
 	
-	template<class T>
+	template<class T, class... Args>
 	struct Cache {
-		T* get(const char* name){
-			auto it = entries.find(name);
+	
+		T* get(const char* name, Args&&... args){
+			DEBUGF("Checking resource cache for %s...", name);
+			auto it = entries.find(std::make_tuple(name, std::forward<Args>(args)...));
 		
 			if(it != entries.end()){
+				DEBUGF("[Found!]\n");
 				return &it->second;
 			} else {
+				DEBUGF("[Not Found]\n");
 				return nullptr;
 			}
 		}
 		
-		void add(const char* name, const T& t){
-			entries.emplace(name, t);
+		void add(const T& t, const char* name, Args&&... args){
+			printf("Adding %s to resource cache.\n", name);
+			entries.emplace(std::make_tuple(name, std::forward<Args>(args)...), t);
 		}
 		
-		static std::map<std::string, T> entries;
+		typedef std::tuple<std::string, Args...> CacheTuple;
+		std::map<CacheTuple, T> entries;
 	};
 	
-	template<class T>
-	Cache<T> cache(void){
-		return Cache<T>();
+	template<class T, class... Args>
+	Cache<T, Args...>& cache(){
+		static Cache<T, Args...> cache;
+		return cache;
 	}
 
 private:
@@ -86,6 +93,6 @@ private:
 	std::map<std::string, ResourceHandle> resources;
 };
 
-template<class T> std::map<std::string, T> ResourceSystem::Cache<T>::entries{};
+//template<class T, class... Args> std::map<std::tuple<std::string, Args...>, T> ResourceSystem::Cache<T, Args...>::entries{};
 
 #endif

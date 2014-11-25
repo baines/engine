@@ -60,26 +60,27 @@ struct ResourceSystem {
 	template<class T, class... Args>
 	struct Cache {
 	
-		T* get(const char* name, Args&&... args){
+		bool get(const char* name, std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
 			DEBUGF("Checking resource cache for %s...", name);
-			auto it = entries.find(std::make_tuple(name, std::forward<Args>(args)...));
+			auto it = entries.find(std::tuple_cat(std::tuple<std::string>(name), args));
 		
 			if(it != entries.end()){
 				DEBUGF("[Found!]\n");
-				return &it->second;
+				ptr = it->second;
+				return true;
 			} else {
 				DEBUGF("[Not Found]\n");
-				return nullptr;
+				return false;
 			}
 		}
 		
-		void add(const T& t, const char* name, Args&&... args){
+		void put(const char* name, const std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
 			printf("Adding %s to resource cache.\n", name);
-			entries.emplace(std::make_tuple(name, std::forward<Args>(args)...), t);
+			entries.emplace(std::tuple_cat(std::tuple<std::string>(name), args), ptr);
 		}
 		
 		typedef std::tuple<std::string, Args...> CacheTuple;
-		std::map<CacheTuple, T> entries;
+		std::map<CacheTuple, std::shared_ptr<T>> entries;
 	};
 	
 	template<class T, class... Args>

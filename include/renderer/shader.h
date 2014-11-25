@@ -11,7 +11,7 @@ struct VertexState;
 
 struct ShaderBase {
 	ShaderBase(GLenum type);
-	bool load(const ResourceHandle& data);
+	bool loadFromResource(Engine& e, const ResourceHandle& data);
 	GLuint getID() const;
 	virtual ~ShaderBase();
 private:

@@ -19,7 +19,7 @@ ShaderBase::ShaderBase(GLenum type)
 
 }
 
-bool ShaderBase::load(const ResourceHandle& res){
+bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
 	id = gl.CreateShader(type);
 
 	const GLchar* str = reinterpret_cast<const GLchar*>(res.data());

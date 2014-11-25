@@ -14,11 +14,14 @@ struct Texture {
 
 struct Texture2D : Texture {
 	Texture2D();
+	Texture2D(GLenum fmt, GLenum int_fmt);
 	
-	void load(const ResourceHandle& img);
+	void loadFromResource(Engine& e, const ResourceHandle& img);
+	
 	GLenum getType(void);
 	bool isValid(void);
 	bool bind(size_t tex_unit, RenderState& rs);
+	
 	~Texture2D();
 private:
 	int w, h;

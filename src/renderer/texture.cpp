@@ -11,7 +11,7 @@ Texture2D::Texture2D()
 
 }
 
-void Texture2D::load(const ResourceHandle& img){
+void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	uint8_t* pixels = stbi_load_from_memory(img.data(), img.size(), &w, &h, nullptr, 4);
 	
 	gl.GenTextures(1, &id);

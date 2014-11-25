@@ -29,8 +29,8 @@ struct TestState : public GameState {
 	}
 	
 	bool onInit(Engine& e){
-		vs.load(e);
-		fs.load(e);
+		vs.load();
+		fs.load();
 		shader.link();
 		vstate.setVertexBuffers({ &vbo });
 		

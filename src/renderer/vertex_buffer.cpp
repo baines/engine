@@ -75,7 +75,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 	ShaderAttribs::Attrib current_attr{ };
 	stride = 0;
 	
-	DEBUGF("starting to parse format:\n");
+	DEBUGF("Starting to parse VBO format...");
 	
 	auto add_attr = [&](ShaderAttribs::Attrib& at){
 		if(at.nelem != 0 && at.type != 0){
@@ -89,7 +89,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 			stride += aligned_sz;
 		
 			attrs.setAttribFormat(at.name_hash, at.type, at.nelem, at.off, at.flags);
-			DEBUGF("---- Attrib added.\n");
+			DEBUGF("---- Attrib added.");
 		}
 	};
 	
@@ -104,7 +104,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 		} else {
 			if(state == GET_NAME && *p == ':'){
 				const int len = p - name_start;
-				DEBUGF("\tattrib name: %.*s\n", len, name_start);
+				DEBUGF("\tAttrib name: %.*s", len, name_start);
 				current_attr.name_hash = djb2(name_start, len);
 				state = GET_NELEM;
 			} else
@@ -112,14 +112,14 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 				const int n = *p - 48;
 				if(n > 0 && n <= 4){
 					current_attr.nelem = n;
-					DEBUGF("\tattrib no. elements: %d\n", n);
+					DEBUGF("\tAttrib no. elements: %d", n);
 					state = GET_TYPE;
 				}
 			} else
 			if(state == GET_TYPE){
 				if(GLenum t = lookup_type(*p)){
 					current_attr.type = t;
-					DEBUGF("\tattrib type: %#x\n", t);
+					DEBUGF("\tAttrib type: %#x", t);
 					state = GET_EXTRA;
 				}
 			} else
@@ -127,7 +127,7 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 				if(*p == 'N') current_attr.flags |= ATR_NORM;
 				if(*p == 'I') current_attr.flags |= ATR_INT;
 				if(*p == '/') current_attr.flags |= ATR_INSTANCED;
-				DEBUGF("\tattrib flags: %#x\n", current_attr.flags);
+				DEBUGF("\tAttrib flags: %#x", current_attr.flags);
 			}
 		}
 	}

@@ -65,11 +65,11 @@ struct ResourceSystem {
 			auto it = entries.find(std::tuple_cat(std::tuple<std::string>(name), args));
 		
 			if(it != entries.end() && !it->second.expired()){
-				DEBUGF("[Found!]\n");
+				DEBUGF("\t[Found!]");
 				ptr = it->second.lock();
 				return true;
 			} else {
-				DEBUGF("[Not Found]\n");
+				DEBUGF("\t[Not Found]");
 				return false;
 			}
 		}
@@ -79,7 +79,7 @@ struct ResourceSystem {
 			auto it = entries.find(tup);
 			
 			if(it == entries.end() || it->second.expired()){
-				DEBUGF("Adding %s to resource cache.\n", name);
+				DEBUGF("Adding %s to resource cache.", name);
 				entries[tup] = ptr;
 			}
 		}

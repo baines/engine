@@ -6,7 +6,7 @@ namespace logging {
 
 	typedef void logsink;
 
-	enum level : int {
+	enum level : uint32_t {
 		fatal = 0,
 		error = 1,
 		warn  = 2,

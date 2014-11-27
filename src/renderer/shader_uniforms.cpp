@@ -88,7 +88,7 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 		if(ai == active.uniform_info.end()){
 			continue;
 		} else if(i.type != ai->type || i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
-			DEBUGF("uniform incompatible:\nt: %#x\t%#x\nr: %d\t%d\nc: %d\t%d\nn: %d\t%d\n",
+			DEBUGF("Uniform incompatible:\nt: %#x\t%#x\nr: %d\t%d\nc: %d\t%d\nn: %d\t%d",
 			i.type, ai->type, i.rows, ai->rows, i.cols, ai->cols, i.count, ai->count);
 			continue;
 		}
@@ -99,7 +99,7 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 			continue;
 		}
 		
-		DEBUGF("updating uniform...\n");
+		DEBUGF("Updating uniform %d...", ai->idx);
 		memcpy(active.uniforms.data() + ai->storage_index, p + i.storage_index, sz);
 		
 		const GLint idx = ai->idx;
@@ -186,8 +186,7 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLint idx, GLuin
 		}
 	} else {
 		// unknown type
-		fprintf(stderr, "Fatal: Shader uniform '%s' has unknown type %#x", name, full_type);
-		abort();
+		logging::log(logging::fatal, "Shader uniform '%s' has unknown type %#x", name, full_type);
 		return;
 	}
 

@@ -14,7 +14,7 @@ void VertexState::setVertexBuffers(std::initializer_list<VertexBuffer*> buffers)
 	
 	GLint vbo_bind_point = 0;
 	for(auto* buf : buffers){
-		DEBUGF("BindVertexBuffer: bind_point: %d, id: %d, stride: %d\n", 
+		DEBUGF("BindVertexBuffer: bind_point: %d, id: %d, stride: %d.", 
 		vbo_bind_point, buf->getID(), buf->getStride());
 		gl.BindBuffer(GL_ARRAY_BUFFER, buf->getID());
 		gl.BindVertexBuffer(vbo_bind_point++, buf->getID(), 0, buf->getStride());
@@ -35,26 +35,26 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		
 	std::bitset<16> new_enabled_arrays;
 	
-	DEBUGF("attr size: %ld\n", std::distance(new_attrs.begin(), new_attrs.end()));
+	DEBUGF("Need to set %ld attribs.", std::distance(new_attrs.begin(), new_attrs.end()));
 	
 	for(const auto& a : new_attrs){
 		if(active_attrs.containsAttrib(a.name_hash, a.index)){
 			new_enabled_arrays[a.index] = 1;
-			DEBUGF("contains %d, skip\n", a.name_hash);
+			DEBUGF("Attrib %d already active, skip.", a.name_hash);
 			continue;
 		}
 		
 		GLint vbo_bind_point = 0;
 		for(auto* vb : vertex_buffers){
-			DEBUGF("checking buffer\n");
+			DEBUGF("Checking buffer %p for attrib %ld...", vb, a.name_hash);
 			const ShaderAttribs& vb_attrs = vb->getShaderAttribs();
 			
-			DEBUGF("attrs in buffer: %ld\n", std::distance(vb_attrs.begin(), vb_attrs.end()));
+			DEBUGF("Num attribs in buffer: %ld.", std::distance(vb_attrs.begin(), vb_attrs.end()));
 			
 			if(vb_attrs.containsAttrib(a.name_hash, -1)){
 				vb_attrs.bind(a.name_hash, a.index);
 				
-				DEBUGF("Set attr bind: a_i [%d] -> vbo_i [%d]\n", a.index, vbo_bind_point);
+				DEBUGF("Setting attrib-buffer binding: [%d] -> [%d]", a.index, vbo_bind_point);
 				
 				gl.VertexAttribBinding(a.index, vbo_bind_point);
 				gl.EnableVertexAttribArray(a.index);

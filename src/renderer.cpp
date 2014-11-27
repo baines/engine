@@ -39,8 +39,7 @@ void Renderer::reload(Engine& e){
 	);
 	
 	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
-		//e.log(loglvl::fatal, SDL_GetError());
-		e.showError(SDL_GetError());
+		logging::log(logging::fatal, "Couldn't load OpenGL library! (%s).", SDL_GetError());
 	}
 	
 	gl.createContext(window);

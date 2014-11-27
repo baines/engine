@@ -83,26 +83,3 @@ Engine::~Engine(){
 	SDL_Quit();
 }
 
-void Engine::showError(const char* text){
-	SDL_MessageBoxColorScheme colors = {{
-		{ 27 , 24 , 37  }, // bg
-		{ 200, 200, 200 }, // text
-		{ 200, 200, 200 }, // button border
-		{ 27 , 24 , 37  }, // button bg
-		{ 255, 255, 255 }  // button selected
-	}};
-	
-	SDL_MessageBoxButtonData button = { 3, 0, "Ok :(" };
-	
-	SDL_MessageBoxData msg = {
-		SDL_MESSAGEBOX_ERROR,
-		renderer.getWindow(),
-		"Fatal Error!",
-		text,
-		1,
-		&button,
-		&colors
-	};
-	
-	SDL_ShowMessageBox(&msg, nullptr);
-}

@@ -16,10 +16,7 @@ struct Engine {
 	Engine(int argc, char** argv, const char* name);
 	void addState(GameState* s);
 	bool run(void);
-	
 	void quit(void);
-
-	void showError(const char* text);
 	~Engine();
 
 	Config         cfg;

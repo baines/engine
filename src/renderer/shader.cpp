@@ -34,11 +34,12 @@ bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
 	if(!compiled_ok){
 		GLchar buffer[1024];
 		gl.GetShaderInfoLog(id, sizeof(buffer), nullptr, buffer);
-		fprintf(stderr, "Error compiling %s shader:\n%s\n", shader_name(type), buffer);
+		
+		//XXX: handle error?
+		logging::log(logging::fatal, "Error compiling %s shader:\n%s", shader_name(type), buffer);
 
 		gl.DeleteShader(id);
 		id = 0;
-		abort(); //XXX: handle error?
 		return false;
 	} else {
 		return true;
@@ -51,7 +52,7 @@ GLuint ShaderBase::getID(void) const {
 
 ShaderBase::~ShaderBase(){
 	if(gl.initialized() && id){
-		DEBUGF("Deleting shader %d\n", id);
+		DEBUGF("Deleting shader %d.", id);
 		gl.DeleteShader(id);
 	}
 }
@@ -81,11 +82,13 @@ bool ShaderProgram::link(void){
 	if(!linked_ok){
 		GLchar buffer[1024];
 		gl.GetProgramInfoLog(program_id, sizeof(buffer), nullptr, buffer);
-		fprintf(stderr, "Error linking shader program:\n%s\n", buffer);
+		
+		//XXX: handle error?
+		logging::log(logging::fatal, "Error linking shader program:\n%s", buffer);
 		
 		gl.DeleteProgram(program_id);
 		program_id = 0;
-		abort(); //XXX: handle error?
+		
 		return false;
 	}
 	

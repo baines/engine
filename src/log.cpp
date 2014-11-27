@@ -5,6 +5,7 @@
 #include <stdarg.h>
 #include <cassert>
 #include <cstring>
+#include <SDL2/SDL.h>
 
 namespace {
 
@@ -15,6 +16,17 @@ namespace {
 #else	
 		logging::fatal;
 #endif
+
+	static SDL_MessageBoxColorScheme colors = {{
+		{ 27 , 24 , 37  }, // bg
+		{ 200, 200, 200 }, // text
+		{ 200, 200, 200 }, // button border
+		{ 27 , 24 , 37  }, // button bg
+		{ 255, 255, 255 }  // button selected
+	}};
+	
+	static SDL_MessageBoxButtonData button = { 3, 0, "Ok :(" };
+
 	static const char* get_level_prefix(logging::level l){
 		switch(l){
 			case logging::fatal : return "[FATAL] ";
@@ -24,6 +36,21 @@ namespace {
 			case logging::debug : return "[DEBUG] ";
 			default             : return "";
 		}
+	}
+
+	void msgbox(const char* text){
+	
+		SDL_MessageBoxData msg = {
+			SDL_MESSAGEBOX_ERROR,
+			nullptr,
+			"Fatal Error!",
+			text,
+			1,
+			&button,
+			&colors
+		};
+	
+		SDL_ShowMessageBox(&msg, nullptr);
 	}
 }
 
@@ -43,9 +70,15 @@ namespace logging {
 				s(l, msg, msg_len);
 			}
 		
-			fprintf(stderr, "%s%s", get_level_prefix(l), msg);
+			fprintf(stderr, "%s%s\n", get_level_prefix(l), msg);
 			//TODO: output to file also?
+			
+			if(l == fatal){
+				msgbox(msg);
+				exit(1);
+			}
 		}
+		
 	}
 
 	void setVerbosity(level l){

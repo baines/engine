@@ -50,7 +50,10 @@ GLuint ShaderBase::getID(void) const {
 }
 
 ShaderBase::~ShaderBase(){
-	if(gl.initialized() && id) gl.DeleteShader(id);
+	if(gl.initialized() && id){
+		DEBUGF("Deleting shader %d\n", id);
+		gl.DeleteShader(id);
+	}
 }
 
 ShaderProgram::ShaderProgram(const VertShader& v, const FragShader& f)
@@ -138,6 +141,8 @@ void ShaderProgram::setAttribs(RenderState& rs, VertexState& vstate){
 }
 
 ShaderProgram::~ShaderProgram(){
-	if(program_id) gl.DeleteProgram(program_id);
+	if(program_id && gl.initialized()){
+		gl.DeleteProgram(program_id);
+	}
 }
 

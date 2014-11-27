@@ -61,12 +61,12 @@ struct ResourceSystem {
 	struct Cache {
 	
 		bool get(const char* name, std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
-			DEBUGF("Checking resource cache for %s...", name);
+			DEBUGF("Checking resource cache for %s... ", name);
 			auto it = entries.find(std::tuple_cat(std::tuple<std::string>(name), args));
 		
-			if(it != entries.end()){
+			if(it != entries.end() && !it->second.expired()){
 				DEBUGF("[Found!]\n");
-				ptr = it->second;
+				ptr = it->second.lock();
 				return true;
 			} else {
 				DEBUGF("[Not Found]\n");
@@ -75,12 +75,17 @@ struct ResourceSystem {
 		}
 		
 		void put(const char* name, const std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
-			printf("Adding %s to resource cache.\n", name);
-			entries.emplace(std::tuple_cat(std::tuple<std::string>(name), args), ptr);
+			auto tup = std::tuple_cat(std::tuple<std::string>(name));
+			auto it = entries.find(tup);
+			
+			if(it == entries.end() || it->second.expired()){
+				DEBUGF("Adding %s to resource cache.\n", name);
+				entries[tup] = ptr;
+			}
 		}
 		
 		typedef std::tuple<std::string, Args...> CacheTuple;
-		std::map<CacheTuple, std::shared_ptr<T>> entries;
+		std::map<CacheTuple, std::weak_ptr<T>> entries;
 	};
 	
 	template<class T, class... Args>

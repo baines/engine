@@ -150,4 +150,10 @@ GLint StaticVertexBuffer::getStride(void) const {
 	return stride;
 }
 
+StaticVertexBuffer::~StaticVertexBuffer(){
+	if(id && gl.initialized()){
+		gl.DeleteBuffers(1, &id);
+	}
+}
+
 

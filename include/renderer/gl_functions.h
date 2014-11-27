@@ -22,6 +22,7 @@ GLFUNC(void, DeleteBuffers, (GLsizei, GLuint*))
 GLFUNC(void, InvalidateBufferData, (GLuint), OPTIONAL | ARBCORE | 43, "invalidate_subdata")
 
 GLFUNC(void, GenVertexArrays, (GLsizei, GLuint*), ARBCORE | 30, "vertex_array_object")
+GLFUNC(void, DeleteVertexArrays, (GLsizei, GLuint*), ARBCORE | 30, "vertex_array_object")
 GLFUNC(void, BindVertexArray, (GLuint), ARBCORE | 30, "vertex_array_object")
 GLFUNC(void, BindVertexBuffer, (GLuint, GLuint, GLintptr, GLsizei), ARBCORE | 43, "vertex_attrib_binding")
 GLFUNC(void, VertexAttribFormat, (GLuint, GLint, GLenum, GLboolean, GLuint), ARBCORE | 43, "vertex_attrib_binding")

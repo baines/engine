@@ -4,7 +4,7 @@ builddir := ../build/$(OS)
 headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources))
-includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/
+includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/ -I/usr/include/freetype2
 CXXFLAGS := $(includes) -std=c++11 -ffast-math -fno-rtti -fno-exceptions
 
 ifdef RELEASE

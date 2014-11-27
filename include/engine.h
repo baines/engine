@@ -6,6 +6,7 @@
 #include "input.h"
 #include "renderer.h"
 #include "resource_system.h"
+#include "text_system.h"
 #include "state_system.h"
 #include "game_state.h"
 #include "root_state.h"
@@ -17,7 +18,7 @@ struct Engine {
 	bool run(void);
 	
 	void quit(void);
-//	void log(const char* text);
+
 	void showError(const char* text);
 	~Engine();
 
@@ -25,6 +26,7 @@ struct Engine {
 	Input          input;
 	Renderer       renderer;
 	ResourceSystem res;
+	TextSystem     text;
 	StateSystem    state;
 	CLI            cli;
 	
@@ -35,5 +37,7 @@ private:
 	uint32_t prev_ticks;
 	RootState root_state;
 };
+
+#include "resource_impl.h"
 
 #endif

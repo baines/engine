@@ -13,6 +13,7 @@ struct VertexState {
 	IndexBuffer* getIndexBuffer(void);
 	void setAttribArrays(RenderState& rs, const ShaderAttribs& attrs);
 	void bind(RenderState& rs);
+	~VertexState();
 private:
 	std::bitset<16> enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
 	ShaderAttribs active_attrs;

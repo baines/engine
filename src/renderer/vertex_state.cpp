@@ -89,3 +89,9 @@ void VertexState::bind(RenderState& rs){
 		rs.vao = id;
 	}
 }
+
+VertexState::~VertexState(){
+	if(id && gl.initialized()){
+		gl.DeleteVertexArrays(1, &id);
+	}
+}

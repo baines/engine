@@ -18,6 +18,7 @@ struct StaticVertexBuffer : VertexBuffer {
 	virtual void invalidate(void);
 	virtual GLuint getID(void) const;
 	virtual GLint getStride(void) const;
+	~StaticVertexBuffer();
 private:
 	void parseAttribs(const char* fmt);
 	ShaderAttribs attrs;

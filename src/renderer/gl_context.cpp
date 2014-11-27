@@ -5,6 +5,8 @@
 
 GLContext gl;
 
+using namespace logging;
+
 namespace {
 
 	constexpr str_const prefix_names[] = { "ARB_", "ARB_", "EXT_", "AMD_", "NV_" };
@@ -21,14 +23,14 @@ namespace {
 	
 	inline bool check_result(const char* name, uint32_t flags, bool loaded){
 		if(!(flags & OPTIONAL) && !loaded){
-			fprintf(stderr, "[Fatal] Required OpenGL function %s is not available.\n", name);
+			log(fatal, "Required OpenGL function %s is not available.\n", name);
 			abort();
 		}
 		return loaded;
 	}
 
 	bool load_func(const char* name, void*& ptr){
-		printf("Loading Func: %-32s [%p]\n", name, (ptr = SDL_GL_GetProcAddress(name)));
+		log(info, "Loading Func: %-32s [%p]\n", name, (ptr = SDL_GL_GetProcAddress(name)));
 		return ptr != nullptr;
 	}
 	
@@ -114,7 +116,7 @@ void GLContext::deleteContext(void){
 bool GLContext::hasExtension(const char* ext){
 	if(ext[0] == 'G' && ext[1] == 'L' && ext[2] == '_') ext += 3;
 	bool ok = extensions.find(djb2(ext)) != extensions.end();
-	printf("Checking Ext: %-32s [%s]\n", ext, ok ? "Available." : "Unavailable.");
+	log(info, "Checking Ext: %-32s [%s]\n", ext, ok ? "Available." : "Unavailable.");
 	return ok;
 }
 
@@ -130,7 +132,7 @@ bool GLContext::loadAllFuncs(void){
 	const char* vs = (const char*)GetString(GL_VERSION);
 	int v_maj = 0, v_min = 0;
 	
-	printf("OpenGL version: %s\n", vs);
+	log(info, "OpenGL version: %s\n", vs);
 	
 	sscanf(vs, "%d.%d", &v_maj, &v_min);
 	version = v_maj * 10 + v_min;
@@ -147,11 +149,11 @@ bool GLContext::loadAllFuncs(void){
 		if(load_func(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__)){ \
 			loaded++; \
 		} else { \
-			printf("Func %s is not available.\n", GL_STRINGIFY(name)); \
+			log(info, "Func %s is not available.\n", GL_STRINGIFY(name)); \
 		}
 	#include "gl_functions.h"
 	#undef GLFUNC
-	printf("Loaded %lu/%lu OpenGL functions.\n", loaded, total);
+	log(info, "Loaded %lu/%lu OpenGL functions.\n", loaded, total);
 
 	return loaded == total;
 }

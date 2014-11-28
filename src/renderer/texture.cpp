@@ -76,6 +76,21 @@ static GLenum get_base_fmt(GLenum sized_fmt){
 		case GL_RGBA32I:
 		case GL_RGBA32UI:
 			return GL_RGBA;
+			
+		/* extensions */
+		
+		case GL_COMPRESSED_RED_RGTC1:
+		case GL_COMPRESSED_SIGNED_RED_RGTC1:
+			return GL_RGB; /* XXX: Why didn't they use GL_RED? */
+			
+		case GL_COMPRESSED_RG_RGTC2:
+		case GL_COMPRESSED_SIGNED_RG_RGTC2:
+			return GL_RG;
+			
+		default: {
+			log(logging::warn, "Unknown internal format %#x.", sized_fmt);
+			return GL_RGBA;
+		}
 	}
 }
 }

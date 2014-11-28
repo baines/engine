@@ -36,7 +36,7 @@ bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
 		gl.GetShaderInfoLog(id, sizeof(buffer), nullptr, buffer);
 		
 		//XXX: handle error?
-		logging::log(logging::fatal, "Error compiling %s shader:\n%s", shader_name(type), buffer);
+		log(logging::fatal, "Error compiling %s shader:\n%s", shader_name(type), buffer);
 
 		gl.DeleteShader(id);
 		id = 0;
@@ -84,7 +84,7 @@ bool ShaderProgram::link(void){
 		gl.GetProgramInfoLog(program_id, sizeof(buffer), nullptr, buffer);
 		
 		//XXX: handle error?
-		logging::log(logging::fatal, "Error linking shader program:\n%s", buffer);
+		log(logging::fatal, "Error linking shader program:\n%s", buffer);
 		
 		gl.DeleteProgram(program_id);
 		program_id = 0;

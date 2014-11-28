@@ -186,7 +186,7 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLint idx, GLuin
 		}
 	} else {
 		// unknown type
-		logging::log(logging::fatal, "Shader uniform '%s' has unknown type %#x", name, full_type);
+		log(logging::fatal, "Shader uniform '%s' has unknown type %#x", name, full_type);
 		return;
 	}
 

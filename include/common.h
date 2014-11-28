@@ -5,7 +5,7 @@
 #include "log.h"
 
 #ifdef DEBUG
-	#define DEBUGF(fmt, ...) do { logging::log(logging::debug, fmt, ##__VA_ARGS__); } while (0)
+	#define DEBUGF(fmt, ...) do { log(logging::debug, fmt, ##__VA_ARGS__); } while (0)
 #else
 	#define DEBUGF(fmt, ...) do { } while(0)
 #endif

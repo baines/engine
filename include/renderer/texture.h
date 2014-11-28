@@ -14,7 +14,7 @@ struct Texture {
 
 struct Texture2D : Texture {
 	Texture2D();
-	Texture2D(GLenum fmt, GLenum int_fmt);
+	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* data);
 	
 	void loadFromResource(Engine& e, const ResourceHandle& img);
 	

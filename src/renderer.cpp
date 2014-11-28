@@ -4,8 +4,8 @@
 #include "enums.h"
 
 Renderer::Renderer(Engine& e, const char* name)
-: renderables()
-, render_state()
+: renderables      ()
+, render_state     ()
 , buff_orphan_mode (e.cfg.addVar("vid_gl_orphan_mode", CVarEnum(gl_orphan_enum, 0)))
 , libgl            (e.cfg.addVar("vid_libgl", CVarString("")))
 , window_width     (e.cfg.addVar("vid_width" , CVarInt(640, 320, INT_MAX)))

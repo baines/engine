@@ -19,7 +19,7 @@ struct TextSystem {
 private:
 	FT_Library ft_lib;
 	VertexState v_state;
-	//DynamicVertexBuffer text_buffer;
+	DynamicVertexBuffer text_buffer;
 	Resource<VertShader> text_vs;
 	Resource<FragShader> text_fs;
 	ShaderProgram text_shader;

@@ -2,6 +2,7 @@
 
 TextSystem::TextSystem(Engine& e)
 : ft_lib(nullptr)
+, text_buffer()
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
 , text_shader(*text_vs, *text_fs) {

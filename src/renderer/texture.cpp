@@ -6,6 +6,7 @@
 
 namespace {
 
+//TODO: use ARB_internalformat_query if available
 static GLenum get_base_fmt(GLenum sized_fmt){
 	switch(sized_fmt){
 		case GL_R8:
@@ -81,7 +82,7 @@ static GLenum get_base_fmt(GLenum sized_fmt){
 		
 		case GL_COMPRESSED_RED_RGTC1:
 		case GL_COMPRESSED_SIGNED_RED_RGTC1:
-			return GL_RGB; /* XXX: Why didn't they use GL_RED? */
+			return GL_RED; /* XXX: Says GL_RGB here? https://www.opengl.org/registry/specs/ARB/texture_compression_rgtc.txt*/
 			
 		case GL_COMPRESSED_RG_RGTC2:
 		case GL_COMPRESSED_SIGNED_RG_RGTC2:

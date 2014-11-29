@@ -88,6 +88,10 @@ void VertexState::bind(RenderState& rs){
 		gl.BindVertexArray(id);
 		rs.vao = id;
 	}
+	
+	for(auto* vb : vertex_buffers){
+		vb->update();
+	}
 }
 
 VertexState::~VertexState(){

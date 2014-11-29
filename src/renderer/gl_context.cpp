@@ -1,4 +1,6 @@
 #include "gl_context.h"
+#include "engine.h"
+#include "enums.h"
 
 #define STRINGIFY(name) #name
 #define GL_STRINGIFY(name) STRINGIFY(gl##name)
@@ -84,9 +86,8 @@ namespace {
 }
 
 GLContext::GLContext()
-: base_w(0)
-, base_h(0)
-, version(0)
+: version(0)
+, streaming_mode(nullptr)
 , sdl_context(nullptr)
 #define GLFUNC(type, name, args, ...) \
 	, name(0)
@@ -96,9 +97,13 @@ GLContext::GLContext()
 
 }
 
-bool GLContext::createContext(SDL_Window* w){
-	sdl_context = SDL_GL_CreateContext(w);
-	if(!sdl_context) puts(SDL_GetError());
+bool GLContext::createContext(Engine& e, SDL_Window* w){
+	streaming_mode = e.cfg.addVar("gl_streaming_mode", CVarEnum(gl_streaming_enum, 0));
+	
+	if(!(sdl_context = SDL_GL_CreateContext(w))){
+		log(logging::fatal, "Couldn't create OpenGL context. (%s).", SDL_GetError());
+	}
+	
 	return sdl_context != nullptr && loadAllFuncs();
 }
 

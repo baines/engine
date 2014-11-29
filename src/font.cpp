@@ -10,7 +10,7 @@ struct GlyphBitmapInfo {
 struct GlyphTextureAtlas {
 	int w, h, pen_x, pen_y;
 	const size_t line_height;
-	const FT_Pos Uascender, descender;
+	const FT_Pos ascender, descender;
 	uint8_t* mem;
 };
 
@@ -108,7 +108,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		init_w,
 		init_h,
 		0,
-		0,
+		static_cast<int>(height),
 		height,
 		face->size->metrics.ascender >> 6,
 		-(face->size->metrics.descender >> 6),

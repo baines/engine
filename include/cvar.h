@@ -63,6 +63,10 @@ struct CVarEnum {
 		}
 		return false;
 	}
+	
+	const str_const& get(){
+		return strs[index];
+	}
 
 	std::vector<str_const> strs;
 	size_t index;

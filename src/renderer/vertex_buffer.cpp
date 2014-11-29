@@ -1,6 +1,7 @@
 #include "vertex_buffer.h"
 #include <numeric>
 #include <algorithm>
+#include "enums.h"
 
 namespace {
 
@@ -44,31 +45,9 @@ static int lookup_size(GLenum e){
 	}
 }
 
-}
-
-StaticVertexBuffer::StaticVertexBuffer()
-: data()
-, attrs()
-, stride(0)
-, id(0) {
-
-}
-
-StaticVertexBuffer::StaticVertexBuffer(const ResourceHandle& data, const char* fmt)
-: data(data)
-, attrs()
-, stride(0)
-, id(0) {
-	parseAttribs(fmt);
-	
-	gl.GenBuffers(1, &id);
-	gl.BindBuffer(GL_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
-}
-
 // format should be (<name>':'<nelem><type>'|')+ e.g. "a_pos:4S|a_tex:2f"
 
-void StaticVertexBuffer::parseAttribs(const char* fmt) {
+static void parse_attribs(const char* fmt, ShaderAttribs& attrs, GLint& stride) {
 
 	enum { GET_NAME, GET_NELEM, GET_TYPE, GET_EXTRA } state = GET_NAME;
 	
@@ -134,12 +113,30 @@ void StaticVertexBuffer::parseAttribs(const char* fmt) {
 	add_attr(current_attr);
 }
 
-const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
-	return attrs;
 }
 
-void StaticVertexBuffer::invalidate(void){
-	gl.InvalidateBufferData(id);
+StaticVertexBuffer::StaticVertexBuffer()
+: data()
+, attrs()
+, stride(0)
+, id(0) {
+
+}
+
+StaticVertexBuffer::StaticVertexBuffer(const ResourceHandle& data, const char* fmt)
+: data(data)
+, attrs()
+, stride(0)
+, id(0) {
+	parse_attribs(fmt, attrs, stride);
+	
+	gl.GenBuffers(1, &id);
+	gl.BindBuffer(GL_ARRAY_BUFFER, id);
+	gl.BufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+}
+
+const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
+	return attrs;
 }
 
 GLuint StaticVertexBuffer::getID(void) const {
@@ -150,10 +147,140 @@ GLint StaticVertexBuffer::getStride(void) const {
 	return stride;
 }
 
+void StaticVertexBuffer::update(){
+
+}
+
 StaticVertexBuffer::~StaticVertexBuffer(){
 	if(id && gl.initialized()){
 		gl.DeleteBuffers(1, &id);
 	}
 }
 
+DynamicVertexBuffer::DynamicVertexBuffer()
+: data()
+, prev_capacity(0)
+, prev_size(0)
+, attrs()
+, dirty(false)
+, stride(0)
+, id(0) {
+
+}
+
+DynamicVertexBuffer::DynamicVertexBuffer(const char* fmt, size_t initial_capacity)
+: data()
+, prev_capacity(0)
+, prev_size(0)
+, attrs()
+, dirty(false)
+, stride(0)
+, id(0) {
+
+	data.reserve(initial_capacity);
+	prev_capacity = data.capacity();
+
+	parse_attribs(fmt, attrs, stride);
+	
+	gl.GenBuffers(1, &id);
+	gl.BindBuffer(GL_ARRAY_BUFFER, id);
+	gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
+}
+
+void DynamicVertexBuffer::clear(){
+	data.clear();
+	prev_size = 0;
+	dirty = true;
+}
+
+const ShaderAttribs& DynamicVertexBuffer::getShaderAttribs() const {
+	return attrs;
+}
+
+GLuint DynamicVertexBuffer::getID() const {
+	return id;
+}
+
+GLint DynamicVertexBuffer::getStride() const {
+	return stride;
+}
+
+void DynamicVertexBuffer::update(){
+/* TODO: more efficient buffer streaming
+	https://www.opengl.org/wiki/Buffer_Object_Streaming
+	http://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
+*/
+	if(!dirty) return;
+
+	gl.BindBuffer(GL_ARRAY_BUFFER, id);
+	
+	if(gl.streaming_mode->get() == BUFFER_INVALIDATE){
+	
+		if(gl.InvalidateBufferData){
+			gl.InvalidateBufferData(id);
+		} else {
+			log(logging::warn, "Streaming mode is BUFFER_INVALIDATE, but glInvalidateBufferData unsupported!");
+		}
+		
+		if(prev_capacity != data.capacity()){
+			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), data.data(), GL_STREAM_DRAW);
+		} else {
+			gl.BufferSubData(GL_ARRAY_BUFFER, 0, data.size(), data.data());
+		}
+	}
+	
+	if(gl.streaming_mode->get() == BUFFER_DATA_NULL){
+		gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
+		gl.BufferSubData(GL_ARRAY_BUFFER, 0, data.size(), data.data());
+	}
+	
+	if(gl.streaming_mode->get() == MAP_INVALIDATE){
+		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
+		
+		if(prev_capacity != data.capacity()){
+			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
+			flags &= ~GL_MAP_INVALIDATE_BUFFER_BIT;
+		}
+		
+		void* gl_data = gl.MapBufferRange(
+			GL_ARRAY_BUFFER, 
+			0, 
+			data.size(),
+			flags
+		);
+		
+		memcpy(gl_data, data.data(), data.size());
+		
+		gl.UnmapBuffer(GL_ARRAY_BUFFER);
+	}
+	
+	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND){
+		if(prev_capacity != data.capacity()){
+			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
+		}
+		
+		void* gl_data = gl.MapBufferRange(
+			GL_ARRAY_BUFFER,
+			prev_size,
+			data.size(),
+			GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT
+		);
+		
+		memcpy(gl_data, data.data() + prev_size, data.size() - prev_size);
+		
+		gl.UnmapBuffer(GL_ARRAY_BUFFER);
+	}
+	
+	if(gl.streaming_mode->get() == DOUBLE_BUFFER){
+		log(logging::error, "gl_streaming_mode DOUBLE_BUFFER NYI");
+	}
+
+	dirty = false;
+	prev_capacity = data.capacity();
+	prev_size = data.size();
+}
+
+DynamicVertexBuffer::~DynamicVertexBuffer(){
+
+}
 

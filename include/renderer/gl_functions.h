@@ -18,8 +18,11 @@ GLFUNC(void, FramebufferTexture2D, (GLenum, GLenum, GLuint, GLint), ARBCORE | EX
 GLFUNC(void, GenBuffers, (GLsizei, GLuint*))
 GLFUNC(void, BindBuffer, (GLenum, GLuint))
 GLFUNC(void, BufferData, (GLenum, GLsizeiptr, const GLvoid*, GLenum))
+GLFUNC(void, BufferSubData, (GLenum, GLintptr, GLsizeiptr, const GLvoid*))
 GLFUNC(void, DeleteBuffers, (GLsizei, GLuint*))
 GLFUNC(void, InvalidateBufferData, (GLuint), OPTIONAL | ARBCORE | 43, "invalidate_subdata")
+GLFUNC(void*, MapBufferRange, (GLenum, GLintptr, GLsizeiptr, GLbitfield), OPTIONAL | ARBCORE | 30, "map_buffer_range")
+GLFUNC(void, UnmapBuffer, (GLenum))
 
 GLFUNC(void, GenVertexArrays, (GLsizei, GLuint*), ARBCORE | 30, "vertex_array_object")
 GLFUNC(void, DeleteVertexArrays, (GLsizei, GLuint*), ARBCORE | 30, "vertex_array_object")

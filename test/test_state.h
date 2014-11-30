@@ -2,6 +2,8 @@
 #include "game_state.h"
 #include "resource.h"
 #include "shader.h"
+#include "font.h"
+#include "text.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -24,7 +26,9 @@ struct TestState : public GameState {
 	, fs(e, {"test.glslf"})
 	, shader(*vs, *fs)
 	, vstate()
-	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3}) {
+	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3})
+	, font(e, {"FreeSans.ttf"}, 16)
+	, text() {
 
 	}
 	
@@ -33,6 +37,8 @@ struct TestState : public GameState {
 		fs.load();
 		shader.link();
 		vstate.setVertexBuffers({ &vbo });
+		
+		text = Text(e, *font, "Testing!");
 		
 		return true;
 	}
@@ -44,6 +50,7 @@ struct TestState : public GameState {
 	
 	void draw(Renderer& r){
 		r.addRenderable(drawme);
+		text.draw(r);
 	}
 private:
 	int timer;
@@ -54,4 +61,7 @@ private:
 	ShaderUniforms uniforms;
 	VertexState vstate;
 	Renderable drawme;
+	
+	Resource<Font, uint16_t> font;
+	Text text;
 };

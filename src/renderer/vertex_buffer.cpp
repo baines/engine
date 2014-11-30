@@ -139,12 +139,16 @@ const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
 	return attrs;
 }
 
-GLuint StaticVertexBuffer::getID(void) const {
-	return id;
-}
-
 GLint StaticVertexBuffer::getStride(void) const {
 	return stride;
+}
+
+size_t StaticVertexBuffer::getSize(void) const {
+	return data.size();
+}
+
+GLuint StaticVertexBuffer::getID(void) const {
+	return id;
 }
 
 void StaticVertexBuffer::update(){
@@ -190,19 +194,28 @@ DynamicVertexBuffer::DynamicVertexBuffer(const char* fmt, size_t initial_capacit
 void DynamicVertexBuffer::clear(){
 	data.clear();
 	prev_size = 0;
-	dirty = true;
+}
+
+void DynamicVertexBuffer::pop(size_t n){
+	data.erase(data.end()-n, data.end());
+	prev_size = data.size();
+	//XXX: don't delete from GPU, just lower primcount
 }
 
 const ShaderAttribs& DynamicVertexBuffer::getShaderAttribs() const {
 	return attrs;
 }
 
-GLuint DynamicVertexBuffer::getID() const {
-	return id;
-}
-
 GLint DynamicVertexBuffer::getStride() const {
 	return stride;
+}
+
+size_t DynamicVertexBuffer::getSize() const {
+	return data.size();
+}
+
+GLuint DynamicVertexBuffer::getID() const {
+	return id;
 }
 
 void DynamicVertexBuffer::update(){
@@ -281,6 +294,8 @@ void DynamicVertexBuffer::update(){
 }
 
 DynamicVertexBuffer::~DynamicVertexBuffer(){
-
+	if(id && gl.initialized()){
+		gl.DeleteBuffers(1, &id);
+	}
 }
 

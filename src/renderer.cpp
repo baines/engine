@@ -46,7 +46,7 @@ void Renderer::reload(Engine& e){
 }
 
 void Renderer::onWindowEvent(SDL_WindowEvent& ev){
-
+	//TODO
 }
 
 void Renderer::drawFrame(){
@@ -69,10 +69,10 @@ void Renderer::drawFrame(){
 		}
 		
 		for(size_t i = 0; i < r->textures.size(); ++i){
-			if(Texture* t = r->textures[i]){
+			if(const Texture* t = r->textures[i]){
 				t->bind(i, render_state);
 			}
-			if(Sampler* s = r->samplers[i]){
+			if(const Sampler* s = r->samplers[i]){
 				s->bind(i, render_state);
 			}
 		}

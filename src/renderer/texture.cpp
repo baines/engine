@@ -116,6 +116,12 @@ Texture2D::Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* da
 	gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, get_base_fmt(int_fmt), fmt, data);
 }
 
+Texture2D& Texture2D::operator=(Texture2D&& other){
+	std::swap(id, other.id);
+	std::swap(w, other.w);
+	std::swap(h, other.h);
+}
+
 void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	uint8_t* pixels = stbi_load_from_memory(img.data(), img.size(), &w, &h, nullptr, 4);
 	
@@ -127,15 +133,15 @@ void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	stbi_image_free(pixels);
 }
 
-GLenum Texture2D::getType(void){
+GLenum Texture2D::getType(void) const {
 	return GL_TEXTURE_2D;
 }
 
-bool Texture2D::isValid(void){
+bool Texture2D::isValid(void) const {
 	return id != 0;
 }
 
-bool Texture2D::bind(size_t tex_unit, RenderState& rs){
+bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 	if(id && id != rs.tex[tex_unit]){
 		gl.ActiveTexture(GL_TEXTURE0 + tex_unit);
 		gl.BindTexture(GL_TEXTURE_2D, id);

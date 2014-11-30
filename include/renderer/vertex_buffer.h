@@ -6,7 +6,8 @@
 
 struct VertexBuffer {
 	virtual const ShaderAttribs& getShaderAttribs() const = 0;
-	virtual GLint getStride() const = 0;
+	virtual GLint  getStride() const = 0;
+	virtual size_t getSize() const = 0;
 	virtual GLuint getID() const = 0;
 	virtual void update() = 0;
 
@@ -17,7 +18,8 @@ struct StaticVertexBuffer : VertexBuffer {
 	StaticVertexBuffer();
 	StaticVertexBuffer(const ResourceHandle& data, const char* fmt);
 	virtual const ShaderAttribs& getShaderAttribs() const;
-	virtual GLint getStride() const;
+	virtual GLint  getStride() const;
+	virtual size_t getSize() const;
 	virtual GLuint getID() const;
 	virtual void update();
 	~StaticVertexBuffer();
@@ -46,11 +48,14 @@ struct DynamicVertexBuffer : VertexBuffer {
 		dirty = true;
 	}
 	
+	void pop(size_t n);
+	
 	void clear();
 
 	virtual const ShaderAttribs& getShaderAttribs() const;
-	virtual GLuint getID() const;
 	virtual GLint getStride() const;
+	virtual size_t getSize() const;
+	virtual GLuint getID() const;
 	virtual void update();
 	~DynamicVertexBuffer();
 private:

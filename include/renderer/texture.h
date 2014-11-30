@@ -6,21 +6,23 @@
 struct RenderState;
 
 struct Texture {
-	virtual GLenum getType(void) = 0;
-	virtual bool isValid(void) = 0;
-	virtual bool bind(size_t tex_unit, RenderState& rs) = 0;
+	virtual GLenum getType(void) const = 0;
+	virtual bool isValid(void) const = 0;
+	virtual bool bind(size_t tex_unit, RenderState& rs) const = 0;
 	virtual ~Texture(){}
 };
 
 struct Texture2D : Texture {
 	Texture2D();
 	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* data);
+	Texture2D& operator=(const Texture2D&) = delete;
+	Texture2D& operator=(Texture2D&&);
 	
 	void loadFromResource(Engine& e, const ResourceHandle& img);
 	
-	GLenum getType(void);
-	bool isValid(void);
-	bool bind(size_t tex_unit, RenderState& rs);
+	GLenum getType(void) const;
+	bool isValid(void) const;
+	bool bind(size_t tex_unit, RenderState& rs) const;
 	
 	~Texture2D();
 private:

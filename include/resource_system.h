@@ -75,7 +75,7 @@ struct ResourceSystem {
 		}
 		
 		void put(const char* name, const std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
-			auto tup = std::tuple_cat(std::tuple<std::string>(name));
+			auto tup = std::tuple_cat(std::tuple<std::string>(name), args);
 			auto it = entries.find(tup);
 			
 			if(it == entries.end() || it->second.expired()){

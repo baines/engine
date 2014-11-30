@@ -102,7 +102,9 @@ bool ShaderProgram::link(void){
 		GLenum type = 0;
 		
 		gl.GetActiveUniform(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
-		if(!*name_buf) continue;
+		
+		const char* n = name_buf;
+		if(!*n || (n[0] == 'g' && n[1] == 'l' && n[2] == '_')) continue;
 		
 		GLint index = gl.GetUniformLocation(program_id, name_buf);
 		
@@ -116,7 +118,9 @@ bool ShaderProgram::link(void){
 		GLenum type = 0;
 		
 		gl.GetActiveAttrib(program_id, i, sizeof(name_buf), nullptr, &size, &type, name_buf);
-		if(!*name_buf) continue;
+
+		const char* n = name_buf;
+		if(!*n || (n[0] == 'g' && n[1] == 'l' && n[2] == '_')) continue;
 		
 		GLint index = gl.GetAttribLocation(program_id, name_buf);
 		

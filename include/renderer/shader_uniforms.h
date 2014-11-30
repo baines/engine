@@ -13,7 +13,7 @@ template<> struct get_glenum<int>{ static const GLenum value = GL_INT; };
 template<> struct get_glenum<unsigned>{ static const GLenum value = GL_UNSIGNED_INT; };
 
 struct ShaderUniforms {
-	ShaderUniforms(){}
+	ShaderUniforms();
 	
 	template<class T>
 	void setUniform(const str_const& str, std::initializer_list<T>&& t){
@@ -63,9 +63,6 @@ private:
 
 	void _setUniform(uint32_t hash, uint32_t rows, uint32_t cols, uint32_t n, GLenum type, const void* ptr);
 
-	typedef variant<GLint, GLuint, GLfloat>::type ustorage;
-	static_assert(sizeof(ustorage) == 4, "ustorage should be 4 bytes");
-
 	struct uinfo {
 		uint32_t name_hash, rows, cols, count;
 		size_t storage_index;
@@ -74,6 +71,9 @@ private:
 
 		bool operator==(uint32_t h) const { return name_hash == h; }
 	};
+
+	typedef variant<GLint, GLuint, GLfloat>::type ustorage;
+	static_assert(sizeof(ustorage) == 4, "ustorage should be 4 bytes");
 
 	std::vector<ustorage> uniforms;
 	std::vector<uinfo> uniform_info;

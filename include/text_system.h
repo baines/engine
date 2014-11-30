@@ -8,12 +8,15 @@
 #include "renderable.h"
 #include "resource.h"
 
+struct Font;
+
 struct TextSystem {
 	TextSystem(Engine& e);
 	
 	FT_Library& getLib();
 	
-	Renderable createRenderable(...);
+	Renderable addText(const Font& f, const std::string& str, size_t max_len);
+	void delText(Renderable& r);
 
 	~TextSystem();
 private:

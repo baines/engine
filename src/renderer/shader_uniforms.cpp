@@ -79,6 +79,12 @@ tuple<GLenum, uint32_t, uint32_t> get_full_type_info(GLenum type){
 
 }
 
+ShaderUniforms::ShaderUniforms()
+: uniforms()
+, uniform_info() {
+
+}
+
 bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	const ustorage* p = uniforms.data();
 	

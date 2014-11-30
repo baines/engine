@@ -41,13 +41,17 @@ struct Renderable {
 	
 	}
 	
+	Renderable(const Renderable&) = default;
+	Renderable(Renderable&&) = default;
+	Renderable& operator=(Renderable&&) = default;
+	
 	template<class... Args>
 	Renderable(Args&&... args) : Renderable() {
 		set(std::forward<Args>(args)...);
 	}
 	
-	std::array<Texture*, 8> textures;
-	std::array<Sampler*, 8> samplers;
+	std::array<const Texture*, 8> textures;
+	std::array<const Sampler*, 8> samplers;
 	
 	VertexState*    vertex_state;
 	ShaderProgram*  shader;

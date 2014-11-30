@@ -90,18 +90,6 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	FT_Library& ft_lib = e.text.getLib();
 	
 	assert(FT_New_Memory_Face(ft_lib, res.data(), res.size(), 0, &face) == 0);
-
-	// assert FT_IS_SCALABLE
-	// get num_glyph, height, scale + max_advance
-		// guess texture size
-	// alloc buffer
-	// load all glyphs from utf_lo - utf_hi
-		// render into buffer
-		// realloc lines?
-	
-	// create texture GL_UNSIGNED_BYTE, GL_R8
-		// test ARB_texture_compression_rgtc?
-	// store in vector per glyph: x_off, y_off, w, h
 	
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	
@@ -184,7 +172,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	
 	if(gl.hasExtension("ARB_texture_compression_rgtc")
 	|| gl.hasExtension("EXT_texture_compression_rgtc")){
-		//int_fmt = GL_COMPRESSED_RED_RGTC1;
+		int_fmt = GL_COMPRESSED_RED_RGTC1;
 	}
 	
 	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, img.w, img.h, img.mem);

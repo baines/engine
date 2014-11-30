@@ -104,6 +104,8 @@ GLFUNC(void, UniformMatrix4x3fv, (GLint, GLsizei, GLboolean, const GLfloat*), 21
 GLFUNC(void, BlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum))
 GLFUNC(void, BlendEquationSeparate, (GLenum, GLenum))
 
+GLFUNC(void, DebugMessageCallback, (GLDEBUGPROC, void*), OPTIONAL | ARB | 43, "debug_output")
+
 #ifdef UNDEF_GLFUNC
 	#undef GLFUNC
 	#undef UNDEF_GLFUNC

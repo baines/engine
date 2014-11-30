@@ -3,6 +3,16 @@
 #include <climits>
 #include "enums.h"
 
+namespace {
+
+static void gl_debug_callback(GLenum source, GLenum type, GLuint id, GLenum severity,
+                       GLsizei length, const GLchar *message, const void *userParam){
+   //TODO: parse all the args into the message.
+   log(logging::debug, "[+ GL +] %s\n", message);
+}
+
+}
+
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
 , render_state     ()
@@ -24,8 +34,8 @@ void Renderer::reload(Engine& e){
 	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	
-	int ctx_flags = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG | SDL_GL_CONTEXT_DEBUG_FLAG;
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
+	int ctx_flags = SDL_GL_CONTEXT_DEBUG_FLAG;
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
 	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	
 	window = SDL_CreateWindow(
@@ -43,6 +53,10 @@ void Renderer::reload(Engine& e){
 	
 	gl.createContext(e, window);
 	gl.Viewport(0, 0, window_width->val, window_height->val);
+	
+	if(gl.DebugMessageCallback){
+		gl.DebugMessageCallback(&gl_debug_callback, nullptr);
+	}
 }
 
 void Renderer::onWindowEvent(SDL_WindowEvent& ev){

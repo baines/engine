@@ -141,6 +141,10 @@ bool Texture2D::isValid(void) const {
 	return id != 0;
 }
 
+std::tuple<int, int> Texture2D::getSize() const {
+	return std::make_tuple(w, h);
+}
+
 bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 	if(id && id != rs.tex[tex_unit]){
 		gl.ActiveTexture(GL_TEXTURE0 + tex_unit);

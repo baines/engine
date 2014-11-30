@@ -1,6 +1,7 @@
 #version 330 core
 
 uniform sampler2D u_samp;
+uniform float u_height;
 
 flat in float width;
 flat in vec2 tex;
@@ -10,8 +11,8 @@ out vec4 color;
 
 void main(void){
 
-	ivec2 p = ivec2(tex + fract(pos) * width);
-	vec4 pixel = texelFetch(u_samp, p, 0);
+	vec4 alpha = texture(u_samp, tex + fract(pos) * vec2(width, u_height));
 	
-	color = vec4(0.0f, pixel.r, 0.0f, 1.0f);
+	color = vec4(alpha.rrr, 1.0f);
 }
+

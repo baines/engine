@@ -27,7 +27,7 @@ struct TestState : public GameState {
 	, shader(*vs, *fs)
 	, vstate()
 	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3})
-	, font(e, {"FreeSans.ttf"}, 16)
+	, font(e, {"FreeSans.ttf"}, 32)
 	, text() {
 
 	}

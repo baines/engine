@@ -3,13 +3,14 @@
 
 struct TextVert {
 	uint16_t x, y;
-	uint8_t tex[4];
+	float tex[2];
+	float width;
 };
 
 TextSystem::TextSystem(Engine& e)
 : ft_lib(nullptr)
 , v_state()
-, text_buffer("a_pos:2S|a_tex:4B", 512)
+, text_buffer("a_pos:2S|a_tex:2f|a_width:1f", 512)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
 , text_shader(*text_vs, *text_fs) {
@@ -33,7 +34,7 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 	
 	for(size_t i = 0; i < str_len; ++i){
 		//TODO: SDL_iconv to UTF-32
-		int32_t letter = std::max(0, str[i] - utf_lo);
+		int32_t letter = std::max(0, (str[i] + 1) - utf_lo);
 		if(letter >= utf_hi) letter = 0;
 		
 		const Font::GlyphInfo* ginfo = f.getGlyphInfo(letter);
@@ -41,15 +42,22 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 		
 		w += ginfo->width;
 		
+		DEBUGF("[TEXT] '%c' -> [%d], x: %d, y: %d, w: %d",
+			str[i], letter, ginfo->x, ginfo->y, ginfo->width);
+		
 		if(i == 0){
 			text_buffer.push(TextVert{ 0, 0, {}});
 			text_buffer.push(TextVert{ 0, h, {}});
 		}
 		
-		uint8_t x0 = ginfo->x / 256, x1 = ginfo->x % 256, row = ginfo->y / h;
+		int tw, th;
+		std::tie(tw, th) = f.getTexture()->getSize();
 		
-		text_buffer.push(TextVert{ w, 0, { x0, x1, row, (uint8_t)ginfo->width }});
-		text_buffer.push(TextVert{ w, h, { x0, x1, row, (uint8_t)ginfo->width }});
+		float tx = ginfo->x / (float)tw, ty = ginfo->y / (float)th;
+		float fw = ginfo->width / (float)tw;
+		
+		text_buffer.push(TextVert{ w, 0, { tx, ty }, fw });
+		text_buffer.push(TextVert{ w, h, { tx, ty }, fw });
 	}
 	
 	for(size_t i = str_len; i < max_len; ++i){
@@ -57,7 +65,7 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 				without needing to orphan the vertex buffer */
 	}
 	
-	const GLsizei count = str_len + 2;
+	const GLsizei count = 2 + str_len * 2;
 	return Renderable(&v_state, &text_shader, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
 }
 

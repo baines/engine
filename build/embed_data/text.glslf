@@ -1,18 +1,14 @@
-#version 330 core
+#version 120
 
 uniform sampler2D u_samp;
-uniform float u_height;
 
-flat in float width;
-flat in vec2 tex;
-in vec2 pos;
-
-out vec4 color;
+varying vec2 tex;
+varying vec2 pos;
 
 void main(void){
 
-	vec4 alpha = texture(u_samp, tex + fract(pos) * vec2(width, u_height));
+	vec4 alpha = texture2D(u_samp, tex);
 	
-	color = vec4(alpha.rrr, 1.0f);
+	gl_FragColor = vec4(alpha.aaa, 1.0f);
 }
 

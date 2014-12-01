@@ -96,18 +96,29 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	assert(FT_IS_SCALABLE(face));
 		
 	double scale = (double)face->units_per_EM / (double)face->height;
-	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
+	assert(FT_Set_Pixel_Sizes(face, 0, (height-1) * scale) == 0);
 	
 	DEBUGF("Font info:\n\tmax_advance: %d\n\tnum_glyphs: %d.",
 	       face->size->metrics.max_advance >> 6, face->num_glyphs);
 	
-	int init_w = 0;
+	int init_w = 0, max_w = 0;
+
+	//XXX: cache common constants like this in GLContext
+	gl.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_w);
+	bool got_size = false;
 	
-	for(init_w = 256; init_w <= 8129; init_w <<= 1){
+	for(init_w = 256; init_w <= max_w; init_w <<= 1){
 		int glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
 		int lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
 		
-		if(lines * height <= init_w) break;
+		if(lines * height <= init_w){
+			got_size = true;
+			break;
+		}
+	}
+	
+	if(!got_size){
+		log(logging::warn, "Font texture might be too big for OpenGL.");
 	}
 		
 	GlyphTextureAtlas img = {
@@ -117,7 +128,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		static_cast<int>(height),
 		height,
 		face->size->metrics.ascender >> 6,
-		-(face->size->metrics.descender >> 6),
+		1-(face->size->metrics.descender >> 6),
 		nullptr
 	};
 	
@@ -168,14 +179,22 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	img.mem = (uint8_t*)realloc(img.mem, img.w * img.h);
 	memset(img.mem + (img.w * old_h), 0, (img.w * img.h) - (img.w * old_h));
 	
-	GLenum int_fmt = GL_R8;
+	bool do_swizzle = false;
+	GLenum int_fmt = GL_ALPHA8;
 	
 	if(gl.hasExtension("ARB_texture_compression_rgtc")
 	|| gl.hasExtension("EXT_texture_compression_rgtc")){
 		int_fmt = GL_COMPRESSED_RED_RGTC1;
+		do_swizzle = true;
+	} else if(gl.version > 30 || gl.hasExtension("ARB_texture_rg")){
+		int_fmt = GL_R8;
+		do_swizzle = true;
 	}
 	
 	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, img.w, img.h, img.mem);
+	if(do_swizzle){
+		atlas.setSwizzle({ GL_ZERO, GL_ZERO, GL_ZERO, GL_RED });
+	}
 
 	free(img.mem);	
 }

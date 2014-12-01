@@ -1,10 +1,8 @@
-#version 330 core
+#version 120
 
-in vec3 pass_col;
-
-out vec3 color;
+varying vec3 pass_col;
 
 void main(){
-	color = pass_col;
+	gl_FragColor = vec4(pass_col, 1.0f);
 }
 

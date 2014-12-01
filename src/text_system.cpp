@@ -2,15 +2,14 @@
 #include "font.h"
 
 struct TextVert {
-	uint16_t x, y;
-	float tex[2];
-	float width;
+	int16_t x, y;
+	uint16_t tex_x, tex_y;
 };
 
 TextSystem::TextSystem(Engine& e)
 : ft_lib(nullptr)
 , v_state()
-, text_buffer("a_pos:2S|a_tex:2f|a_width:1f", 512)
+, text_buffer("a_pos:2s|a_tex:2SN", 512)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
 , text_shader(*text_vs, *text_fs) {
@@ -30,7 +29,11 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 	std::tie(utf_lo, utf_hi) = f.getUTFRange();
 	
 	int off = text_buffer.getSize();
-	uint16_t w = 0, h = f.getLineHeight();
+	int16_t w = 0, h = f.getLineHeight();
+	
+	int tw, th;
+	std::tie(tw, th) = f.getTexture()->getSize();
+	float x_scale = USHRT_MAX / (float)tw, y_scale = USHRT_MAX / (float)th;
 	
 	for(size_t i = 0; i < str_len; ++i){
 		//TODO: SDL_iconv to UTF-32
@@ -39,25 +42,22 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 		
 		const Font::GlyphInfo* ginfo = f.getGlyphInfo(letter);
 		assert(ginfo);
+				
+		DEBUGF("[TEXT] '%c' -> [%d], x: %d, y: %d, w: %d",
+			str[i], letter, ginfo->x, ginfo->y, ginfo->width);
+						
+		uint16_t tx0 = ginfo->x * x_scale,
+		         ty0 = ginfo->y * y_scale,
+		         tx1 = (ginfo->x + ginfo->width) * x_scale,
+		         ty1 = (ginfo->y + h) * y_scale;
+		
+		text_buffer.push(TextVert{ w, 0, tx0, ty0 });
+		text_buffer.push(TextVert{ w, h, tx0, ty1 });
 		
 		w += ginfo->width;
 		
-		DEBUGF("[TEXT] '%c' -> [%d], x: %d, y: %d, w: %d",
-			str[i], letter, ginfo->x, ginfo->y, ginfo->width);
-		
-		if(i == 0){
-			text_buffer.push(TextVert{ 0, 0, {}});
-			text_buffer.push(TextVert{ 0, h, {}});
-		}
-		
-		int tw, th;
-		std::tie(tw, th) = f.getTexture()->getSize();
-		
-		float tx = ginfo->x / (float)tw, ty = ginfo->y / (float)th;
-		float fw = ginfo->width / (float)tw;
-		
-		text_buffer.push(TextVert{ w, 0, { tx, ty }, fw });
-		text_buffer.push(TextVert{ w, h, { tx, ty }, fw });
+		text_buffer.push(TextVert{ w, 0, tx1, ty0 });
+		text_buffer.push(TextVert{ w, h, tx1, ty1 });
 	}
 	
 	for(size_t i = str_len; i < max_len; ++i){
@@ -65,7 +65,7 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 				without needing to orphan the vertex buffer */
 	}
 	
-	const GLsizei count = 2 + str_len * 2;
+	const GLsizei count = 4 * str_len;
 	return Renderable(&v_state, &text_shader, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
 }
 

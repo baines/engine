@@ -30,11 +30,6 @@ Text::Text(Engine& e, const Font& f, const std::string& str, size_t max_len)
 	
 	//XXX: don't hardcode window dimensions!
 	uniforms.setUniform("u_mvp", { glm::ortho(0.f, 640.f, 480.f, 0.f) });
-	
-	int w = 0, h = 0;
-	std::tie(w, h) = tex->getSize();
-	
-	uniforms.setUniform("u_height", { (float)f.getLineHeight() / (float)h });
 }
 
 Text::Text(Text&& other)

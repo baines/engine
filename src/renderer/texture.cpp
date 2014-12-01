@@ -82,11 +82,37 @@ static GLenum get_base_fmt(GLenum sized_fmt){
 		
 		case GL_COMPRESSED_RED_RGTC1:
 		case GL_COMPRESSED_SIGNED_RED_RGTC1:
-			return GL_RED; /* XXX: Says GL_RGB here? https://www.opengl.org/registry/specs/ARB/texture_compression_rgtc.txt*/
+			return GL_RED; 
 			
 		case GL_COMPRESSED_RG_RGTC2:
 		case GL_COMPRESSED_SIGNED_RG_RGTC2:
 			return GL_RG;
+			
+		/* legacy */
+		
+		case GL_ALPHA4:
+		case GL_ALPHA8:
+		case GL_ALPHA12:
+		case GL_ALPHA16:
+			return GL_ALPHA;	
+		case GL_LUMINANCE4:
+		case GL_LUMINANCE8:
+		case GL_LUMINANCE12:
+		case GL_LUMINANCE16:
+			return GL_LUMINANCE;
+			
+		case GL_LUMINANCE4_ALPHA4:
+		case GL_LUMINANCE6_ALPHA2:
+		case GL_LUMINANCE8_ALPHA8:
+		case GL_LUMINANCE12_ALPHA4:
+		case GL_LUMINANCE16_ALPHA16:
+			return GL_LUMINANCE_ALPHA;
+		
+		case GL_INTENSITY4:
+		case GL_INTENSITY8:
+		case GL_INTENSITY12:
+		case GL_INTENSITY16:
+			return GL_INTENSITY;
 			
 		default: {
 			log(logging::warn, "Unknown internal format %#x.", sized_fmt);
@@ -131,6 +157,18 @@ void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	
 	stbi_image_free(pixels);
+}
+
+bool Texture2D::setSwizzle(const std::array<GLint, 4>& swizzle){
+	if(!(gl.version >= 33
+	|| gl.hasExtension("EXT_texture_swizzle") 
+	|| gl.hasExtension("ARB_texture_swizzle"))){
+		log(logging::error, "Can't set swizzle: not supported by OpenGL driver.");
+		return false;
+	}
+	//XXX: assume texture is already bound
+	gl.TexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle.data());
+	return true;
 }
 
 GLenum Texture2D::getType(void) const {

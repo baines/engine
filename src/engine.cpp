@@ -2,7 +2,7 @@
 #include "game_state.h"
 
 Engine::Engine(int argc, char** argv, const char* name)
-: cfg        ()
+: cfg        (argc, argv)
 , input      ()
 , renderer   (*this, name)
 , res        (argv[0])
@@ -14,7 +14,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , prev_ticks (0)
 , root_state (*this) {
 
-	cfg.load(argc, argv);
+	cfg.loadConfigFile(*this);
 	state.push(&root_state);
 	
 	//move to a default config file?
@@ -33,6 +33,7 @@ bool Engine::run(void){
 	
 	if(delta < min_delta){
 		SDL_Delay(min_delta - delta);
+		delta = min_delta;
 	}
 	prev_ticks += delta;
 	delta = std::min(delta, 100);

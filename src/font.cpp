@@ -32,7 +32,9 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 		memset(img.mem + (prev_w * prev_h), 0, (img.w * img.h) - (prev_w * prev_h));
 	}
 
-	const int rows_avail = std::min<int>(img.line_height, img.descender + glyph.bearing_y);
+	const int rows_avail = std::min<int>(
+		img.line_height, img.line_height - (img.ascender - glyph.bearing_y)
+	);
 	const int rows = std::min(rows_avail, bmp->rows);
 	
 	for(int i = 0; i < rows; ++i){
@@ -96,10 +98,13 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	assert(FT_IS_SCALABLE(face));
 		
 	double scale = (double)face->units_per_EM / (double)face->height;
-	assert(FT_Set_Pixel_Sizes(face, 0, (height-1) * scale) == 0);
+	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
-	DEBUGF("Font info:\n\tmax_advance: %d\n\tnum_glyphs: %d.",
-	       face->size->metrics.max_advance >> 6, face->num_glyphs);
+	DEBUGF("Font info:\n\tmax_advance: %d\n\tnum_glyphs: %d, asc: %d, desc: %d",
+	       face->size->metrics.max_advance >> 6,
+	       face->num_glyphs,
+	       face->size->metrics.ascender >> 6,
+	       -(face->size->metrics.descender >> 6));
 	
 	int init_w = 0, max_w = 0;
 
@@ -128,7 +133,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		static_cast<int>(height),
 		height,
 		face->size->metrics.ascender >> 6,
-		1-(face->size->metrics.descender >> 6),
+		-(face->size->metrics.descender >> 6),
 		nullptr
 	};
 	

@@ -9,6 +9,10 @@
 
 struct Config {
 
+	Config(int argc, char** argv);
+
+	void loadConfigFile(Engine& e);
+
 	template<class Var>
 	Var* addVar(const char* name, Var&& var){
 		if(CVar* v = cvar_trie.find(name)){
@@ -36,8 +40,6 @@ struct Config {
 	void getVarsWithPrefix(const char* prefix, std::vector<CVar*>& output){
 		cvar_trie.prefixSearch(prefix, output);
 	}
-	
-	void load(int argc, char** argv);
 private:
 	std::list<CVar> cvars;
 	Trie<CVar*> cvar_trie;

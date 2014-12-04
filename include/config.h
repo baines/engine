@@ -1,17 +1,17 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 #include "common.h"
+#include "resource_system.h"
 #include "cvar.h"
 #include "trie.h"
 #include <vector>
 #include <list>
 #include <cstring>
+#include <map>
 
 struct Config {
 
-	Config(int argc, char** argv);
-
-	void loadConfigFile(Engine& e);
+	Config(Engine& e, int argc, char** argv);
 
 	template<class Var>
 	Var* addVar(const char* name, Var&& var){
@@ -20,6 +20,13 @@ struct Config {
 		} else {
 			cvars.emplace_back(name, std::forward<Var>(var));
 			cvar_trie.add(name, &cvars.back());
+			
+			/* TODO: look through cfg_file_cmds for name w/ multimap::equal_range
+					 if CvarFunc, call it with value from the map
+					 else, convert map value to type for this CVar + set it.
+					 	//XXX: the conversion should probably be done inside the cvar's Set member func.
+			*/
+			
 			return cvars.back().get<Var>();
 		}
 	}
@@ -33,6 +40,14 @@ struct Config {
 		}
 	}
 	
+	template<class T>
+	void overrideVar(const char* name, const T& val){
+		/*TODO: similar to cfg_file_cmds, store val to be set when Var is created.
+				could accept a string instead of templated type and add to the
+				cfg_file_cmds for simplicity, would be slightly less performant though...
+		*/
+	}
+	
 	bool extendPrefix(std::string& prefix){
 		return cvar_trie.prefixExtend(prefix);
 	}
@@ -43,6 +58,9 @@ struct Config {
 private:
 	std::list<CVar> cvars;
 	Trie<CVar*> cvar_trie;
+	
+	ResourceHandle cfg_file;
+	std::multimap<uint32_t, std::string> cfg_file_cmds;
 };
 
 #endif

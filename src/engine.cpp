@@ -2,10 +2,10 @@
 #include "game_state.h"
 
 Engine::Engine(int argc, char** argv, const char* name)
-: cfg        (argc, argv)
+: res        (argv[0])
+, cfg        (*this, argc, argv)
 , input      ()
 , renderer   (*this, name)
-, res        (argv[0])
 , text       (*this)
 , state      ()
 , cli        (*this)
@@ -14,7 +14,6 @@ Engine::Engine(int argc, char** argv, const char* name)
 , prev_ticks (0)
 , root_state (*this) {
 
-	cfg.loadConfigFile(*this);
 	state.push(&root_state);
 	
 	//move to a default config file?

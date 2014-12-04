@@ -19,10 +19,10 @@ struct Engine {
 	void quit(void);
 	~Engine();
 
+	ResourceSystem res;
 	Config         cfg;
 	Input          input;
 	Renderer       renderer;
-	ResourceSystem res;
 	TextSystem     text;
 	StateSystem    state;
 	CLI            cli;

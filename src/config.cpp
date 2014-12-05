@@ -152,7 +152,8 @@ Config::Config(Engine& e, int argc, char** argv){
 	enum {
 		GET_NAME_START,
 		GET_NAME_END,
-		GET_VALUE
+		GET_VALUE,
+		SKIP_LINE
 	} state = GET_NAME_START;
 	
 	
@@ -164,9 +165,7 @@ Config::Config(Engine& e, int argc, char** argv){
 		const char* name_start = data, *value = nullptr;
 		
 		auto add_line = [&](const char* c){
-			if(hash){
-				hookVar(hash, value);
-			}
+			if(hash){ hookVar(hash, value, c - value); }
 			hash = 0;
 			value = nullptr;
 		};
@@ -174,8 +173,12 @@ Config::Config(Engine& e, int argc, char** argv){
 		for(const char* c = data; c < data + sz; ++c){
 		
 			if(state == GET_NAME_START && !isspace(*c)){
-				name_start = c;
-				state = GET_NAME_END;
+				if(*c == '#' || *c == ';' || *c == '/'){
+					state = SKIP_LINE;
+				} else {
+					name_start = c;
+					state = GET_NAME_END;
+				}
 			} 
 			
 			else if(state == GET_NAME_END && isspace(*c)){
@@ -193,6 +196,10 @@ Config::Config(Engine& e, int argc, char** argv){
 					value = c;
 				}
 			} 
+			
+			if(state == SKIP_LINE && *c == '\n'){
+				state = GET_NAME_START;
+			}
 		}
 		add_line(data+sz);
 	}

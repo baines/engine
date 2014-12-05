@@ -40,7 +40,7 @@ struct CVarString {
 	CVarString(const char* str) : str(str){}
 	bool set(const char* s, size_t len = 0){
 		if(!s) return false;
-		str = len ? std::string(str, len) : std::string(s);
+		str = len ? std::string(s, len) : std::string(s);
 		return true;
 	}
 	bool set(std::string&& s){

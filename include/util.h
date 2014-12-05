@@ -58,15 +58,15 @@ static unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
-inline constexpr uint32_t djb2(const char* str){
-	return *str ? djb2(str+1) * 33 + *str : 5381;
+inline constexpr uint32_t str_hash(const char* str, uint32_t hash = 6159){
+	return *str ? str_hash(str+1, 187 * hash + *str) : hash;
 }
 
-static uint32_t djb2(const char* str, size_t len){
-	uint32_t hash = 5381;
+static uint32_t str_hash_len(const char* str, size_t len){
+	uint32_t hash = 6159;
 	
-	while(len--){
-		hash = hash * 33 + str[len];
+	for(int i = 0; i < len; ++i){
+		hash = hash * 187 + str[i];
 	}
 	
 	return hash;
@@ -78,12 +78,16 @@ struct str_const {
 	constexpr str_const(const char(&s)[N])
 	: str(s)
 	, size(N-1)
-	, hash(djb2(s)){
+	, hash(str_hash(s)){
 	
 	}
 	
 	constexpr bool operator==(const str_const& other) const {
 		return hash == other.hash;
+	}
+	
+	constexpr bool operator<(const str_const& other) const {
+		return hash < other.hash;
 	}
 		
 	const char* const str;
@@ -104,6 +108,13 @@ constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... ar
 struct ArrayDeleter {
 	void operator()(const uint8_t* arr) const { delete [] arr; }
 };
+
+//XXX: std::numpunct::truename()?
+inline bool str_to_bool(const char* str){
+	return str[0] == '1' 
+	    || (tolower(str[0]) == 't' && tolower(str[1]) == 'r' 
+	    &&  tolower(str[2]) == 'u' && tolower(str[3]) == 'e');
+}
 
 /* GLM stuff */
 

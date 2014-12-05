@@ -62,8 +62,9 @@ ResourceHandle ResourceSystem::import(const char* name){
 	if(PHYSFS_File* f = PHYSFS_openRead(name)){
 		file_size = PHYSFS_fileLength(f);
 		if(file_size > 0){
-			file_data = new uint8_t[file_size];
-			size_t r = PHYSFS_readBytes(f, file_data, file_size);
+			// add an extra null byte in case c string functions are used.
+			file_data = new uint8_t[file_size+1]();
+			PHYSFS_readBytes(f, file_data, file_size);
 		}
 		PHYSFS_close(f);
 	}

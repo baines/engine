@@ -29,10 +29,14 @@ private:
 	std::vector<Renderable*> renderables;
 	RenderState render_state;
 		
-	CVarEnum* buff_orphan_mode;
+	CVarBool* gl_debug;
+	CVarBool* gl_fwd_compat;
+	CVarBool* gl_core_profile;
 	CVarString* libgl;
 	CVarInt* window_width;
 	CVarInt* window_height;
+	CVarInt* vsync;
+	CVarBool* fullscreen;
 	
 	const char* window_title;
 	SDL_Window* window;

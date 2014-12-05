@@ -41,28 +41,28 @@ static struct Args {
 		[](Config& c, ArgContext& ctx){
 			const char* filename = nullptr;
 			if(ctx.getNextArg(filename)){
-				c.overrideVar("cfg_filename", filename);
+				c.hookVar("cfg_filename", filename);
 			}
 		}
 	}, {
 		{"-fs"}, {"--full-screen"}, nullptr,
 		[](Config& c, ArgContext& ctx){
-			c.overrideVar("vid_fullscreen", true);
+			c.hookVar("vid_fullscreen", "1");
 		}
 	}, {
 		{"-w"}, {"--windowed"}, nullptr,
 		[](Config& c, ArgContext& ctx){
-			c.overrideVar("vid_fullscreen", false);
+			c.hookVar("vid_fullscreen", "0");
 		}
 	}, {
 		{"-r"}, {"--resolution"}, "<width> <height>",
 		[](Config& c, ArgContext& ctx){
-			int w = 0, h = 0;
+			const char *w = nullptr, *h = nullptr;
 			if(ctx.getNextArg(w) && w){
-				c.overrideVar("vid_width", w);
+				c.hookVar("vid_width", w);
 			}
 			if(ctx.getNextArg(h) && h){
-				c.overrideVar("vid_height", h);
+				c.hookVar("vid_height", h);
 			}
 		}
 	}
@@ -96,16 +96,21 @@ bool ArgContext::getNextArg(int& i){
 
 bool ArgContext::getNextArg(const char*& str){
 	if(idx + 1 >= argc) return false;
-	str = argv[++idx];
-	//XXX: make sure it's not another flag? (i.e. check for '-', but not -number)
-	return true;
+	str = argv[idx+1];
+	
+	if(strlen(str) > 2 && str[0] == '-' && (str[1] < '0' || str[1] > '9')){
+		return false;
+	} else {
+		++idx;
+		return true;
+	}
 }
 
 void ArgContext::parse(Config& c){
 	for(idx = 1; idx < argc; ++idx){
 		const char* str = argv[idx];
 		const size_t sz = strlen(str);
-		const uint32_t hash = djb2(str);
+		const uint32_t hash = str_hash(str);
 		
 		// not a flag, skip it
 		if(sz < 2 || str[0] != '-') continue;
@@ -159,7 +164,9 @@ Config::Config(Engine& e, int argc, char** argv){
 		const char* name_start = data, *value = nullptr;
 		
 		auto add_line = [&](const char* c){
-			if(hash) cfg_file_cmds.emplace(hash, value ? std::string(value, c) : "");
+			if(hash){
+				hookVar(hash, value);
+			}
 			hash = 0;
 			value = nullptr;
 		};
@@ -173,7 +180,7 @@ Config::Config(Engine& e, int argc, char** argv){
 			
 			else if(state == GET_NAME_END && isspace(*c)){
 				size_t name_sz = c - name_start;
-				hash = djb2(name_start, name_sz);
+				hash = str_hash_len(name_start, name_sz);
 				DEBUGF("Got name: %.*s = %d", name_sz, name_start, hash);
 				state = GET_VALUE;
 			}

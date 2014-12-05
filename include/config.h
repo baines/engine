@@ -8,25 +8,24 @@
 #include <list>
 #include <cstring>
 #include <map>
+#include <algorithm>
 
 struct Config {
 
 	Config(Engine& e, int argc, char** argv);
 
 	template<class Var>
-	Var* addVar(const char* name, Var&& var){
-		if(CVar* v = cvar_trie.find(name)){
+	Var* addVar(const str_const& name, Var&& var){
+		if(CVar* v = cvar_trie.find(name.str)){
 			return v->template get<Var>();
 		} else {
 			cvars.emplace_back(name, std::forward<Var>(var));
-			cvar_trie.add(name, &cvars.back());
+			cvar_trie.add(name.str, &cvars.back());
 			
-			/* TODO: look through cfg_file_cmds for name w/ multimap::equal_range
-					 if CvarFunc, call it with value from the map
-					 else, convert map value to type for this CVar + set it.
-					 	//XXX: the conversion should probably be done inside the cvar's Set member func.
-			*/
-			
+			auto it_pair = cvar_hooks.equal_range(name.hash);
+			for(auto& i = it_pair.first, &j = it_pair.second; i != j; ++i){
+				cvars.back().eval(i->second.str, i->second.len);
+			}
 			return cvars.back().get<Var>();
 		}
 	}
@@ -40,12 +39,21 @@ struct Config {
 		}
 	}
 	
-	template<class T>
-	void overrideVar(const char* name, const T& val){
-		/*TODO: similar to cfg_file_cmds, store val to be set when Var is created.
-				could accept a string instead of templated type and add to the
-				cfg_file_cmds for simplicity, would be slightly less performant though...
-		*/
+	// sets value to val or calls function with val for CVarFuncs
+	//TODO: template this instead or use std::string??
+	void hookVar(uint32_t hash, const char* val, size_t len = 0){
+		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const CVar& cv){
+			return cv.name.hash == hash;
+		});
+		if(it != cvars.end()){
+			it->eval(val, len);
+		} else {
+			cvar_hooks.emplace(hash, hook_str{ val, len });
+		}
+	}
+	
+	void hookVar(const str_const& str, const char* val, size_t len = 0){
+		hookVar(str.hash, val, len);
 	}
 	
 	bool extendPrefix(std::string& prefix){
@@ -60,7 +68,8 @@ private:
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;
-	std::multimap<uint32_t, std::string> cfg_file_cmds;
+	struct hook_str { const char* str; size_t len; };
+	std::multimap<uint32_t, hook_str> cvar_hooks;
 };
 
 #endif

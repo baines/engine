@@ -40,7 +40,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 	for(const auto& a : new_attrs){
 		if(active_attrs.containsAttrib(a.name_hash, a.index)){
 			new_enabled_arrays[a.index] = 1;
-			DEBUGF("Attrib %d already active, skip.", a.name_hash);
+			DEBUGF("Attrib %#x already active, skip.", a.name_hash);
 			continue;
 		}
 		

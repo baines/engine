@@ -12,7 +12,7 @@ using namespace logging;
 namespace {
 
 	constexpr str_const prefix_names[] = { "ARB_", "ARB_", "EXT_", "AMD_", "NV_" };
-
+	
 	enum {
 		ARBCORE  = 1 << 16,
 		ARB      = 1 << 17,
@@ -98,13 +98,22 @@ GLContext::GLContext()
 }
 
 bool GLContext::createContext(Engine& e, SDL_Window* w){
+	if(sdl_context) return true;
+	
 	streaming_mode = e.cfg.addVar("gl_streaming_mode", CVarEnum(gl_streaming_enum, 0));
 	
-	if(!(sdl_context = SDL_GL_CreateContext(w))){
-		log(logging::fatal, "Couldn't create OpenGL context. (%s).", SDL_GetError());
-	}
+	int maj = 0, min = 0;
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
+	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 	
-	return sdl_context != nullptr && loadAllFuncs();
+	if(sdl_context = SDL_GL_CreateContext(w)){
+		log(logging::info, "Got OpenGL %d.%d context.", maj, min);
+		loadAllFuncs();
+		return true;
+	} else {
+		log(logging::debug, "OpenGL %d.%d context unavailable.", maj, min);
+		return false;
+	}
 }
 
 void GLContext::deleteContext(void){
@@ -120,7 +129,7 @@ void GLContext::deleteContext(void){
 
 bool GLContext::hasExtension(const char* ext){
 	if(ext[0] == 'G' && ext[1] == 'L' && ext[2] == '_') ext += 3;
-	bool ok = extensions.find(djb2(ext)) != extensions.end();
+	bool ok = extensions.find(str_hash(ext)) != extensions.end();
 	log(info, "Checking Ext: %-32s [%s]", ext, ok ? "Available." : "Unavailable.");
 	return ok;
 }
@@ -172,7 +181,10 @@ void GLContext::loadExtensions(){
 		for(GLint i = 0; i < num_ext; ++i){
 			const char* ext = reinterpret_cast<const char*>(GetStringi(GL_EXTENSIONS, i));
 			if(ext){
-				extensions.insert(djb2(ext+3));
+				if(!extensions.insert(str_hash(ext+3)).second){
+					//TODO: better collision recovery
+					log(logging::warn, "GL Extension hash collision :/ (%s).", ext);
+				}
 			}
 		}
 	} else {
@@ -181,7 +193,9 @@ void GLContext::loadExtensions(){
 			const char* c = nullptr, *prev_c = exts+3;
 
 			while(c = strchr(prev_c, ' ')){
-				extensions.insert(djb2(prev_c, c - prev_c));
+				if(!extensions.insert(str_hash_len(prev_c, c - prev_c)).second){
+					log(logging::warn, "GL Extension hash collision :/ (%.*s).", c - prev_c, prev_c);
+				}
 				prev_c = c+4;
 			}
 		}

@@ -3,6 +3,7 @@
 #include "common.h"
 #include <string>
 #include <vector>
+#include <cstdlib>
 #include "util.h"
 
 enum CVarType {
@@ -37,8 +38,13 @@ typedef CVarNumeric<float> CVarFloat;
 
 struct CVarString {
 	CVarString(const char* str) : str(str){}
+	bool set(const char* s, size_t len = 0){
+		if(!s) return false;
+		str = len ? std::string(str, len) : std::string(s);
+		return true;
+	}
 	bool set(std::string&& s){
-		s = std::move(str);
+		str = std::move(s);
 		return true;
 	}
 	std::string str;
@@ -53,9 +59,13 @@ struct CVarEnum {
 	}
 
 	bool set(const str_const& s){
+		return set(s.hash);
+	}
+
+	bool set(uint32_t hash){
 		size_t i = 0;
 		for(const auto& str : strs){
-			if(str == s){
+			if(str.hash == hash){
 				index = i;
 				return true;
 			}
@@ -81,16 +91,30 @@ struct CVarBool {
 	bool val;
 };
 
+struct CVarFunc {
+	template<class F>
+	CVarFunc(F&& fn) : func(std::forward<F>(fn)){}
+	void call(const char* s, size_t len){
+		if(!s) return;
+		func(len ? std::string(s, len) : std::string(s));
+	}
+	void call(const std::string& args){
+		func(args);
+	}
+	std::function<void(const std::string&)> func;
+};
+
 template<class T> struct cvar_id {};
 template<> struct cvar_id<CVarInt>    { static const int value = CVAR_INT; };
 template<> struct cvar_id<CVarFloat>  { static const int value = CVAR_FLOAT; };
 template<> struct cvar_id<CVarString> { static const int value = CVAR_STRING; };
 template<> struct cvar_id<CVarEnum>   { static const int value = CVAR_ENUM; };
 template<> struct cvar_id<CVarBool>   { static const int value = CVAR_BOOL; };
+template<> struct cvar_id<CVarFunc>   { static const int value = CVAR_FUNC; };
 
 struct CVar {
 	template<class Var>
-	CVar(const char* name, Var&& v)
+	CVar(const str_const& name, Var&& v)
 	: type(cvar_id<Var>::value)
 	, name(name)
 	, value(){
@@ -105,20 +129,38 @@ struct CVar {
 			return nullptr;
 		}
 	}
+	
+	void eval(const char* val, size_t len = 0){
+		if(!val && type != CVAR_FUNC) return;
+		
+		switch(type){
+			case CVAR_INT:    get<CVarInt>()->set(strtol(val, nullptr, 0)); break;
+			case CVAR_FLOAT:  get<CVarFloat>()->set(strtof(val, nullptr)); break;
+			case CVAR_STRING: get<CVarString>()->set(val, len); break;
+			case CVAR_ENUM: {
+				uint32_t hash = len ? str_hash_len(val, len) : str_hash(val);
+				get<CVarEnum>()->set(hash);
+				break;
+			}
+			case CVAR_BOOL:   get<CVarBool>()->set(str_to_bool(val)); break;
+			case CVAR_FUNC:   get<CVarFunc>()->call(val, len); break;
+		}
+	}
 
 	~CVar(){
 		switch(type){
-			case CVAR_INT:    reinterpret_cast<CVarInt*>(&value)->~CVarInt();       break;
-			case CVAR_FLOAT:  reinterpret_cast<CVarFloat*>(&value)->~CVarFloat();   break;
-			case CVAR_STRING: reinterpret_cast<CVarString*>(&value)->~CVarString(); break;
-			case CVAR_ENUM:   reinterpret_cast<CVarEnum*>(&value)->~CVarEnum();     break;
-			case CVAR_BOOL:   reinterpret_cast<CVarBool*>(&value)->~CVarBool();     break;
+			case CVAR_INT:    get<CVarInt>()->~CVarInt();       break;
+			case CVAR_FLOAT:  get<CVarFloat>()->~CVarFloat();   break;
+			case CVAR_STRING: get<CVarString>()->~CVarString(); break;
+			case CVAR_ENUM:   get<CVarEnum>()->~CVarEnum();     break;
+			case CVAR_BOOL:   get<CVarBool>()->~CVarBool();     break;
+			case CVAR_FUNC:   get<CVarFunc>()->~CVarFunc();     break;
 		}
 	}
 	
 	const int type;
-	const std::string name;
-	variant<CVarInt, CVarFloat, CVarString, CVarEnum, CVarBool>::type value;
+	const str_const name;
+	variant<CVarInt, CVarFloat, CVarString, CVarEnum, CVarBool, CVarFunc>::type value;
 };
 
 #endif

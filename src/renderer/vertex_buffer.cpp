@@ -84,7 +84,7 @@ static void parse_attribs(const char* fmt, ShaderAttribs& attrs, GLint& stride) 
 			if(state == GET_NAME && *p == ':'){
 				const int len = p - name_start;
 				DEBUGF("\tAttrib name: %.*s", len, name_start);
-				current_attr.name_hash = djb2(name_start, len);
+				current_attr.name_hash = str_hash_len(name_start, len);
 				state = GET_NELEM;
 			} else
 			if(state == GET_NELEM){

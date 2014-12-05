@@ -94,7 +94,7 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 		
 		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
 		if(ai == active.uniform_info.end()){
-			DEBUGF("Uniform %d not available in actives.", i.name_hash);
+			DEBUGF("Uniform %#x not available in actives.", i.name_hash);
 			continue;
 		} else if(i.type != ai->type || i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
 			DEBUGF("Uniform incompatible:\nt: %#x\t%#x\nr: %d\t%d\nc: %d\t%d\nn: %d\t%d",
@@ -159,7 +159,7 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLint idx, GLuin
 	//TODO: arrays: name will not have [n], size > 0. 
 	assert(size == 1 && "Arrays are NYI :(");
 
-	uint32_t hash = djb2(name);
+	uint32_t hash = str_hash(name);
 	auto it = std::find(uniform_info.begin(), uniform_info.end(), hash);
 
 	assert(it == uniform_info.end());

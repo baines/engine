@@ -124,7 +124,7 @@ bool ShaderProgram::link(void){
 		
 		GLint index = gl.GetAttribLocation(program_id, name_buf);
 		
-		uint32_t hash = djb2(name_buf);
+		uint32_t hash = str_hash(name_buf);
 		attribs.initAttrib(hash, index);
 	}
 	

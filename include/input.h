@@ -7,6 +7,8 @@
 #include <string>
 
 struct Input {
+	
+	Input(Engine& e);
 
 	void bind(const char* input_name, const char* action);
 	void bindRaw(SDL_Scancode key, const char* action);

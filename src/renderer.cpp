@@ -181,6 +181,9 @@ void Renderer::drawFrame(){
 		
 		v->bind(render_state);
 		
+		/*TODO: check next renderable, if it uses the same state then call the
+		        MultiDrawElements / MultiDrawArrays funcs instead. */
+		
 		if(IndexBuffer* ib = v->getIndexBuffer()){
 			gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
 		} else {

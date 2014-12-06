@@ -1,6 +1,30 @@
 #include "input.h"
+#include "engine.h"
 
 using namespace std;
+
+Input::Input(Engine& e){
+	//XXX: consolidate these two?
+	e.cfg.addVar("bind", CVarFunc([&](std::string&& s){
+		char* state = nullptr;
+		char* key = strtok_r(&s[0]  , " \t", &state);
+		char* act = strtok_r(nullptr, " \t", &state);
+		
+		if(key && act){
+			this->bind(key, act);
+		}
+	}));
+	e.cfg.addVar("bind_raw", CVarFunc([&](std::string&& s){
+		char* state = nullptr;
+		char* key = strtok_r(&s[0]  , " \t", &state);
+		char* act = strtok_r(nullptr, " \t", &state);
+		
+		if(key && act){
+			auto code = static_cast<SDL_Scancode>(strtol(key, nullptr, 0));
+			this->bindRaw(code, act);
+		}
+	}));
+}
 
 void Input::bind(const char* input_name, const char* action){
 	SDL_Scancode key = SDL_GetScancodeFromName(input_name);

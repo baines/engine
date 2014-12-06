@@ -40,7 +40,11 @@ struct CVarString {
 	CVarString(const char* str) : str(str){}
 	bool set(const char* s, size_t len = 0){
 		if(!s) return false;
-		str = len ? std::string(s, len) : std::string(s);
+		if(len){
+			str.assign(s, len);
+		} else {
+			str.assign(s);
+		}
 		return true;
 	}
 	bool set(std::string&& s){
@@ -98,10 +102,7 @@ struct CVarFunc {
 		if(!s) return;
 		func(len ? std::string(s, len) : std::string(s));
 	}
-	void call(const std::string& args){
-		func(args);
-	}
-	std::function<void(const std::string&)> func;
+	std::function<void(std::string&&)> func;
 };
 
 template<class T> struct cvar_id {};

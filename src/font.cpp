@@ -187,6 +187,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	bool do_swizzle = false;
 	GLenum int_fmt = GL_ALPHA8;
 	
+	//TODO: use glInternalFormatQuery instead of extensions (if available)?
 	if(gl.hasExtension("ARB_texture_compression_rgtc")
 	|| gl.hasExtension("EXT_texture_compression_rgtc")){
 		int_fmt = GL_COMPRESSED_RED_RGTC1;

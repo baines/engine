@@ -173,7 +173,7 @@ Config::Config(Engine& e, int argc, char** argv){
 		for(const char* c = data; c < data + sz; ++c){
 		
 			if(state == GET_NAME_START && !isspace(*c)){
-				if(*c == '#' || *c == ';' || *c == '/'){
+				if(*c == '#' || *c == ';'){
 					state = SKIP_LINE;
 				} else {
 					name_start = c;
@@ -189,9 +189,10 @@ Config::Config(Engine& e, int argc, char** argv){
 			}
 			
 			if(state == GET_VALUE){
-				if(*c == '\n'){
+				bool eol = (*c == '\n');
+				if(eol || *c == '#' || *c == ';'){
 					add_line(c);
-					state = GET_NAME_START;
+					state = eol ? GET_NAME_START : SKIP_LINE;
 				} else if(!value && !isspace(*c)){
 					value = c;
 				}

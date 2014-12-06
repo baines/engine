@@ -26,6 +26,8 @@ struct Config {
 			for(auto& i = it_pair.first, &j = it_pair.second; i != j; ++i){
 				cvars.back().eval(i->second.str, i->second.len);
 			}
+			cvar_hooks.erase(it_pair.first, it_pair.second);
+			
 			return cvars.back().get<Var>();
 		}
 	}

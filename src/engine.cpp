@@ -4,7 +4,7 @@
 Engine::Engine(int argc, char** argv, const char* name)
 : res        (argv[0])
 , cfg        (*this, argc, argv)
-, input      ()
+, input      (*this)
 , renderer   (*this, name)
 , text       (*this)
 , state      ()
@@ -13,12 +13,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , running    (true)
 , prev_ticks (0)
 , root_state (*this) {
-
 	state.push(&root_state);
-	
-	//move to a default config file?
-	input.bindRaw(SDL_SCANCODE_ESCAPE, "menu");
-	input.bindRaw(SDL_SCANCODE_GRAVE, "console");
 }
 
 void Engine::addState(GameState* s){

@@ -53,8 +53,8 @@ struct ResourceSystem {
 	size_t getUseCount(const char* name);
 	
 	template<size_t N>
-	void addImmediate(const char* name, const char (&data)[N]){
-		resources.emplace(name, make_resource(data));
+	void addImmediate(const str_const& name, const char (&data)[N]){
+		resources.emplace(name.hash, make_resource(data));
 	}
 	
 	template<class T, class... Args>
@@ -62,7 +62,7 @@ struct ResourceSystem {
 	
 		bool get(const char* name, std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
 			DEBUGF("Checking resource cache for %s... ", name);
-			auto it = entries.find(std::tuple_cat(std::tuple<std::string>(name), args));
+			auto it = entries.find(std::tuple_cat(std::make_tuple(str_hash(name)), args));
 		
 			if(it != entries.end() && !it->second.expired()){
 				DEBUGF("\t[Found!]");
@@ -75,7 +75,7 @@ struct ResourceSystem {
 		}
 		
 		void put(const char* name, const std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
-			auto tup = std::tuple_cat(std::tuple<std::string>(name), args);
+			auto tup = std::tuple_cat(std::make_tuple(str_hash(name)), args);
 			auto it = entries.find(tup);
 			
 			if(it == entries.end() || it->second.expired()){
@@ -84,7 +84,7 @@ struct ResourceSystem {
 			}
 		}
 		
-		typedef std::tuple<std::string, Args...> CacheTuple;
+		typedef std::tuple<uint32_t, Args...> CacheTuple;
 		std::map<CacheTuple, std::weak_ptr<T>> entries;
 	};
 	
@@ -96,7 +96,7 @@ struct ResourceSystem {
 
 private:
 	ResourceHandle import(const char* name);
-	std::map<std::string, ResourceHandle> resources;
+	std::map<uint32_t, ResourceHandle> resources;
 };
 
 //template<class T, class... Args> std::map<std::tuple<std::string, Args...>, T> ResourceSystem::Cache<T, Args...>::entries{};

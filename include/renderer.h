@@ -18,7 +18,6 @@ struct Renderer {
 	void drawFrame();
 	
 	void addRenderable(Renderable& r);
-	void delRenderable(Renderable& r);
 	
 	SDL_Window* getWindow() const {
 		return window;

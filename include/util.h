@@ -4,6 +4,8 @@
 #include <memory>
 #include <cstring>
 #include <array>
+#include <experimental/string_view>
+using string_view = std::experimental::string_view;
 
 /* Integer sequence stuff since C++14 isn't out yet */
 
@@ -62,7 +64,7 @@ inline constexpr uint32_t str_hash(const char* str, uint32_t hash = 6159){
 	return *str ? str_hash(str+1, 187 * hash + *str) : hash;
 }
 
-static uint32_t str_hash_len(const char* str, size_t len){
+inline uint32_t str_hash_len(const char* str, size_t len){
 	uint32_t hash = 6159;
 	
 	for(int i = 0; i < len; ++i){
@@ -70,6 +72,10 @@ static uint32_t str_hash_len(const char* str, size_t len){
 	}
 	
 	return hash;
+}
+
+inline uint32_t str_hash(const string_view& str){
+	return str_hash_len(str.data(), str.size());
 }
 
 struct str_const {
@@ -114,6 +120,10 @@ inline bool str_to_bool(const char* str){
 	return str[0] == '1' 
 	    || (tolower(str[0]) == 't' && tolower(str[1]) == 'r' 
 	    &&  tolower(str[2]) == 'u' && tolower(str[3]) == 'e');
+}
+
+inline constexpr bool str_to_bool(const string_view& str){
+	return str[0] == '1' || str.compare(0, 4, string_view("true", 4));
 }
 
 /* GLM stuff */

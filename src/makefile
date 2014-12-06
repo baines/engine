@@ -5,7 +5,7 @@ headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources))
 includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/ -I/usr/include/freetype2
-CXXFLAGS := $(includes) -std=c++11 -pipe -ffast-math -fno-rtti -fno-exceptions
+CXXFLAGS := $(includes) -std=c++1y -pipe -ffast-math -fno-rtti -fno-exceptions
 
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer

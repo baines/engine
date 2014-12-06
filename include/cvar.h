@@ -5,6 +5,8 @@
 #include <vector>
 #include <cstdlib>
 #include "util.h"
+#include <experimental/string_view>
+using string_view = std::experimental::string_view;
 
 enum CVarType {
 	CVAR_INVALID,
@@ -38,13 +40,8 @@ typedef CVarNumeric<float> CVarFloat;
 
 struct CVarString {
 	CVarString(const char* str) : str(str){}
-	bool set(const char* s, size_t len = 0){
-		if(!s) return false;
-		if(len){
-			str.assign(s, len);
-		} else {
-			str.assign(s);
-		}
+	bool set(const string_view& s){
+		str = std::move(s.to_string());
 		return true;
 	}
 	bool set(std::string&& s){
@@ -98,11 +95,10 @@ struct CVarBool {
 struct CVarFunc {
 	template<class F>
 	CVarFunc(F&& fn) : func(std::forward<F>(fn)){}
-	void call(const char* s, size_t len){
-		if(!s) return;
-		func(len ? std::string(s, len) : std::string(s));
+	void call(const string_view& str){
+		func(str);
 	}
-	std::function<void(std::string&&)> func;
+	std::function<void(const string_view&)> func;
 };
 
 template<class T> struct cvar_id {};
@@ -131,20 +127,16 @@ struct CVar {
 		}
 	}
 	
-	void eval(const char* val, size_t len = 0){
-		if(!val && type != CVAR_FUNC) return;
+	void eval(const string_view& val){
+		if(val.empty() && type != CVAR_FUNC) return;
 		
 		switch(type){
-			case CVAR_INT:    get<CVarInt>()->set(strtol(val, nullptr, 0)); break;
-			case CVAR_FLOAT:  get<CVarFloat>()->set(strtof(val, nullptr)); break;
-			case CVAR_STRING: get<CVarString>()->set(val, len); break;
-			case CVAR_ENUM: {
-				uint32_t hash = len ? str_hash_len(val, len) : str_hash(val);
-				get<CVarEnum>()->set(hash);
-				break;
-			}
+			case CVAR_INT:    get<CVarInt>()->set(strtol(val.data(), nullptr, 0)); break;
+			case CVAR_FLOAT:  get<CVarFloat>()->set(strtof(val.data(), nullptr)); break;
+			case CVAR_STRING: get<CVarString>()->set(val); break;
+			case CVAR_ENUM:   get<CVarEnum>()->set(str_hash(val)); break;
 			case CVAR_BOOL:   get<CVarBool>()->set(str_to_bool(val)); break;
-			case CVAR_FUNC:   get<CVarFunc>()->call(val, len); break;
+			case CVAR_FUNC:   get<CVarFunc>()->call(val); break;
 		}
 	}
 

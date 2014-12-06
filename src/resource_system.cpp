@@ -35,18 +35,18 @@ ResourceSystem::ResourceSystem(const char* argv0){
 }
 
 ResourceHandle ResourceSystem::load(const char* name){
-	auto it = resources.find(name);
+	auto it = resources.find(str_hash(name));
 	if(it != resources.end()){
 		return it->second;
 	} else {
 		ResourceHandle h = import(name);
-		resources.emplace(string(name), h);
+		resources.emplace(str_hash(name), h);
 		return h;
 	}
 }
 
 size_t ResourceSystem::getUseCount(const char* name){
-	auto it = resources.find(name);
+	auto it = resources.find(str_hash(name));
 	
 	if(it != resources.end()){
 		return it->second->use_count();

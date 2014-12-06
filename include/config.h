@@ -9,6 +9,8 @@
 #include <cstring>
 #include <map>
 #include <algorithm>
+#include <experimental/string_view>
+using string_view = std::experimental::string_view;
 
 struct Config {
 
@@ -24,7 +26,7 @@ struct Config {
 			
 			auto it_pair = cvar_hooks.equal_range(name.hash);
 			for(auto& i = it_pair.first, &j = it_pair.second; i != j; ++i){
-				cvars.back().eval(i->second.str, i->second.len);
+				cvars.back().eval(i->second);
 			}
 			cvar_hooks.erase(it_pair.first, it_pair.second);
 			
@@ -43,19 +45,19 @@ struct Config {
 	
 	// sets value to val or calls function with val for CVarFuncs
 	//TODO: template this instead or use std::string??
-	void hookVar(uint32_t hash, const char* val, size_t len = 0){
+	void hookVar(uint32_t hash, const string_view& str){
 		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const CVar& cv){
 			return cv.name.hash == hash;
 		});
 		if(it != cvars.end()){
-			it->eval(val, len);
+			it->eval(str);
 		} else {
-			cvar_hooks.emplace(hash, hook_str{ val, len });
+			cvar_hooks.emplace(hash, str);
 		}
 	}
 	
-	void hookVar(const str_const& str, const char* val, size_t len = 0){
-		hookVar(str.hash, val, len);
+	void hookVar(const str_const& key, const string_view& value){
+		hookVar(key.hash, value);
 	}
 	
 	bool extendPrefix(std::string& prefix){
@@ -70,8 +72,7 @@ private:
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;
-	struct hook_str { const char* str; size_t len; };
-	std::multimap<uint32_t, hook_str> cvar_hooks;
+	std::multimap<uint32_t, string_view> cvar_hooks;
 };
 
 #endif

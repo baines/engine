@@ -111,7 +111,7 @@ void Renderer::reload(Engine& e){
 		
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
 		
-		int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN;
+		int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE;
 		if(fullscreen->val){
 			window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 		}
@@ -149,6 +149,14 @@ void Renderer::reload(Engine& e){
 
 void Renderer::onWindowEvent(SDL_WindowEvent& ev){
 	//TODO: handle resizes / focus
+	if(ev.event == SDL_WINDOWEVENT_SIZE_CHANGED){
+		window_width->val = ev.data1;
+		window_height->val = ev.data2;
+		
+		if(gl.initialized()){
+			gl.Viewport(0, 0, window_width->val, window_height->val);
+		}
+	}
 }
 
 void Renderer::drawFrame(){
@@ -198,10 +206,6 @@ void Renderer::drawFrame(){
 
 void Renderer::addRenderable(Renderable& r){
 	renderables.push_back(&r);
-}
-
-void Renderer::delRenderable(Renderable& r){
-
 }
 
 Renderer::~Renderer(){

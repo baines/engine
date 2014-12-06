@@ -5,40 +5,44 @@ using namespace std;
 
 Input::Input(Engine& e){
 	//XXX: consolidate these two?
-	e.cfg.addVar("bind", CVarFunc([&](std::string&& s){
+	e.cfg.addVar("bind", CVarFunc([&](const string_view& str){
+		char s[str.size()+1] = {};
+		str.copy(s, str.size());
 		char* state = nullptr;
 		char* key = strtok_r(&s[0]  , " \t", &state);
 		char* act = strtok_r(nullptr, " \t", &state);
 		
 		if(key && act){
-			this->bind(key, act);
+			this->bind(key, str_hash(act));
 		}
 	}));
-	e.cfg.addVar("bind_raw", CVarFunc([&](std::string&& s){
+	e.cfg.addVar("bind_raw", CVarFunc([&](const string_view& str){
+		char s[str.size()+1] = {};
+		str.copy(s, str.size());
 		char* state = nullptr;
 		char* key = strtok_r(&s[0]  , " \t", &state);
 		char* act = strtok_r(nullptr, " \t", &state);
 		
 		if(key && act){
 			auto code = static_cast<SDL_Scancode>(strtol(key, nullptr, 0));
-			this->bindRaw(code, act);
+			this->bindRaw(code, str_hash(act));
 		}
 	}));
 }
 
-void Input::bind(const char* input_name, const char* action){
+void Input::bind(const char* input_name, uint32_t action){
 	SDL_Scancode key = SDL_GetScancodeFromName(input_name);
 	bindRaw(key, action);
 }
 
-void Input::bindRaw(SDL_Scancode key, const char* action){
+void Input::bindRaw(SDL_Scancode key, uint32_t action){
 	if(key != SDL_SCANCODE_UNKNOWN){
-		binds.emplace(string(action), key);
+		binds.emplace(action, key);
 		
-		for(auto states = watches.find(action); states != watches.end(); ++states){
-			StateAction& action = states->second;
-			
-			active_binds.emplace(StateKey{action.state, key}, action.id);
+		auto pair = watches.equal_range(action);
+		for(auto i = pair.first, j = pair.second; i != j; ++i){
+			StateAction& sa =i->second;
+			active_binds.emplace(StateKey{sa.state, key}, sa.id);
 		}
 	}
 }
@@ -72,11 +76,11 @@ void Input::onDeviceChange(SDL_ControllerDeviceEvent& event){
 
 }
 
-void Input::watchAction(GameState* s, const char* action, int action_id){
+void Input::watchAction(GameState* s, const str_const& action, int action_id){
 
-	watches.emplace(action, StateAction{s, action_id});
+	watches.emplace(action.hash, StateAction{s, action_id});
 	
-	auto it = binds.find(action);
+	auto it = binds.find(action.hash);
 	if(it != binds.end()){
 		active_binds.emplace(StateKey{s, it->second}, action_id);
 	}

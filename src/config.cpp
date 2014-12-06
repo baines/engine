@@ -162,12 +162,15 @@ Config::Config(Engine& e, int argc, char** argv){
 		size_t sz = cfg_file.size();
 		
 		uint32_t hash = 0;
-		const char* name_start = data, *value = nullptr;
+		const char* name_start = data, *value = "";
 		
 		auto add_line = [&](const char* c){
-			if(hash){ hookVar(hash, value, c - value); }
+			if(hash){ 
+				const size_t sz = *value ? c - value : 0;
+				hookVar(hash, { value, sz });
+			}
 			hash = 0;
-			value = nullptr;
+			value = "";
 		};
 		
 		for(const char* c = data; c < data + sz; ++c){
@@ -193,7 +196,7 @@ Config::Config(Engine& e, int argc, char** argv){
 				if(eol || *c == '#' || *c == ';'){
 					add_line(c);
 					state = eol ? GET_NAME_START : SKIP_LINE;
-				} else if(!value && !isspace(*c)){
+				} else if(!*value && !isspace(*c)){
 					value = c;
 				}
 			} 

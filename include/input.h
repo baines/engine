@@ -1,6 +1,7 @@
 #ifndef INPUT_H_
 #define INPUT_H_
 #include "common.h"
+#include "util.h"
 #include <SDL2/SDL.h>
 #include "game_state.h"
 #include <map>
@@ -10,13 +11,13 @@ struct Input {
 	
 	Input(Engine& e);
 
-	void bind(const char* input_name, const char* action);
-	void bindRaw(SDL_Scancode key, const char* action);
+	void bind(const char* input_name, uint32_t action);
+	void bindRaw(SDL_Scancode key, uint32_t action);
 	
 	void unbind(const char* input_name);
 	void unbindRaw(SDL_Scancode key);
 
-	void watchAction(GameState* s, const char* action, int action_id);
+	void watchAction(GameState* s, const str_const& action, int action_id);
 
 	void onDeviceChange(SDL_ControllerDeviceEvent& event);
 
@@ -40,9 +41,9 @@ private:
 		}
 	};
 
-	std::map<std::string, SDL_Scancode> binds;
+	std::map<uint32_t, SDL_Scancode> binds;
 	std::map<StateKey, int> active_binds;
-	std::multimap<std::string, StateAction> watches;
+	std::multimap<uint32_t, StateAction> watches;
 };
 
 #endif

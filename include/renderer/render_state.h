@@ -10,7 +10,7 @@ struct RenderState {
 	std::array<GLuint, 8> samp;
 	GLuint vao;
 	
-	BlendMode blend_mode;
+	BlendMode blend_mode = BlendMode({ GL_ONE, GL_ZERO, GL_ONE, GL_ZERO});
 	
 };
 

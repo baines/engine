@@ -26,6 +26,7 @@ private:
 	Resource<VertShader> text_vs;
 	Resource<FragShader> text_fs;
 	ShaderProgram text_shader;
+	BlendMode blend_mode;
 };
 
 #endif

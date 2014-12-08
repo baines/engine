@@ -123,7 +123,7 @@ inline bool str_to_bool(const char* str){
 }
 
 inline constexpr bool str_to_bool(const string_view& str){
-	return str[0] == '1' || str.compare(0, 4, string_view("true", 4));
+	return str[0] == '1' || str.compare(0, 4, string_view("true", 4)) == 0;
 }
 
 /* GLM stuff */

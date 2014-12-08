@@ -102,6 +102,8 @@ void Renderer::reload(Engine& e){
 						
 		if(gl_core_profile->val && v.maj >= 3){
 			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		} else {
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
 		}
 		
 		int ctx_flags = 0;
@@ -143,11 +145,13 @@ void Renderer::reload(Engine& e){
 	
 	if(gl.DebugMessageCallback){
 		gl.DebugMessageCallback(&gl_dbg_callback, nullptr);
+		gl.Enable(GL_DEBUG_OUTPUT);
 	}
 	
-	handleResize(window_width->val, window_height->val);
-	
+	gl.Enable(GL_BLEND);
 	SDL_GL_SetSwapInterval(vsync->val);
+	
+	handleResize(window_width->val, window_height->val);
 }
 
 void Renderer::handleResize(float w, float h){
@@ -170,7 +174,7 @@ void Renderer::drawFrame(){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
 		
-		r->blend_mode.set(render_state);
+		r->blend_mode.bind(render_state);
 		
 		if(ShaderProgram* s = r->shader){
 			s->bind(render_state);

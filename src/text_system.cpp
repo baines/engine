@@ -12,7 +12,8 @@ TextSystem::TextSystem(Engine& e)
 , text_buffer("a_pos:2s|a_tex:2SN", 512)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
-, text_shader(*text_vs, *text_fs) {
+, text_shader(*text_vs, *text_fs)
+, blend_mode({ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }) {
 	assert(FT_Init_FreeType(&ft_lib) == 0);
 	text_shader.link();
 	v_state.setVertexBuffers({ &text_buffer });
@@ -66,7 +67,7 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 	}
 	
 	const GLsizei count = 4 * str_len;
-	return Renderable(&v_state, &text_shader, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
+	return Renderable(&v_state, &text_shader, blend_mode, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
 }
 
 void TextSystem::delText(Renderable& r){

@@ -6,8 +6,20 @@ BlendMode::BlendMode()
 , equations { GL_FUNC_ADD, GL_FUNC_ADD } {
 
 }
+
+BlendMode::BlendMode(const std::array<GLenum, 4>& fns, const std::array<GLenum, 2>& eqs)
+: funcs(fns)
+, equations(eqs) {
+	if(funcs[2] == 0 && funcs[3] == 0){
+		funcs[2] = funcs[0];
+		funcs[3] = funcs[1];
+	}
+	if(equations[1] == 0){
+		equations[1] = equations[0];
+	}
+}
 	
-void BlendMode::set(RenderState& state){
+void BlendMode::bind(RenderState& state){
 	if(funcs != state.blend_mode.funcs){
 		gl.BlendFuncSeparate(funcs[0], funcs[1], funcs[2], funcs[3]);
 	}

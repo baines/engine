@@ -2,6 +2,8 @@
 #include "engine.h"
 #include <climits>
 #include "enums.h"
+#define GLM_FORCE_RADIANS
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace {
 
@@ -64,7 +66,8 @@ Renderer::Renderer(Engine& e, const char* name)
 , vsync            (e.cfg.addVar("vid_vsync", CVarInt(1, -2, 2)))
 , fullscreen       (e.cfg.addVar("vid_fullscreen", CVarBool(false)))
 , window_title     (name)
-, window           (nullptr) {
+, window           (nullptr)
+, main_uniforms    () {
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	
 	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
@@ -142,20 +145,20 @@ void Renderer::reload(Engine& e){
 		gl.DebugMessageCallback(&gl_dbg_callback, nullptr);
 	}
 	
-	gl.Viewport(0, 0, window_width->val, window_height->val);
+	handleResize(window_width->val, window_height->val);
 	
 	SDL_GL_SetSwapInterval(vsync->val);
 }
 
-void Renderer::onWindowEvent(SDL_WindowEvent& ev){
-	//TODO: handle resizes / focus
-	if(ev.event == SDL_WINDOWEVENT_SIZE_CHANGED){
-		window_width->val = ev.data1;
-		window_height->val = ev.data2;
-		
-		if(gl.initialized()){
-			gl.Viewport(0, 0, window_width->val, window_height->val);
-		}
+void Renderer::handleResize(float w, float h){
+	window_width->val = w;
+	window_height->val = h;
+	
+	if(gl.initialized()){
+		gl.Viewport(0, 0, w, h);
+		main_uniforms.setUniform("u_ortho", {
+			glm::ortho(0.f, w, h, 0.f)
+		});
 	}
 }
 
@@ -172,6 +175,7 @@ void Renderer::drawFrame(){
 		if(ShaderProgram* s = r->shader){
 			s->bind(render_state);
 			s->setAttribs(render_state, *v);
+			s->setUniforms(main_uniforms);
 			
 			if(ShaderUniforms* u = r->uniforms){
 				s->setUniforms(*u);

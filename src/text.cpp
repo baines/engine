@@ -3,8 +3,6 @@
 #include "font.h"
 #include "renderer.h"
 #include "engine.h"
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
 
 Text::Text()
 : engine(nullptr)
@@ -27,9 +25,6 @@ Text::Text(Engine& e, const Font& f, const std::string& str, size_t max_len)
 	renderable.textures[0] = tex;
 	
 	uniforms.setUniform("u_samp", { 0 });
-	
-	//XXX: don't hardcode window dimensions!
-	uniforms.setUniform("u_mvp", { glm::ortho(0.f, 640.f, 480.f, 0.f) });
 }
 
 Text::Text(Text&& other)

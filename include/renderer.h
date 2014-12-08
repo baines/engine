@@ -14,7 +14,8 @@
 struct Renderer {
 	Renderer(Engine& e, const char* name);
 	void reload(Engine& e);
-	void onWindowEvent(SDL_WindowEvent& ev);
+	void handleResize(float w, float h);
+
 	void drawFrame();
 	
 	void addRenderable(Renderable& r);
@@ -39,6 +40,8 @@ private:
 	
 	const char* window_title;
 	SDL_Window* window;
+	
+	ShaderUniforms main_uniforms;
 };
 
 #endif

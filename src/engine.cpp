@@ -52,9 +52,12 @@ bool Engine::run(void){
 			case SDL_CONTROLLERDEVICEREMAPPED:
 				input.onDeviceChange(e.cdevice);
 				break;
-			case SDL_WINDOWEVENT:
-				renderer.onWindowEvent(e.window);
+			case SDL_WINDOWEVENT: {
+				if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
+					renderer.handleResize(e.window.data1, e.window.data2);
+				}
 				break;
+			}
 			case SDL_QUIT:
 				running = false;
 			default:

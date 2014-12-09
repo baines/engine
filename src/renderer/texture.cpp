@@ -146,6 +146,7 @@ Texture2D& Texture2D::operator=(Texture2D&& other){
 	std::swap(id, other.id);
 	std::swap(w, other.w);
 	std::swap(h, other.h);
+	return *this;
 }
 
 void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
@@ -189,6 +190,7 @@ bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 		gl.BindTexture(GL_TEXTURE_2D, id);
 		rs.tex[tex_unit] = id;
 	}
+	return true;
 }
 
 Texture2D::~Texture2D(){

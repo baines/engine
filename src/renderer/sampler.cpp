@@ -22,7 +22,7 @@ void Sampler::setParam(GLenum key, GLint val){
 	gl.SamplerParameteri(id, key, val);
 }
 
-bool Sampler::bind(size_t tex_unit, RenderState& rs) const {
+void Sampler::bind(size_t tex_unit, RenderState& rs) const {
 	if(rs.samp[tex_unit] != id){
 		gl.BindSampler(tex_unit, id);
 		rs.samp[tex_unit] = id;

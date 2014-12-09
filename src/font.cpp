@@ -113,10 +113,10 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	bool got_size = false;
 	
 	for(init_w = 256; init_w <= max_w; init_w <<= 1){
-		int glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
-		int lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
+		size_t glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
+		size_t lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
 		
-		if(lines * height <= init_w){
+		if(lines * height <= (size_t)init_w){
 			got_size = true;
 			break;
 		}
@@ -202,6 +202,8 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		atlas.setSwizzle({ GL_ZERO, GL_ZERO, GL_ZERO, GL_RED });
 	}
 
-	free(img.mem);	
+	free(img.mem);
+	
+	return true;
 }
 

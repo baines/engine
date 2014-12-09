@@ -57,17 +57,22 @@ GLsizei len, const char* msg, const void* p){
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
 , render_state     ()
-, gl_debug         (e.cfg.addVar("gl_debug", CVarBool(true)))
-, gl_fwd_compat    (e.cfg.addVar("gl_fwd_compat", CVarBool(true)))
+, gl_debug         (e.cfg.addVar("gl_debug",        CVarBool(true)))
+, gl_fwd_compat    (e.cfg.addVar("gl_fwd_compat",   CVarBool(true)))
 , gl_core_profile  (e.cfg.addVar("gl_core_profile", CVarBool(true)))
-, libgl            (e.cfg.addVar("gl_library", CVarString("")))
-, window_width     (e.cfg.addVar("vid_width" , CVarInt(640, 320, INT_MAX)))
-, window_height    (e.cfg.addVar("vid_height", CVarInt(480, 240, INT_MAX)))
-, vsync            (e.cfg.addVar("vid_vsync", CVarInt(1, -2, 2)))
-, fullscreen       (e.cfg.addVar("vid_fullscreen", CVarBool(false)))
+, gl_multi_draw    (e.cfg.addVar("gl_multi_draw",   CVarBool(true)))
+, libgl            (e.cfg.addVar("gl_library",      CVarString("")))
+, window_width     (e.cfg.addVar("vid_width" ,      CVarInt(640, 320, INT_MAX)))
+, window_height    (e.cfg.addVar("vid_height",      CVarInt(480, 240, INT_MAX)))
+, vsync            (e.cfg.addVar("vid_vsync",       CVarInt(1, -2, 2)))
+, fov              (e.cfg.addVar("vid_fov",         CVarInt(90, 45, 135)))
+, fullscreen       (e.cfg.addVar("vid_fullscreen",  CVarBool(false)))
+, resizable        (e.cfg.addVar("vid_resizable",   CVarBool(true)))
 , window_title     (name)
 , window           (nullptr)
-, main_uniforms    () {
+, main_uniforms    ()
+, window_w         (window_width->val)
+, window_h         (window_height->val) {
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	
 	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
@@ -94,7 +99,7 @@ void Renderer::reload(Engine& e){
 	
 	bool created = false;
 		
-	for(int i = 0; i < SDL_arraysize(ctx_versions); ++i){
+	for(size_t i = 0; i < SDL_arraysize(ctx_versions); ++i){
 		const glversion& v = ctx_versions[i];
 		
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, v.maj);
@@ -116,9 +121,12 @@ void Renderer::reload(Engine& e){
 		
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
 		
-		int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE;
+		int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN;
 		if(fullscreen->val){
 			window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		}
+		if(resizable->val){
+			window_flags |= SDL_WINDOW_RESIZABLE;
 		}
 	
 		window = SDL_CreateWindow(
@@ -130,7 +138,7 @@ void Renderer::reload(Engine& e){
 			window_flags
 		);
 		
-		if(created = gl.createContext(e, window)){
+		if((created = gl.createContext(e, window))){
 			break;
 		} else {
 			SDL_DestroyWindow(window);
@@ -160,8 +168,17 @@ void Renderer::handleResize(float w, float h){
 	
 	if(gl.initialized()){
 		gl.Viewport(0, 0, w, h);
+
 		main_uniforms.setUniform("u_ortho", {
 			glm::ortho(0.f, w, h, 0.f)
+		});
+		
+		const float half_angle = (fov->val / 360.f) * M_PI;
+		const float x_dist = tan(half_angle);
+		const float y_dist = x_dist * (h/w);
+		
+		main_uniforms.setUniform("u_perspective", {
+			glm::frustum(-x_dist, x_dist, -y_dist, y_dist, 1.0f, 1000.0f)
 		});
 	}
 }
@@ -170,7 +187,9 @@ void Renderer::drawFrame(){
 
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for(auto& r : renderables){
+	for(auto i = renderables.begin(), j = renderables.end(); i != j; ++i){
+		auto* r = *i;
+		
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
 		
@@ -196,14 +215,38 @@ void Renderer::drawFrame(){
 		}
 		
 		v->bind(render_state);
+				
+		if(gl_multi_draw->val){
+			int num_calls = 1;
+			multi_counts.push_back(r->count);
+			multi_offs.push_back(r->offset);
 		
-		/*TODO: check next renderable, if it uses the same state then call the
-		        MultiDrawElements / MultiDrawArrays funcs instead. */
+			for(auto k = i+1; k != j; ++k){
+				if((*k)->usesSameState(*r)){
+					multi_counts.push_back((*k)->count);
+					multi_offs.push_back((*k)->offset);
+					++num_calls;
+				} else {
+					break;
+				}
+			}
 		
-		if(IndexBuffer* ib = v->getIndexBuffer()){
-			gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
+			if(IndexBuffer* ib = v->getIndexBuffer()){
+				auto offs = reinterpret_cast<const void* const*>(multi_offs.data());
+				gl.MultiDrawElements(r->prim_type, multi_counts.data(), ib->getType(), offs, num_calls);
+			} else {
+				gl.MultiDrawArrays(r->prim_type, multi_offs.data(), multi_counts.data(), num_calls);
+			}
+			
+			multi_counts.clear();
+			multi_offs.clear();
+			
 		} else {
-			gl.DrawArrays(r->prim_type, r->offset, r->count);
+			if(IndexBuffer* ib = v->getIndexBuffer()){
+				gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
+			} else {
+				gl.DrawArrays(r->prim_type, r->offset, r->count);
+			}
 		}
 	}
 	

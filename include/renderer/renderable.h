@@ -50,6 +50,17 @@ struct Renderable {
 		set(std::forward<Args>(args)...);
 	}
 	
+	bool usesSameState(const Renderable& o){
+		//TODO: don't just compare pointers?
+		return prim_type == o.prim_type
+		    && blend_mode == o.blend_mode
+		    && vertex_state == o.vertex_state
+		    && shader == o.shader
+		    && uniforms == o.uniforms
+		    && textures == o.textures
+		    && samplers == o.samplers;
+	}
+	
 	std::array<const Texture*, 8> textures;
 	std::array<const Sampler*, 8> samplers;
 	

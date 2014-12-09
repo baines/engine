@@ -13,7 +13,7 @@ namespace logging {
 		info  = 3,
 		debug = 4
 	};
-	
+
 	void log(level l, const char* fmt, ...);
 	
 	void setVerbosity(level l);
@@ -23,7 +23,7 @@ namespace logging {
 	logsink* addSink(log_fn&& fn);
 	
 	void delSink(logsink* handle);
-};
+}
 
 #endif
 

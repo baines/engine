@@ -13,6 +13,9 @@ GLFUNC(void, Disable, (GLenum))
 
 GLFUNC(void, DrawArrays, (GLenum, GLint, GLsizei))
 GLFUNC(void, DrawElements, (GLenum, GLsizei, GLenum, const GLvoid*))
+GLFUNC(void, MultiDrawArrays, (GLenum, const GLint*, const GLsizei*, GLsizei))
+GLFUNC(void, MultiDrawElements, (GLenum, const GLsizei*, GLenum, const GLvoid* const*, GLsizei))
+
 GLFUNC(void, GenFramebuffers, (GLsizei, GLuint*), ARBCORE | EXT | 30, "framebuffer_object")
 GLFUNC(void, BindFramebuffer, (GLenum, GLuint), ARBCORE | EXT | 30, "framebuffer_object")
 GLFUNC(void, FramebufferTexture2D, (GLenum, GLenum, GLuint, GLint), ARBCORE | EXT | 30, "framebuffer_object")

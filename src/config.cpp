@@ -121,8 +121,8 @@ void ArgContext::parse(Config& c){
 		bool found = false, long_name = (str[1] == '-');
 
 		for(auto& a : args){
-			if(long_name && hash == a.long_name.hash 
-			|| !long_name && hash == a.short_name.hash){
+			if((long_name && (hash == a.long_name.hash)) 
+			|| (!long_name && (hash == a.short_name.hash))){
 				a.func(c, *this);
 				found = true;
 				break;

@@ -3,6 +3,7 @@
 *~
 test/test
 test/*.log
+test/settings.cfg
 build/internal.zip
 *.trace
 

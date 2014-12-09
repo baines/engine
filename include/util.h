@@ -56,7 +56,7 @@ struct variant {
 	using type = typename std::aligned_storage<union_size, alignment>::type;
 };
 
-static unsigned log2ll(uint64_t n){
+inline unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
@@ -67,7 +67,7 @@ inline constexpr uint32_t str_hash(const char* str, uint32_t hash = 6159){
 inline uint32_t str_hash_len(const char* str, size_t len){
 	uint32_t hash = 6159;
 	
-	for(int i = 0; i < len; ++i){
+	for(size_t i = 0; i < len; ++i){
 		hash = hash * 187 + str[i];
 	}
 	

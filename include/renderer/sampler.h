@@ -17,7 +17,7 @@ struct Sampler {
 	void setParam(const Param& p);
 	void setParam(GLenum key, GLint val);
 	
-	bool bind(size_t tex_unit, RenderState& rs) const;
+	void bind(size_t tex_unit, RenderState& rs) const;
 private:
 	GLuint id;
 };

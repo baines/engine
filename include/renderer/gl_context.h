@@ -15,7 +15,7 @@ struct GLContext {
 	bool hasExtension(const char* ext);
 	bool initialized();
 	
-	int version;
+	uint32_t version;
 	
 	CVarEnum* streaming_mode;
 
@@ -24,7 +24,7 @@ struct GLContext {
 	const GLubyte* (APIENTRY* GetStringi)(GLenum, GLuint);
 	void           (APIENTRY* GetIntegerv)(GLenum, GLint*);
 
-	#define GLFUNC(type, name, args, ...) \
+	#define GLFUNC(type, name, ...) \
 		name##_p name;
 	#include "gl_functions.h"
 	#undef GLFUNC

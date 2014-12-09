@@ -48,7 +48,7 @@ namespace {
 		if(req_vers && gl.version >= req_vers){
 			return load_func(name, ptr);
 		} else {
-			for(int i = 0; i < SDL_arraysize(prefix_names) && !ptr; ++i){
+			for(size_t i = 0; i < SDL_arraysize(prefix_names) && !ptr; ++i){
 				if(!(flags & (1 << (16+i)))) continue;
 				
 				size_t sz = prefix_names[i].size;
@@ -88,11 +88,11 @@ namespace {
 GLContext::GLContext()
 : version(0)
 , streaming_mode(nullptr)
-, sdl_context(nullptr)
-#define GLFUNC(type, name, args, ...) \
+#define GLFUNC(type, name, ...) \
 	, name(0)
 #include "gl_functions.h"
 #undef GLFUNC
+, sdl_context(nullptr)
 {
 
 }
@@ -106,7 +106,7 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 	
-	if(sdl_context = SDL_GL_CreateContext(w)){
+	if((sdl_context = SDL_GL_CreateContext(w))){
 		log(logging::info, "Got OpenGL %d.%d context.", maj, min);
 		loadAllFuncs();
 		return true;
@@ -121,7 +121,7 @@ void GLContext::deleteContext(void){
 		SDL_GL_DeleteContext(sdl_context);
 		sdl_context = nullptr;
 	}
-	#define GLFUNC(type, name, args, ...) \
+	#define GLFUNC(type, name, ...) \
 		name = nullptr;
 	#include "gl_functions.h"
 	#undef GLFUNC
@@ -160,7 +160,7 @@ bool GLContext::loadAllFuncs(void){
 	size_t total = 0, loaded = 0;
 	#define GLFUNC(type, name, args, ...) \
 		total++; \
-		if(load_func(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__)){ \
+		if(load_func(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__ )){ \
 			loaded++; \
 		} else { \
 			log(info, "Func %s is not available.", GL_STRINGIFY(name)); \
@@ -192,7 +192,7 @@ void GLContext::loadExtensions(){
 		if(exts){
 			const char* c = nullptr, *prev_c = exts+3;
 
-			while(c = strchr(prev_c, ' ')){
+			while((c = strchr(prev_c, ' '))){
 				if(!extensions.insert(str_hash_len(prev_c, c - prev_c)).second){
 					log(logging::warn, "GL Extension hash collision :/ (%.*s).", c - prev_c, prev_c);
 				}

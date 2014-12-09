@@ -25,8 +25,8 @@ struct StaticVertexBuffer : VertexBuffer {
 	~StaticVertexBuffer();
 private:
 	void parseAttribs(const char* fmt);
-	ShaderAttribs attrs;
 	ResourceHandle data;
+	ShaderAttribs attrs;
 	GLint stride;
 	GLuint id;
 };

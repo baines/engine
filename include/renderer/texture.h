@@ -31,8 +31,8 @@ struct Texture2D : Texture {
 	
 	~Texture2D();
 private:
-	int w, h;
 	GLuint id;
+	int w, h;
 };
 
 #endif

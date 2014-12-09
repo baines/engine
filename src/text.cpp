@@ -50,6 +50,7 @@ Text& Text::operator=(Text&& other){
 
 bool Text::update(const std::string& newstr){
 	//TODO
+	return false;
 }
 
 void Text::draw(Renderer& r){

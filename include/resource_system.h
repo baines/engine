@@ -65,11 +65,11 @@ struct ResourceSystem {
 			auto it = entries.find(std::tuple_cat(std::make_tuple(str_hash(name)), args));
 		
 			if(it != entries.end() && !it->second.expired()){
-				DEBUGF("\t[Found!]");
+				DEBUGF("%s", "[Found!]");
 				ptr = it->second.lock();
 				return true;
 			} else {
-				DEBUGF("\t[Not Found]");
+				DEBUGF("%s", "[Not Found]");
 				return false;
 			}
 		}

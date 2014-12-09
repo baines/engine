@@ -241,6 +241,8 @@ void Renderer::drawFrame(){
 			multi_counts.clear();
 			multi_offs.clear();
 			
+			i += (num_calls-1);
+			
 		} else {
 			if(IndexBuffer* ib = v->getIndexBuffer()){
 				gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));

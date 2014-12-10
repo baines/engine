@@ -3,21 +3,19 @@
 #include "font.h"
 #include "renderer.h"
 #include "engine.h"
+#include <glm/glm.hpp>
 
 Text::Text()
 : engine(nullptr)
-, str()
 , uniforms()
 , renderable() {
 
 }
 
-//XXX: x / y / z position?
-Text::Text(Engine& e, const Font& f, const std::string& str, size_t max_len)
+Text::Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& str)
 : engine(&e)
-, str(str)
 , uniforms()
-, renderable(e.text.addText(f, str, max_len ? max_len : str.size())){
+, renderable(e.text.addText(f, pos, str)){
 
 	const Texture2D* tex = f.getTexture();
 	
@@ -29,7 +27,6 @@ Text::Text(Engine& e, const Font& f, const std::string& str, size_t max_len)
 
 Text::Text(Text&& other)
 : engine(other.engine)
-, str(std::move(other.str))
 , uniforms(std::move(other.uniforms))
 , renderable(std::move(other.renderable)) {
 	renderable.uniforms = &uniforms;
@@ -38,7 +35,6 @@ Text::Text(Text&& other)
 
 Text& Text::operator=(Text&& other){
 	engine = other.engine;
-	str = std::move(other.str);
 	uniforms = std::move(other.uniforms);
 	renderable = std::move(other.renderable);
 	renderable.uniforms = &uniforms;
@@ -48,7 +44,7 @@ Text& Text::operator=(Text&& other){
 	return *this;
 }
 
-bool Text::update(const std::string& newstr){
+bool Text::update(const string_view& newstr){
 	//TODO
 	return false;
 }

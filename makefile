@@ -10,6 +10,10 @@ relwin:
 	@CXX=i686-w64-mingw32-g++ OS=win32 RELEASE=1 $(MAKE) -C src
 cleanwin:
 	@OS=win32 $(MAKE) -C src clean
+	
+test: all
+	$(MAKE) -C test
+	./test/test
 
-.PHONY: all release clean win relwin cleanwin
+.PHONY: all release clean win relwin cleanwin test
 

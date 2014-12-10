@@ -15,7 +15,7 @@ struct TextSystem {
 	
 	FT_Library& getLib();
 	
-	Renderable addText(const Font& f, const std::string& str, size_t max_len);
+	Renderable addText(const Font& f, const glm::ivec2& pos, const string_view& str);
 	void delText(Renderable& r);
 
 	~TextSystem();

@@ -4,8 +4,6 @@
 #include <memory>
 #include <cstring>
 #include <array>
-#include <experimental/string_view>
-using string_view = std::experimental::string_view;
 
 /* Integer sequence stuff since C++14 isn't out yet */
 

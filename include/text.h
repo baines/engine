@@ -10,17 +10,16 @@ struct Font;
 
 struct Text {
 	Text();
-	Text(Engine& e, const Font& f, const std::string& s, size_t max_len = 0);
+	Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& s);
 	Text(Text&&);
 	Text& operator=(Text&&);
 	
-	bool update(const std::string& newstr);
+	bool update(const string_view& newstr);
 	void draw(Renderer& r);
 	
 	~Text();
 private:
 	Engine* engine;
-	std::string str;
 	ShaderUniforms uniforms;
 	Renderable renderable;
 };

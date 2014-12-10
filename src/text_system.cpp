@@ -2,6 +2,7 @@
 #include "font.h"
 
 struct TextVert {
+	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty) : x(x), y(y), tex_x(tx), tex_y(ty){}
 	int16_t x, y;
 	uint16_t tex_x, tex_y;
 };
@@ -23,14 +24,14 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max_len){
-
-	size_t str_len = std::min(str.size(), max_len);
+Renderable TextSystem::addText(const Font& f, const glm::ivec2& pos, const string_view& str){
+	const size_t str_len = str.size();
+	
 	uint16_t utf_lo = 0, utf_hi = 0;
 	std::tie(utf_lo, utf_hi) = f.getUTFRange();
 	
 	int off = text_buffer.getSize();
-	int16_t w = 0, h = f.getLineHeight();
+	int16_t x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
 	
 	int tw, th;
 	std::tie(tw, th) = f.getTexture()->getSize();
@@ -52,20 +53,15 @@ Renderable TextSystem::addText(const Font& f, const std::string& str, size_t max
 		         tx1 = (ginfo->x + ginfo->width) * x_scale,
 		         ty1 = (ginfo->y + h) * y_scale;
 		
-		text_buffer.push(TextVert{ w, 0, tx0, ty0 });
-		text_buffer.push(TextVert{ w, h, tx0, ty1 });
+		text_buffer.push(TextVert(x + w, y + 0, tx0, ty0));
+		text_buffer.push(TextVert(x + w, y + h, tx0, ty1));
 		
 		w += ginfo->width;
 		
-		text_buffer.push(TextVert{ w, 0, tx1, ty0 });
-		text_buffer.push(TextVert{ w, h, tx1, ty1 });
+		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0));
+		text_buffer.push(TextVert(x + w, y + h, tx1, ty1));
 	}
-	
-	for(size_t i = str_len; i < max_len; ++i){
-		/*TODO: fill up to max_len uninialized to allow string to be expanded
-				without needing to orphan the vertex buffer */
-	}
-	
+		
 	const GLsizei count = 4 * str_len;
 	return Renderable(&v_state, &text_shader, blend_mode, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
 }

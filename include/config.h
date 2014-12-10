@@ -9,8 +9,6 @@
 #include <cstring>
 #include <map>
 #include <algorithm>
-#include <experimental/string_view>
-using string_view = std::experimental::string_view;
 
 struct Config {
 

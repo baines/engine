@@ -98,7 +98,7 @@ bool ArgContext::getNextArg(const char*& str){
 	if(idx + 1 >= argc) return false;
 	str = argv[idx+1];
 	
-	if(strlen(str) > 2 && str[0] == '-' && (str[1] < '0' || str[1] > '9')){
+	if((str[0] == '-' || str[0] == '+') && (str[1] < '0' || str[1] > '9')){
 		return false;
 	} else {
 		++idx;
@@ -109,27 +109,34 @@ bool ArgContext::getNextArg(const char*& str){
 void ArgContext::parse(Config& c){
 	for(idx = 1; idx < argc; ++idx){
 		const char* str = argv[idx];
-		const size_t sz = strlen(str);
 		const uint32_t hash = str_hash(str);
 		
-		// not a flag, skip it
-		if(sz < 2 || str[0] != '-') continue;
+		// not a flag or cvar, skip it
+		if(str[0] != '-' && str[0] != '+') continue;
 		
 		// don't parse negative numbers as flags.
 		if(str[1] >= '0' && str[1] <= '9') continue;
 		
-		bool found = false, long_name = (str[1] == '-');
+		// stuff starting with + is parsed as a CVar instead of a flag.
+		if(str[0] == '+'){
+			const char* value = "";
+			getNextArg(value);
+			c.hookVar(str_hash(str+1), value);
+		} else {
+		
+			bool found = false, long_name = (str[1] == '-');
 
-		for(auto& a : args){
-			if((long_name && (hash == a.long_name.hash)) 
-			|| (!long_name && (hash == a.short_name.hash))){
-				a.func(c, *this);
-				found = true;
-				break;
+			for(auto& a : args){
+				if((long_name && (hash == a.long_name.hash)) 
+				|| (!long_name && (hash == a.short_name.hash))){
+					a.func(c, *this);
+					found = true;
+					break;
+				}
 			}
-		}
-		if(!found){
-			log(logging::warn, "Unknown command line argument \"%s\".", str);
+			if(!found){
+				log(logging::warn, "Unknown command line argument \"%s\".", str);
+			}
 		}
 	}
 }
@@ -143,8 +150,6 @@ struct Override {
 }
 
 Config::Config(Engine& e, int argc, char** argv){
-	ArgContext(argc, argv).parse(*this);
-	
 	/* TODO:
 		if -c, SDL_RWFromFile config file + copy it to physfs write dir
 	*/
@@ -187,7 +192,6 @@ Config::Config(Engine& e, int argc, char** argv){
 			else if(state == GET_NAME_END && isspace(*c)){
 				size_t name_sz = c - name_start;
 				hash = str_hash_len(name_start, name_sz);
-				DEBUGF("Got name: %.*s = %d", name_sz, name_start, hash);
 				state = GET_VALUE;
 			}
 			
@@ -207,5 +211,8 @@ Config::Config(Engine& e, int argc, char** argv){
 		}
 		add_line(data+sz);
 	}
+	
+	// parse command line args after, so they'll override the cfg file.
+	ArgContext(argc, argv).parse(*this);
 }
 

@@ -28,7 +28,7 @@ struct TestState : public GameState {
 	, vstate()
 	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3})
 	, font(e, {"FreeSans.ttf"}, 32)
-	, text() {
+	, text(e, *font, { 0, 0 }, "Testing!") {
 
 	}
 	
@@ -37,8 +37,6 @@ struct TestState : public GameState {
 		fs.load();
 		shader.link();
 		vstate.setVertexBuffers({ &vbo });
-		
-		text = Text(e, *font, "Testing!");
 		
 		return true;
 	}

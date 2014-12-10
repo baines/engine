@@ -2,6 +2,9 @@
 #define COMMON_H_
 #include <array>
 #include <cstdint>
+#include <experimental/string_view>
+using string_view = std::experimental::string_view;
+
 #include "log.h"
 
 #ifdef DEBUG

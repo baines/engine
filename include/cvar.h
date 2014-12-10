@@ -5,8 +5,6 @@
 #include <vector>
 #include <cstdlib>
 #include "util.h"
-#include <experimental/string_view>
-using string_view = std::experimental::string_view;
 
 enum CVarType {
 	CVAR_INVALID,

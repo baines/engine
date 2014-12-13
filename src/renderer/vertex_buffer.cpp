@@ -163,43 +163,29 @@ StaticVertexBuffer::~StaticVertexBuffer(){
 
 DynamicVertexBuffer::DynamicVertexBuffer()
 : data()
-, prev_capacity(0)
-, prev_size(0)
 , attrs()
-, dirty(false)
 , stride(0)
-, id(0) {
+, stream_buf() {
 
 }
 
 DynamicVertexBuffer::DynamicVertexBuffer(const char* fmt, size_t initial_capacity)
 : data()
-, prev_capacity(0)
-, prev_size(0)
 , attrs()
-, dirty(false)
 , stride(0)
-, id(0) {
-
-	data.reserve(initial_capacity);
-	prev_capacity = data.capacity();
-
+, stream_buf(GL_ARRAY_BUFFER, data) {
 	parse_attribs(fmt, attrs, stride);
-	
-	gl.GenBuffers(1, &id);
-	gl.BindBuffer(GL_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
+	data.reserve(initial_capacity);	
 }
 
 void DynamicVertexBuffer::clear(){
 	data.clear();
-	prev_size = 0;
+	stream_buf.mark();
 }
 
 void DynamicVertexBuffer::pop(size_t n){
 	data.erase(data.end()-n, data.end());
-	prev_size = data.size();
-	//XXX: don't delete from GPU, just lower primcount
+	stream_buf.mark();
 }
 
 const ShaderAttribs& DynamicVertexBuffer::getShaderAttribs() const {
@@ -215,87 +201,10 @@ size_t DynamicVertexBuffer::getSize() const {
 }
 
 GLuint DynamicVertexBuffer::getID() const {
-	return id;
+	return stream_buf.getID();
 }
 
 void DynamicVertexBuffer::update(){
-/* TODO: more efficient buffer streaming
-	https://www.opengl.org/wiki/Buffer_Object_Streaming
-	http://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
-*/
-	if(!dirty) return;
-
-	gl.BindBuffer(GL_ARRAY_BUFFER, id);
-	
-	if(gl.streaming_mode->get() == BUFFER_INVALIDATE){
-	
-		if(gl.InvalidateBufferData){
-			gl.InvalidateBufferData(id);
-		} else {
-			log(logging::warn, "Streaming mode is BUFFER_INVALIDATE, but glInvalidateBufferData unsupported!");
-		}
-		
-		if(prev_capacity != data.capacity()){
-			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), data.data(), GL_STREAM_DRAW);
-		} else {
-			gl.BufferSubData(GL_ARRAY_BUFFER, 0, data.size(), data.data());
-		}
-	}
-	
-	if(gl.streaming_mode->get() == BUFFER_DATA_NULL){
-		gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
-		gl.BufferSubData(GL_ARRAY_BUFFER, 0, data.size(), data.data());
-	}
-	
-	if(gl.streaming_mode->get() == MAP_INVALIDATE){
-		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT;
-		
-		if(prev_capacity != data.capacity()){
-			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
-			flags &= ~GL_MAP_INVALIDATE_BUFFER_BIT;
-		}
-		
-		void* gl_data = gl.MapBufferRange(
-			GL_ARRAY_BUFFER, 
-			0, 
-			data.size(),
-			flags
-		);
-		
-		memcpy(gl_data, data.data(), data.size());
-		
-		gl.UnmapBuffer(GL_ARRAY_BUFFER);
-	}
-	
-	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND){
-		if(prev_capacity != data.capacity()){
-			gl.BufferData(GL_ARRAY_BUFFER, data.capacity(), nullptr, GL_STREAM_DRAW);
-		}
-		
-		void* gl_data = gl.MapBufferRange(
-			GL_ARRAY_BUFFER,
-			prev_size,
-			data.size(),
-			GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT
-		);
-		
-		memcpy(gl_data, data.data() + prev_size, data.size() - prev_size);
-		
-		gl.UnmapBuffer(GL_ARRAY_BUFFER);
-	}
-	
-	if(gl.streaming_mode->get() == DOUBLE_BUFFER){
-		log(logging::error, "gl_streaming_mode DOUBLE_BUFFER NYI");
-	}
-
-	dirty = false;
-	prev_capacity = data.capacity();
-	prev_size = data.size();
-}
-
-DynamicVertexBuffer::~DynamicVertexBuffer(){
-	if(id && gl.initialized()){
-		gl.DeleteBuffers(1, &id);
-	}
+	stream_buf.update();
 }
 

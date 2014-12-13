@@ -3,27 +3,28 @@
 
 using namespace std;
 
+static bool parse_bind(char* buff, char*& key, char*& act){
+	char* state = nullptr;
+	key = strtok_r(buff   , " \t", &state);
+	act = strtok_r(nullptr, " \t", &state);
+	
+	return key && act;
+}
+
 Input::Input(Engine& e){
-	//XXX: consolidate these two?
 	e.cfg.addVar("bind", CVarFunc([&](const string_view& str){
-		char s[str.size()+1] = {};
-		str.copy(s, str.size());
-		char* state = nullptr;
-		char* key = strtok_r(&s[0]  , " \t", &state);
-		char* act = strtok_r(nullptr, " \t", &state);
+		char buff[str.size()+1] = {}, *key = nullptr, *act = nullptr;
+		str.copy(buff, str.size());
 		
-		if(key && act){
+		if(parse_bind(buff, key, act)){
 			this->bind(key, str_hash(act));
 		}
 	}));
 	e.cfg.addVar("bind_raw", CVarFunc([&](const string_view& str){
-		char s[str.size()+1] = {};
-		str.copy(s, str.size());
-		char* state = nullptr;
-		char* key = strtok_r(&s[0]  , " \t", &state);
-		char* act = strtok_r(nullptr, " \t", &state);
+		char buff[str.size()+1] = {}, *key = nullptr, *act = nullptr;
+		str.copy(buff, str.size());
 		
-		if(key && act){
+		if(parse_bind(buff, key, act)){
 			auto code = static_cast<SDL_Scancode>(strtol(key, nullptr, 0));
 			this->bindRaw(code, str_hash(act));
 		}

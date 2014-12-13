@@ -1,6 +1,7 @@
 #ifndef VERTEX_BUFFER_H_
 #define VERTEX_BUFFER_H_
 #include "gl_context.h"
+#include "buffer_common.h"
 #include "resource_system.h"
 #include "shader_attribs.h"
 
@@ -45,7 +46,7 @@ struct DynamicVertexBuffer : VertexBuffer {
 			data.push_back(p[i]);
 		}
 		
-		dirty = true;
+		stream_buf.mark();	
 	}
 	
 	void pop(size_t n);
@@ -57,14 +58,11 @@ struct DynamicVertexBuffer : VertexBuffer {
 	virtual size_t getSize() const;
 	virtual GLuint getID() const;
 	virtual void update();
-	~DynamicVertexBuffer();
 private:
 	std::vector<uint8_t> data;
-	size_t prev_capacity, prev_size;
 	ShaderAttribs attrs;
-	bool dirty;
 	GLint stride;
-	GLuint id;
+	StreamingBuffer stream_buf;
 };
 
 #endif

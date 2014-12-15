@@ -3,8 +3,16 @@
 
 CLI::CLI(Engine& e)
 : engine(e)
-, active(false) {
+, active(false)
+, font(e, { "DejaVuSansMono.ttf" }, 16)
+, lines() {
+	char spaces[81] = {};
 
+	for(int i = 0; i < 5; ++i){
+		memset(spaces, 'a'+i, sizeof(spaces)-1);
+		glm::ivec2 pos = { 0, 16 * i };
+		lines.emplace_back(e, *font, pos, spaces);
+	}
 }
 
 void CLI::toggle(){
@@ -29,7 +37,10 @@ void CLI::update(Engine& e, uint32_t delta){
 }
 
 void CLI::draw(Renderer& r){
-
+	if(!active) return;
+	for(auto& l : lines){
+		l.draw(r);		
+	}
 }
 
 CLI::~CLI(){

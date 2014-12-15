@@ -173,7 +173,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			glyph.x = img.pen_x;
 			glyph.y = img.pen_y - img.line_height;
 			
-			img.pen_x += glyph.width;
+			img.pen_x += 1 + std::max<int>(glyph.width, face->glyph->bitmap.width);
 		}
 		
 		glyph_info.push_back(glyph);

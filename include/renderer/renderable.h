@@ -52,13 +52,18 @@ struct Renderable {
 	
 	bool usesSameState(const Renderable& o){
 		//TODO: don't just compare pointers?
+
+		bool uniforms_compat = uniforms && o.uniforms
+			? *uniforms == *o.uniforms
+			: !uniforms && !o.uniforms;
+
 		return prim_type == o.prim_type
 		    && blend_mode == o.blend_mode
 		    && vertex_state == o.vertex_state
 		    && shader == o.shader
-		    && uniforms == o.uniforms
 		    && textures == o.textures
-		    && samplers == o.samplers;
+		    && samplers == o.samplers
+			&& uniforms_compat;
 	}
 	
 	std::array<const Texture*, 8> textures;

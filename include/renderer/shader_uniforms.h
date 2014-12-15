@@ -56,7 +56,7 @@ struct ShaderUniforms {
 	}
 	
 	void initUniform(const char* name, GLuint prog, GLint idx, GLuint size, GLenum full_type);
-		
+	bool operator==(const ShaderUniforms& other) const;
 	bool bind(GLuint program_id, ShaderUniforms& current) const;
 
 private:

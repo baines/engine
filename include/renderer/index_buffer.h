@@ -57,6 +57,11 @@ struct DynamicIndexBuffer : public IndexBuffer {
 	GLuint getID() const {
 		return stream_buf.getID();
 	}
+
+	void bind(){
+		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, stream_buf.getID());
+	}	
+
 private:
 	std::vector<uint8_t> indices;
 	StreamingBuffer stream_buf;

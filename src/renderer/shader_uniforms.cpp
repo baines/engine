@@ -85,6 +85,37 @@ ShaderUniforms::ShaderUniforms()
 
 }
 
+bool ShaderUniforms::operator==(const ShaderUniforms& other) const {
+	bool result = true;
+
+	for(auto& info : uniform_info){
+		auto o_info = std::find(
+			other.uniform_info.begin(),
+			other.uniform_info.end(),
+			info.name_hash
+		);
+
+		if(o_info == other.uniform_info.end() 
+		|| o_info->rows != info.rows
+		|| o_info->cols != info.cols
+		|| o_info->count != info.count
+		|| o_info->type != info.type){
+			result = false;
+			break;
+		}
+
+		if(memcmp(uniforms.data() + info.storage_index, 
+			other.uniforms.data() + o_info->storage_index,
+			info.rows * info.cols * info.count * 4
+		) != 0){
+			result = false;
+			break;
+		}
+	}
+
+	return result;
+}
+
 bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	const ustorage* p = uniforms.data();
 	

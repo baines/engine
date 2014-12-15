@@ -30,7 +30,7 @@ Renderable TextSystem::addText(const Font& f, const glm::ivec2& pos, const strin
 	uint16_t utf_lo = 0, utf_hi = 0;
 	std::tie(utf_lo, utf_hi) = f.getUTFRange();
 	
-	int off = text_buffer.getSize();
+	int off = text_buffer.getSize() / sizeof(TextVert);
 	int16_t x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
 	
 	int tw, th;

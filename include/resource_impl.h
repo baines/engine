@@ -55,6 +55,7 @@ const T* Resource<T, Args...>::operator->(void) {
 template<class T, class... Args>
 const T& Resource<T, Args...>::operator*(void) {
 	if(!data) load();
+	assert(data);
 	return *data;
 }
 

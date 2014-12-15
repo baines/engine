@@ -2,6 +2,10 @@
 #define CLI_H_
 #include "common.h"
 #include "game_state.h"
+#include "resource.h"
+#include "font.h"
+#include "text.h"
+#include <vector>
 
 struct CLI : public GameState {
 	CLI(Engine& e);
@@ -18,6 +22,9 @@ struct CLI : public GameState {
 private:
 	Engine& engine;
 	bool active;
+	
+	Resource<Font, uint16_t> font;
+	std::vector<Text> lines;
 };
 
 #endif

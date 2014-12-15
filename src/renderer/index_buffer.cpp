@@ -31,3 +31,4 @@ GLenum StaticIndexBuffer::getID() const {
 StaticIndexBuffer::~StaticIndexBuffer(){
 	gl.DeleteBuffers(1, &id);
 }
+

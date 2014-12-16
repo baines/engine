@@ -11,7 +11,12 @@ static bool parse_bind(char* buff, char*& key, char*& act){
 	return key && act;
 }
 
-Input::Input(Engine& e){
+Input::Input(Engine& e)
+: binds()
+, active_binds()
+, bound_actions()
+, current_state(nullptr){
+
 	e.cfg.addVar("bind", CVarFunc([&](const string_view& str){
 		char buff[str.size()+1] = {}, *key = nullptr, *act = nullptr;
 		str.copy(buff, str.size());
@@ -29,6 +34,8 @@ Input::Input(Engine& e){
 			this->bindRaw(code, str_hash(act));
 		}
 	}));
+
+	SDL_StopTextInput();
 }
 
 void Input::bind(const char* input_name, uint32_t action){
@@ -40,7 +47,7 @@ void Input::bindRaw(SDL_Scancode key, uint32_t action){
 	if(key != SDL_SCANCODE_UNKNOWN){
 		binds.emplace(action, key);
 		
-		auto pair = watches.equal_range(action);
+		auto pair = bound_actions.equal_range(action);
 		for(auto i = pair.first, j = pair.second; i != j; ++i){
 			StateAction& sa =i->second;
 			active_binds.emplace(StateKey{sa.state, key}, sa.id);
@@ -77,13 +84,38 @@ void Input::onDeviceChange(SDL_ControllerDeviceEvent& event){
 
 }
 
+void Input::onStateChange(GameState* s){
+	auto it = text_states.find(s);
+
+	if(it != text_states.end()){
+		SDL_StartTextInput();
+		SDL_SetTextInputRect(&it->second);
+	} else {
+		SDL_StopTextInput();
+	}
+
+	current_state = s;
+}
+
 void Input::watchAction(GameState* s, const str_const& action, int action_id){
 
-	watches.emplace(action.hash, StateAction{s, action_id});
+	bound_actions.emplace(action.hash, StateAction{s, action_id});
 	
 	auto it = binds.find(action.hash);
 	if(it != binds.end()){
 		active_binds.emplace(StateKey{s, it->second}, action_id);
+	}
+}
+
+void Input::enableText(GameState* gs, bool enable, const SDL_Rect& pos){
+	if(enable){
+		text_states[gs] = pos;
+	} else {
+		text_states.erase(gs);
+	}
+
+	if(gs == current_state){
+		onStateChange(current_state);
 	}
 }
 
@@ -97,5 +129,10 @@ bool Input::getKeyAction(GameState* s, SDL_Scancode key, int& action_id){
 	} else {
 		return false;
 	}
+}
+
+bool Input::getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id){
+	// TODO
+	return false;
 }
 

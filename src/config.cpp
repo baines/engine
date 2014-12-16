@@ -41,28 +41,28 @@ static struct Args {
 		[](Config& c, ArgContext& ctx){
 			const char* filename = nullptr;
 			if(ctx.getNextArg(filename)){
-				c.hookVar("cfg_filename", filename);
+				c.evalVar("cfg_filename", filename, true);
 			}
 		}
 	}, {
 		{"-fs"}, {"--full-screen"}, nullptr,
 		[](Config& c, ArgContext& ctx){
-			c.hookVar("vid_fullscreen", "1");
+			c.evalVar("vid_fullscreen", "1", true);
 		}
 	}, {
 		{"-w"}, {"--windowed"}, nullptr,
 		[](Config& c, ArgContext& ctx){
-			c.hookVar("vid_fullscreen", "0");
+			c.evalVar("vid_fullscreen", "0", true);
 		}
 	}, {
 		{"-r"}, {"--resolution"}, "<width> <height>",
 		[](Config& c, ArgContext& ctx){
 			const char *w = nullptr, *h = nullptr;
 			if(ctx.getNextArg(w) && w){
-				c.hookVar("vid_width", w);
+				c.evalVar("vid_width", w, true);
 			}
 			if(ctx.getNextArg(h) && h){
-				c.hookVar("vid_height", h);
+				c.evalVar("vid_height", h, true);
 			}
 		}
 	}
@@ -121,7 +121,7 @@ void ArgContext::parse(Config& c){
 		if(str[0] == '+'){
 			const char* value = "";
 			getNextArg(value);
-			c.hookVar(str_hash(str+1), value);
+			c.evalVar(str_hash(str+1), value, true);
 		} else {
 		
 			bool found = false, long_name = (str[1] == '-');
@@ -172,7 +172,7 @@ Config::Config(Engine& e, int argc, char** argv){
 		auto add_line = [&](const char* c){
 			if(hash){ 
 				const size_t sz = *value ? c - value : 0;
-				hookVar(hash, { value, sz });
+				evalVar(hash, { value, sz }, true);
 			}
 			hash = 0;
 			value = "";

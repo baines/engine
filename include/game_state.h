@@ -21,6 +21,8 @@ struct GameState {
 		return false;
 	}
 	
+	virtual void onText(Engine& e, const char* text){}
+
 	virtual void update(Engine& e, uint32_t delta) = 0;
 	virtual void draw(Renderer& r) = 0;
 	

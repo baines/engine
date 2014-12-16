@@ -6,6 +6,7 @@
 
 struct RenderState {
 	GLuint program;
+	GLuint active_tex;
 	std::array<GLuint, 8> tex;
 	std::array<GLuint, 8> samp;
 	GLuint vao;

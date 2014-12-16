@@ -45,6 +45,12 @@ void StateSystem::onMotion(Engine& e, SDL_Event& ev){
 
 }
 
+void StateSystem::onText(Engine& e, SDL_TextInputEvent& ev){
+	assert(!states.empty());
+
+	states.back()->onText(e, ev.text);
+}
+
 void StateSystem::update(Engine& e, uint32_t delta){
 	GameState* current_state = states.empty() ? nullptr : states.back();
 	
@@ -69,6 +75,7 @@ void StateSystem::update(Engine& e, uint32_t delta){
 		}
 		current_state = states.back();
 		current_state->onStateChange(e, true);
+		e.input.onStateChange(current_state);
 	}
 
 	current_state->update(e, delta);

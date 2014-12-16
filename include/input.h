@@ -5,6 +5,7 @@
 #include <SDL2/SDL.h>
 #include "game_state.h"
 #include <map>
+#include <unordered_map>
 #include <string>
 
 struct Input {
@@ -18,13 +19,16 @@ struct Input {
 	void unbindRaw(SDL_Scancode key);
 
 	void watchAction(GameState* s, const str_const& action, int action_id);
+	void enableText(GameState* s, bool enable, const SDL_Rect& pos = {0, 0, 0, 0});
 
 	void onDeviceChange(SDL_ControllerDeviceEvent& event);
+	void onStateChange(GameState* new_state);
 
 	bool getKeyAction(GameState* s, SDL_Scancode key, int& action_id);
 	bool getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id);
 
 private:
+
 	struct StateAction {
 		GameState* state;
 		int id;
@@ -43,7 +47,11 @@ private:
 
 	std::map<uint32_t, SDL_Scancode> binds;
 	std::map<StateKey, int> active_binds;
-	std::multimap<uint32_t, StateAction> watches;
+	std::multimap<uint32_t, StateAction> bound_actions;
+
+	std::unordered_map<GameState*, SDL_Rect> text_states;
+		
+	GameState* current_state;
 };
 
 #endif

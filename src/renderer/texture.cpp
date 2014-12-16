@@ -186,7 +186,9 @@ std::tuple<int, int> Texture2D::getSize() const {
 
 bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 	if(id && id != rs.tex[tex_unit]){
-		gl.ActiveTexture(GL_TEXTURE0 + tex_unit);
+		if(rs.active_tex != tex_unit){
+			gl.ActiveTexture(GL_TEXTURE0 + tex_unit);
+		}
 		gl.BindTexture(GL_TEXTURE_2D, id);
 		rs.tex[tex_unit] = id;
 	}

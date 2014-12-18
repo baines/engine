@@ -1,5 +1,6 @@
 #include "text_system.h"
 #include "font.h"
+#include <algorithm>
 
 struct TextVert {
 	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty) : x(x), y(y), tex_x(tx), tex_y(ty){}
@@ -24,7 +25,7 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-Renderable TextSystem::addText(const Font& f, const glm::ivec2& pos, const string_view& str){
+Renderable* TextSystem::addText(const Font& f, glm::ivec2 pos, const string_view& str){
 	const size_t str_len = str.size();
 	
 	uint16_t utf_lo = 0, utf_hi = 0;
@@ -63,11 +64,55 @@ Renderable TextSystem::addText(const Font& f, const glm::ivec2& pos, const strin
 	}
 		
 	const GLsizei count = 4 * str_len;
-	return Renderable(&v_state, &text_shader, blend_mode, RType{GL_TRIANGLE_STRIP}, RCount{count}, ROff{off});
+	text_renderables.push_back(
+		Renderable(
+			&v_state,
+			&text_shader, 
+			blend_mode, 
+			RType{GL_TRIANGLE_STRIP}, 
+			RCount{count}, 
+			ROff{off}
+		)
+	);
+	return &text_renderables.back();
 }
 
-void TextSystem::delText(Renderable& r){
-	//TODO
+bool TextSystem::updateText(Renderable*& r, const Font& f, glm::ivec2 pos, const string_view& newstr){
+	if(!r) return false;
+	//TODO: optimization if newstr is substring of old str: only adjust r->off / r->count.
+	//    + optimization if renderable is last in buffer + appending text
+
+	delText(r);
+	r = addText(f, pos, newstr);
+	return true;
+}
+
+void TextSystem::delText(Renderable* r){
+	if(!r) return;
+
+	size_t start = r->offset * sizeof(TextVert);
+	size_t count = r->count * sizeof(TextVert);
+	text_buffer.invalidate(BufferRange{ start, count, this });
+
+	auto i = text_renderables.begin();
+	for(auto j = text_renderables.end(); i != j; ++i){
+		if(&(*i) == r){
+			break;
+		}
+	}
+	if(i == text_renderables.end()){
+		return;
+	} else {
+		text_renderables.erase(i);
+	}
+}
+
+void TextSystem::onBufferRangeInvalidated(size_t off, size_t len){
+	for(auto& r : text_renderables){
+		if(r.offset * sizeof(TextVert) > off){
+			r.offset -= (len / sizeof(TextVert));
+		}
+	}
 }
 
 TextSystem::~TextSystem(){

@@ -49,7 +49,7 @@ struct DynamicVertexBuffer : VertexBuffer {
 		stream_buf.mark();	
 	}
 	
-	void pop(size_t n);
+	void invalidate(BufferRange&& range);
 	
 	void clear();
 

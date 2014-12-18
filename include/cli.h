@@ -22,7 +22,7 @@ struct CLI : public GameState {
 	~CLI();
 private:
 	Engine& engine;
-	bool active;
+	bool active, ignore_next_text;
 
 	CVarInt* scrollback_lines;
 	CVarInt* visible_lines;
@@ -34,8 +34,7 @@ private:
 	std::unique_ptr<char[]> output_buffer;
 	
 	Text input_text;
-	char input_buffer[256];
-	char* input_cursor;
+	std::string input_str;
 };
 
 #endif

@@ -183,9 +183,8 @@ void DynamicVertexBuffer::clear(){
 	stream_buf.mark();
 }
 
-void DynamicVertexBuffer::pop(size_t n){
-	data.erase(data.end()-n, data.end());
-	stream_buf.mark();
+void DynamicVertexBuffer::invalidate(BufferRange&& range){
+	stream_buf.invalidate(std::move(range));
 }
 
 const ShaderAttribs& DynamicVertexBuffer::getShaderAttribs() const {

@@ -43,6 +43,9 @@ bool Engine::run(void){
 			case SDL_MOUSEWHEEL:
 				state.onInput(*this, e);
 				break;
+			case SDL_TEXTINPUT:
+				state.onText(*this, e.text);
+				break;
 			case SDL_MOUSEMOTION:
 			case SDL_CONTROLLERAXISMOTION:
 				state.onMotion(*this, e);

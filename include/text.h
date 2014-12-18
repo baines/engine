@@ -20,8 +20,10 @@ struct Text {
 	~Text();
 private:
 	Engine* engine;
+	const Font* font;
+	glm::ivec2 pos;
 	ShaderUniforms uniforms;
-	Renderable renderable;
+	Renderable* renderable;
 };
 
 #endif

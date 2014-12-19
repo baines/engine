@@ -9,27 +9,25 @@ Text::Text()
 : engine(nullptr)
 , font(nullptr)
 , pos()
+, total_width(0)
 , str()
 , uniforms()
 , renderable(nullptr) {
 
+	uniforms.setUniform("u_samp", { 0 });
 }
 
 Text::Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& s)
 : engine(&e)
 , font(&f)
 , pos(pos)
+, total_width(0)
 , str(std::move(s.to_string()))
 , uniforms()
 , renderable(nullptr) {
 
 	e.text.addText(*this);
 
-	const Texture2D* tex = f.getTexture();
-	
-	renderable->uniforms = &uniforms;
-	renderable->textures[0] = tex;
-	
 	uniforms.setUniform("u_samp", { 0 });
 }
 
@@ -37,6 +35,7 @@ Text::Text(Text&& other)
 : engine(other.engine)
 , font(other.font)
 , pos(other.pos)
+, total_width(other.total_width)
 , str(std::move(other.str))
 , uniforms(std::move(other.uniforms))
 , renderable(other.renderable) {
@@ -50,6 +49,7 @@ Text& Text::operator=(Text&& other){
 	engine = other.engine;
 	font = other.font;
 	pos = other.pos;
+	total_width = other.total_width;
 	str = std::move(other.str);
 	uniforms = std::move(other.uniforms);
 	renderable = other.renderable;
@@ -76,5 +76,11 @@ void Text::draw(Renderer& r){
 
 Text::~Text(){
 	if(engine) engine->text.delText(*this);
+}
+
+void Text::setRenderable(Renderable* r){
+	renderable = r;
+	renderable->uniforms = &uniforms;
+	renderable->textures[0] = font->getTexture();
 }
 

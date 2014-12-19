@@ -87,7 +87,7 @@ ShaderUniforms::ShaderUniforms()
 
 bool ShaderUniforms::operator==(const ShaderUniforms& other) const {
 	bool result = true;
-
+	
 	for(auto& info : uniform_info){
 		auto o_info = std::find(
 			other.uniform_info.begin(),

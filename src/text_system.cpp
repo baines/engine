@@ -26,20 +26,14 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-void TextSystem::addText(Text& t){
+GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const string_view& str){
 	const Font& f = *t.font;
-	const glm::ivec2& pos = t.pos;
-	const std::string& str = t.str;
-
-	const size_t str_len = str.size();
+	size_t str_len = str.size(), x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
 	
 	uint16_t utf_lo = 0, utf_hi = 0;
 	std::tie(utf_lo, utf_hi) = f.getUTFRange();
 	
-	int off = text_buffer.getSize() / sizeof(TextVert);
-	int16_t x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
-	
-	int tw, th;
+	int tw = 0, th = 0;
 	std::tie(tw, th) = f.getTexture()->getSize();
 	float x_scale = USHRT_MAX / (float)tw, y_scale = USHRT_MAX / (float)th;
 	
@@ -67,8 +61,16 @@ void TextSystem::addText(Text& t){
 		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0));
 		text_buffer.push(TextVert(x + w, y + h, tx1, ty1));
 	}
-		
-	const GLsizei count = 4 * str_len;
+
+	t.total_width += w;
+
+	return str_len * 4;
+}
+
+void TextSystem::addText(Text& t){
+	const GLint off = text_buffer.getSize() / sizeof(TextVert);
+	const GLsizei count = writeString(t, t.pos, t.str);
+
 	text_renderables.push_back(
 		Renderable(
 			&v_state,
@@ -80,38 +82,50 @@ void TextSystem::addText(Text& t){
 		)
 	);
 	
-	t.renderable = &text_renderables.back();
+	t.setRenderable(&text_renderables.back());
 }
 
 bool TextSystem::updateText(Text& t, const string_view& newstr){
 	if(!t.renderable) return false;
 
-	auto i = (newstr.size() > t.str.size())
-		? std::string::npos
-		: t.str.find(newstr.data(), 0, newstr.size());
-	
-	if(i != std::string::npos){
-		//DEBUGF("Using fast text update: [%s] -> [%.*s]\n", t.str.c_str(), newstr.size(), newstr.data());
-		size_t start = t.renderable->offset * sizeof(TextVert);
-		size_t count = t.renderable->count * sizeof(TextVert);
-		size_t v_diff = (t.str.size() - newstr.size()) * 4;
-		size_t diff = v_diff * sizeof(TextVert);
-
-		BufferRange r_lo = { start, i * sizeof(TextVert) * 4, this },
-		            r_hi = { (start + count) - diff, diff, this };
-
-		text_buffer.invalidate(std::move(r_hi));
-		text_buffer.invalidate(std::move(r_lo));
-
-		t.renderable->offset += i;
-		t.renderable->count  -= v_diff;
-
-		t.str = std::move(newstr.to_string());
+	// if this is only appending text, and it's at the end of the vertex buffer,
+	// then we can just push the new characters on the end.
+	if(newstr.size() >= t.str.size()
+	&& (t.renderable->offset + t.renderable->count) * sizeof(TextVert) == text_buffer.getSize()
+	&& newstr.find(t.str) == 0){
+		auto suffix = string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
+		t.renderable->count += writeString(
+			t,
+			glm::ivec2(t.pos.x + t.total_width, t.pos.y),
+			suffix
+		);
+		t.str.append(suffix.data(), suffix.size());
 	} else {
-		//DEBUGF("Slow text update: [%s] -> [%.*s]\n", t.str.c_str(), newstr.size(), newstr.data());
-		delText(t);
-		t.str = std::move(newstr.to_string());
-		addText(t);
+		// if the new text is a substring of the old text then don't add to the vertex buffer,
+		// just adjust the renderable's count and offset and invalidate the old bits.
+		auto i = t.str.find(newstr.data(), 0, newstr.size());
+		if(i != std::string::npos){
+			size_t start = t.renderable->offset * sizeof(TextVert),
+			       count = t.renderable->count * sizeof(TextVert),
+			       v_diff = (t.str.size() - newstr.size()) * 4,
+			       diff = v_diff * sizeof(TextVert);
+
+			BufferRange r_lo = { start, i * sizeof(TextVert) * 4, this },
+						r_hi = { (start + count) - diff, diff, this };
+
+			text_buffer.invalidate(std::move(r_hi));
+			text_buffer.invalidate(std::move(r_lo));
+
+			t.renderable->offset += i;
+			t.renderable->count  -= v_diff;
+
+			t.str = std::move(newstr.to_string());
+		} else {
+			// otherwise we'll have to invalidate all the old vertices and append new ones.
+			delText(t);
+			t.str = std::move(newstr.to_string());
+			addText(t);
+		}
 	}
 	return true;
 }
@@ -133,6 +147,8 @@ void TextSystem::delText(Text& t){
 	}
 	assert(i != text_renderables.end());
 	text_renderables.erase(i);
+	t.total_width = 0;
+	t.renderable = nullptr;
 }
 
 void TextSystem::onBufferRangeInvalidated(size_t off, size_t len){

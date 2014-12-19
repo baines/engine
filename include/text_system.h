@@ -25,6 +25,8 @@ struct TextSystem : public BufferInvalidateListener {
 
 	~TextSystem();
 private:
+	GLsizei writeString(Text& t, glm::ivec2 pos, const string_view& str);
+
 	FT_Library ft_lib;
 	VertexState v_state;
 	DynamicVertexBuffer text_buffer;

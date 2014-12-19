@@ -51,7 +51,6 @@ struct Renderable {
 	}
 	
 	bool usesSameState(const Renderable& o){
-		//TODO: don't just compare pointers?
 
 		bool uniforms_compat = uniforms && o.uniforms
 			? *uniforms == *o.uniforms

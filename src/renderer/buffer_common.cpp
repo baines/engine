@@ -116,7 +116,7 @@ void StreamingBuffer::update(){
 	
 	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND){
 		if(prev_capacity != data->capacity()
-		|| unused_bytes >= data->size() / 2){
+		|| unused_bytes/3 >= data->capacity()/4){
 			tidy_buffer(*data, unused_ranges, unused_bytes);
 			gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
 			prev_size = 0;

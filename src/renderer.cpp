@@ -253,7 +253,6 @@ void Renderer::drawFrame(){
 	}
 	
 	SDL_GL_SwapWindow(window);
-	
 	renderables.clear();
 }
 

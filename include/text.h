@@ -20,9 +20,13 @@ struct Text {
 	~Text();
 private:
 	friend class TextSystem;
+
+	void setRenderable(Renderable* r);
+
 	Engine* engine;
 	const Font* font;
 	glm::ivec2 pos;
+	size_t total_width;
 	std::string str;
 	ShaderUniforms uniforms;
 	Renderable* renderable;

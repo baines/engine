@@ -196,6 +196,7 @@ void GLContext::loadExtensions(){
 				if(!extensions.insert(str_hash_len(prev_c, c - prev_c)).second){
 					log(logging::warn, "GL Extension hash collision :/ (%.*s).", c - prev_c, prev_c);
 				}
+				if(!c[1] || !c[2] || !c[3]) break;
 				prev_c = c+4;
 			}
 		}

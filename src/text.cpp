@@ -9,17 +9,21 @@ Text::Text()
 : engine(nullptr)
 , font(nullptr)
 , pos()
+, str()
 , uniforms()
 , renderable(nullptr) {
 
 }
 
-Text::Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& str)
+Text::Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& s)
 : engine(&e)
 , font(&f)
 , pos(pos)
+, str(std::move(s.to_string()))
 , uniforms()
-, renderable(e.text.addText(f, pos, str)){
+, renderable(nullptr) {
+
+	e.text.addText(*this);
 
 	const Texture2D* tex = f.getTexture();
 	
@@ -33,6 +37,7 @@ Text::Text(Text&& other)
 : engine(other.engine)
 , font(other.font)
 , pos(other.pos)
+, str(std::move(other.str))
 , uniforms(std::move(other.uniforms))
 , renderable(other.renderable) {
 	if(renderable) renderable->uniforms = &uniforms;
@@ -45,6 +50,7 @@ Text& Text::operator=(Text&& other){
 	engine = other.engine;
 	font = other.font;
 	pos = other.pos;
+	str = std::move(other.str);
 	uniforms = std::move(other.uniforms);
 	renderable = other.renderable;
 	if(renderable) renderable->uniforms = &uniforms;
@@ -59,7 +65,7 @@ Text& Text::operator=(Text&& other){
 bool Text::update(const string_view& newstr){
 	if(!engine || !font) return false;
 
-	return engine->text.updateText(renderable, *font, pos, newstr);
+	return engine->text.updateText(*this, newstr);
 }
 
 void Text::draw(Renderer& r){
@@ -69,6 +75,6 @@ void Text::draw(Renderer& r){
 }
 
 Text::~Text(){
-	if(engine) engine->text.delText(renderable);
+	if(engine) engine->text.delText(*this);
 }
 

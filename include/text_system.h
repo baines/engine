@@ -10,15 +10,16 @@
 #include <list>
 
 struct Font;
+struct Text;
 
 struct TextSystem : public BufferInvalidateListener {
 	TextSystem(Engine& e);
 	
 	FT_Library& getLib();
 	
-	Renderable* addText(const Font& f, glm::ivec2 pos, const string_view& str);
-	bool updateText(Renderable*& r, const Font& f, glm::ivec2 pos, const string_view& str);
-	void delText(Renderable* r);
+	void addText(Text& t);
+	bool updateText(Text& t, const string_view& newstr);
+	void delText(Text& t);
 
 	virtual void onBufferRangeInvalidated(size_t off, size_t len); 
 

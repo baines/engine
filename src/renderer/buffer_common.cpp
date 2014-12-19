@@ -1,22 +1,29 @@
 #include "buffer_common.h"
 #include "enums.h"
+#include <algorithm>
 
 namespace {
 using namespace std;
 
-void tidy_buffer(vector<uint8_t>& data, vector<BufferRange>& del_ranges){
-//XXX: handle overlapping ranges correctly
+static bool biggest_off_first(const BufferRange& a, const BufferRange& b){
+	return a.off > b.off;
+}
+
+static void tidy_buffer(vector<uint8_t>& data, vector<BufferRange>& del_ranges, size_t& unused_bytes){
+	//XXX: handle overlapping ranges correctly
+
+	sort(del_ranges.begin(), del_ranges.end(), &biggest_off_first);
+
 	for(auto& r : del_ranges){
 		data.erase(data.begin() + r.off, data.begin() + r.off + r.len);
-		for(auto& r2 : del_ranges){
-			if(r2.off > r.off) r2.off -= r.len;
-		}
 
 		if(r.callback){
 			r.callback->onBufferRangeInvalidated(r.off, r.len);
 		}
 	}
+
 	del_ranges.clear();
+	unused_bytes = 0;
 }
 
 }
@@ -48,6 +55,7 @@ void StreamingBuffer::mark(){
 }
 
 void StreamingBuffer::invalidate(BufferRange&& range){
+	unused_bytes += range.len;
 	unused_ranges.push_back(std::move(range));
 }
 
@@ -68,18 +76,17 @@ void StreamingBuffer::update(){
 			log(logging::warn, "Streaming mode is BUFFER_INVALIDATE, but glInvalidateBufferData unsupported!");
 		}
 	
-		tidy_buffer(*data, unused_ranges);
+		tidy_buffer(*data, unused_ranges, unused_bytes);
 
 		if(prev_capacity != data->capacity()){
 			gl.BufferData(type, data->capacity(), data->data(), GL_STREAM_DRAW);
 		} else {
-			::printf("bsd: sz: %lu, cap: %lu\n", data->size(), data->capacity());
 			gl.BufferSubData(type, 0, data->size(), data->data());
 		}
 	}
 	
 	if(gl.streaming_mode->get() == BUFFER_DATA_NULL){
-		tidy_buffer(*data, unused_ranges);
+		tidy_buffer(*data, unused_ranges, unused_bytes);
 		gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
 		gl.BufferSubData(type, 0, data->size(), data->data());
 	}
@@ -93,7 +100,7 @@ void StreamingBuffer::update(){
 			flags |= GL_MAP_INVALIDATE_BUFFER_BIT;
 		}
 
-		tidy_buffer(*data, unused_ranges);
+		tidy_buffer(*data, unused_ranges, unused_bytes);
 		
 		void* gl_data = gl.MapBufferRange(
 			type, 
@@ -108,8 +115,9 @@ void StreamingBuffer::update(){
 	}
 	
 	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND){
-		if(prev_capacity != data->capacity()){
-			tidy_buffer(*data, unused_ranges);
+		if(prev_capacity != data->capacity()
+		|| unused_bytes >= data->size() / 2){
+			tidy_buffer(*data, unused_ranges, unused_bytes);
 			gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
 			prev_size = 0;
 		}

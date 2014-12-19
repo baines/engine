@@ -19,9 +19,11 @@ struct Text {
 	
 	~Text();
 private:
+	friend class TextSystem;
 	Engine* engine;
 	const Font* font;
 	glm::ivec2 pos;
+	std::string str;
 	ShaderUniforms uniforms;
 	Renderable* renderable;
 };

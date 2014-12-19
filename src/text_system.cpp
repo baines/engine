@@ -1,5 +1,6 @@
 #include "text_system.h"
 #include "font.h"
+#include "text.h"
 #include <algorithm>
 
 struct TextVert {
@@ -25,7 +26,11 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-Renderable* TextSystem::addText(const Font& f, glm::ivec2 pos, const string_view& str){
+void TextSystem::addText(Text& t){
+	const Font& f = *t.font;
+	const glm::ivec2& pos = t.pos;
+	const std::string& str = t.str;
+
 	const size_t str_len = str.size();
 	
 	uint16_t utf_lo = 0, utf_hi = 0;
@@ -74,20 +79,46 @@ Renderable* TextSystem::addText(const Font& f, glm::ivec2 pos, const string_view
 			ROff{off}
 		)
 	);
-	return &text_renderables.back();
+	
+	t.renderable = &text_renderables.back();
 }
 
-bool TextSystem::updateText(Renderable*& r, const Font& f, glm::ivec2 pos, const string_view& newstr){
-	if(!r) return false;
-	//TODO: optimization if newstr is substring of old str: only adjust r->off / r->count.
-	//    + optimization if renderable is last in buffer + appending text
+bool TextSystem::updateText(Text& t, const string_view& newstr){
+	if(!t.renderable) return false;
 
-	delText(r);
-	r = addText(f, pos, newstr);
+	auto i = (newstr.size() > t.str.size())
+		? std::string::npos
+		: t.str.find(newstr.data(), 0, newstr.size());
+	
+	if(i != std::string::npos){
+		//DEBUGF("Using fast text update: [%s] -> [%.*s]\n", t.str.c_str(), newstr.size(), newstr.data());
+		size_t start = t.renderable->offset * sizeof(TextVert);
+		size_t count = t.renderable->count * sizeof(TextVert);
+		size_t v_diff = (t.str.size() - newstr.size()) * 4;
+		size_t diff = v_diff * sizeof(TextVert);
+
+		BufferRange r_lo = { start, i * sizeof(TextVert) * 4, this },
+		            r_hi = { (start + count) - diff, diff, this };
+
+		text_buffer.invalidate(std::move(r_hi));
+		text_buffer.invalidate(std::move(r_lo));
+
+		t.renderable->offset += i;
+		t.renderable->count  -= v_diff;
+
+		t.str = std::move(newstr.to_string());
+	} else {
+		//DEBUGF("Slow text update: [%s] -> [%.*s]\n", t.str.c_str(), newstr.size(), newstr.data());
+		delText(t);
+		t.str = std::move(newstr.to_string());
+		addText(t);
+	}
 	return true;
 }
 
-void TextSystem::delText(Renderable* r){
+void TextSystem::delText(Text& t){
+	auto* r = t.renderable;
+
 	if(!r) return;
 
 	size_t start = r->offset * sizeof(TextVert);
@@ -100,11 +131,8 @@ void TextSystem::delText(Renderable* r){
 			break;
 		}
 	}
-	if(i == text_renderables.end()){
-		return;
-	} else {
-		text_renderables.erase(i);
-	}
+	assert(i != text_renderables.end());
+	text_renderables.erase(i);
 }
 
 void TextSystem::onBufferRangeInvalidated(size_t off, size_t len){

@@ -30,7 +30,7 @@ private:
 	std::vector<BufferRange> unused_ranges;
 	GLuint id;
 	GLenum type;
-	size_t prev_size, prev_capacity;
+	size_t prev_size, prev_capacity, unused_bytes;
 	bool dirty;
 };
 

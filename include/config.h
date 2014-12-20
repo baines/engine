@@ -42,20 +42,24 @@ struct Config {
 	}
 	
 	// sets value to val or calls function with val for CVarFuncs
-	//TODO: template this instead or use std::string??
-	void evalVar(uint32_t hash, const string_view& str, bool hook = false){
+	bool evalVar(uint32_t hash, const string_view& str, bool hook = false){
 		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const CVar& cv){
 			return cv.name.hash == hash;
 		});
+		
+		bool ret_val = false;
 		if(it != cvars.end()){
 			it->eval(str);
+			ret_val = true; //XXX: return if setting the var to str succeeded or not instead?
 		} else if(hook){
 			cvar_hooks.emplace(hash, str);
 		}
+
+		return ret_val;
 	}
-	
-	void evalVar(const str_const& key, const string_view& value, bool hook = false){
-		evalVar(key.hash, value, hook);
+
+	bool evalVar(const str_const& key, const string_view& value, bool hook = false){
+		return evalVar(key.hash, value, hook);
 	}
 	
 	bool extendPrefix(std::string& prefix){

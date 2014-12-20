@@ -90,7 +90,7 @@ bool TextSystem::updateText(Text& t, const string_view& newstr){
 
 	// if this is only appending text, and it's at the end of the vertex buffer,
 	// then we can just push the new characters on the end.
-	if(newstr.size() >= t.str.size()
+	if(newstr.size() > t.str.size()
 	&& (t.renderable->offset + t.renderable->count) * sizeof(TextVert) == text_buffer.getSize()
 	&& newstr.find(t.str) == 0){
 		auto suffix = string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
@@ -104,7 +104,7 @@ bool TextSystem::updateText(Text& t, const string_view& newstr){
 		// if the new text is a substring of the old text then don't add to the vertex buffer,
 		// just adjust the renderable's count and offset and invalidate the old bits.
 		auto i = t.str.find(newstr.data(), 0, newstr.size());
-		if(i != std::string::npos){
+		if(i != std::string::npos && !(i == 0 && t.str.size() == newstr.size())){
 			size_t start = t.renderable->offset * sizeof(TextVert),
 			       count = t.renderable->count * sizeof(TextVert),
 			       v_diff = (t.str.size() - newstr.size()) * 4,
@@ -113,8 +113,8 @@ bool TextSystem::updateText(Text& t, const string_view& newstr){
 			BufferRange r_lo = { start, i * sizeof(TextVert) * 4, this },
 						r_hi = { (start + count) - diff, diff, this };
 
-			text_buffer.invalidate(std::move(r_hi));
-			text_buffer.invalidate(std::move(r_lo));
+			if(r_hi.len > 0) text_buffer.invalidate(std::move(r_hi));
+			if(r_lo.len > 0) text_buffer.invalidate(std::move(r_lo));
 
 			t.renderable->offset += i;
 			t.renderable->count  -= v_diff;
@@ -137,7 +137,9 @@ void TextSystem::delText(Text& t){
 
 	size_t start = r->offset * sizeof(TextVert);
 	size_t count = r->count * sizeof(TextVert);
-	text_buffer.invalidate(BufferRange{ start, count, this });
+	if(count > 0){
+		text_buffer.invalidate(BufferRange{ start, count, this });
+	}
 
 	auto i = text_renderables.begin();
 	for(auto j = text_renderables.end(); i != j; ++i){

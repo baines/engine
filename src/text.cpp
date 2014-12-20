@@ -17,7 +17,7 @@ Text::Text()
 	uniforms.setUniform("u_samp", { 0 });
 }
 
-Text::Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& s)
+Text::Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s)
 : engine(&e)
 , font(&f)
 , pos(pos)
@@ -66,6 +66,11 @@ bool Text::update(const string_view& newstr){
 	if(!engine || !font) return false;
 
 	return engine->text.updateText(*this, newstr);
+}
+
+bool Text::update(const string_view& newstr, glm::ivec2 newpos){
+	pos = newpos;
+	return update(newstr);
 }
 
 void Text::draw(Renderer& r){

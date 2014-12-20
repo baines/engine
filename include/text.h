@@ -10,13 +10,23 @@ struct Font;
 
 struct Text {
 	Text();
-	Text(Engine& e, const Font& f, const glm::ivec2& pos, const string_view& s);
+	Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s);
 	Text(Text&&);
 	Text& operator=(Text&&);
 	
 	bool update(const string_view& newstr);
+	bool update(const string_view& newstr, glm::ivec2 newpos);
+
 	void draw(Renderer& r);
-	
+
+	const std::string& getStr() const {
+		return str;
+	}
+
+	glm::ivec2 getPos() const {
+		return pos;
+	}
+
 	~Text();
 private:
 	friend class TextSystem;

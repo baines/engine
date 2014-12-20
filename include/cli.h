@@ -21,12 +21,16 @@ struct CLI : public GameState {
 	
 	~CLI();
 private:
+	void updateCursor();
+
 	Engine& engine;
-	bool active, ignore_next_text;
+	bool active, ignore_next_text, show_cursor;
+	int blink_timer;
 
 	CVarInt* scrollback_lines;
 	CVarInt* visible_lines;
 	CVarInt* font_height;
+	CVarInt* cursor_blink_ms;
 
 	Resource<Font, uint16_t> font;
 	
@@ -35,6 +39,8 @@ private:
 	
 	Text input_text;
 	std::string input_str;
+
+	Text cursor_text;
 };
 
 #endif

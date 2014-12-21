@@ -85,14 +85,17 @@ void TextSystem::addText(Text& t){
 	t.setRenderable(&text_renderables.back());
 }
 
-bool TextSystem::updateText(Text& t, const string_view& newstr){
+bool TextSystem::updateText(Text& t, const string_view& newstr, glm::ivec2 newpos){
 	if(!t.renderable) return false;
 
+	bool pos_changed = t.pos != newpos;
 	// if this is only appending text, and it's at the end of the vertex buffer,
 	// then we can just push the new characters on the end.
-	if(newstr.size() > t.str.size()
+	if(!pos_changed
+	&& newstr.size() >= t.str.size()
 	&& (t.renderable->offset + t.renderable->count) * sizeof(TextVert) == text_buffer.getSize()
 	&& newstr.find(t.str) == 0){
+
 		auto suffix = string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
 		t.renderable->count += writeString(
 			t,
@@ -100,11 +103,12 @@ bool TextSystem::updateText(Text& t, const string_view& newstr){
 			suffix
 		);
 		t.str.append(suffix.data(), suffix.size());
+
 	} else {
 		// if the new text is a substring of the old text then don't add to the vertex buffer,
 		// just adjust the renderable's count and offset and invalidate the old bits.
 		auto i = t.str.find(newstr.data(), 0, newstr.size());
-		if(i != std::string::npos && !(i == 0 && t.str.size() == newstr.size())){
+		if(i != std::string::npos && !pos_changed){
 			size_t start = t.renderable->offset * sizeof(TextVert),
 			       count = t.renderable->count * sizeof(TextVert),
 			       v_diff = (t.str.size() - newstr.size()) * 4,
@@ -124,6 +128,7 @@ bool TextSystem::updateText(Text& t, const string_view& newstr){
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);
 			t.str = std::move(newstr.to_string());
+			t.pos = newpos;
 			addText(t);
 		}
 	}

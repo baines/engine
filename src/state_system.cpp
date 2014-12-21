@@ -23,7 +23,7 @@ void StateSystem::onInput(Engine& e, SDL_Event& ev){
 	
 	if(ev.type == SDL_KEYDOWN || SDL_KEYUP){
 		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-			if(e.input.getKeyAction(*i, ev.key.keysym.scancode, action_id)
+			if(e.input.getKeyAction(*i, ev.key.keysym, action_id)
 			&& (*i)->onInput(e, action_id, ev.key.state)){
 				break;
 			}

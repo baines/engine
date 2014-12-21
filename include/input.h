@@ -10,13 +10,22 @@
 
 struct Input {
 	
+	struct Key {
+		Key();
+		Key(SDL_Scancode code);
+		Key(const SDL_Keysym& key);
+		Key(const char* str, bool raw_scancode = false);
+		bool operator<(const Key& k) const;
+		bool operator==(const Key& k) const;
+
+		SDL_Scancode code;
+		bool shift, ctrl, alt;
+	};
+
 	Input(Engine& e);
 
-	void bind(const char* input_name, uint32_t action);
-	void bindRaw(SDL_Scancode key, uint32_t action);
-	
-	void unbind(const char* input_name);
-	void unbindRaw(SDL_Scancode key);
+	void bind(Key key, uint32_t action);
+	void unbind(Key key);
 
 	void watchAction(GameState* s, const str_const& action, int action_id);
 	void enableText(GameState* s, bool enable, const SDL_Rect& pos = {0, 0, 0, 0});
@@ -24,28 +33,21 @@ struct Input {
 	void onDeviceChange(SDL_ControllerDeviceEvent& event);
 	void onStateChange(GameState* new_state);
 
-	bool getKeyAction(GameState* s, SDL_Scancode key, int& action_id);
+	bool getKeyAction(GameState* s, const Key& key, int& action_id);
 	bool getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id);
 
 private:
-
 	struct StateAction {
 		GameState* state;
 		int id;
 	};
 	struct StateKey {
 		GameState* state;
-		SDL_Scancode key;
-		bool operator<(const StateKey& rhs) const {
-			if(state == rhs.state){
-				return key < rhs.key;
-			} else {
-				return state < rhs.state;
-			}
-		}
+		Key key;
+		bool operator<(const StateKey& rhs) const;
 	};
 
-	std::map<uint32_t, SDL_Scancode> binds;
+	std::map<uint32_t, Key> binds;
 	std::map<StateKey, int> active_binds;
 	std::multimap<uint32_t, StateAction> bound_actions;
 

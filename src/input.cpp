@@ -1,14 +1,63 @@
 #include "input.h"
 #include "engine.h"
+#include <tuple>
 
 using namespace std;
 
-static bool parse_bind(char* buff, char*& key, char*& act){
-	char* state = nullptr;
-	key = strtok_r(buff   , " \t", &state);
-	act = strtok_r(nullptr, " \t", &state);
+Input::Key::Key() : code(SDL_SCANCODE_UNKNOWN), shift(false), ctrl(false), alt(false){}
+
+Input::Key::Key(SDL_Scancode code) : code(code), shift(false), ctrl(false), alt(false){}
+
+Input::Key::Key(const SDL_Keysym& k)
+: code  (k.scancode)
+, shift (k.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
+, ctrl  (k.mod & (KMOD_LCTRL  | KMOD_RCTRL))
+, alt   (k.mod & (KMOD_LALT   | KMOD_RALT)){
+
+}
+
+Input::Key::Key(const char* str, bool raw_scancode){
+	const char* mod_separator = nullptr;
+
+	if(str[0] != '-' && (mod_separator = strchr(str, '-'))){
+		for(const char* p = str; p < mod_separator; ++p){
+			if(*p == 's' || *p == 'S') shift = true;
+			if(*p == 'c' || *p == 'C') ctrl  = true;
+			if(*p == 'a' || *p == 'A') alt   = true;
+		}
+		str = mod_separator+1;
+	}
+
+	if(raw_scancode){
+		code = static_cast<SDL_Scancode>(strtol(str, nullptr, 0));
+	} else {
+		code = SDL_GetScancodeFromName(str);
+	}
+}
+
+bool Input::Key::operator<(const Key& rhs) const {
+	return tie(code, shift, ctrl, alt) < tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);	
+}
+
+bool Input::Key::operator==(const Key& rhs) const {
+	return tie(code, shift, ctrl, alt) == tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);
+}
+
+bool Input::StateKey::operator<(const StateKey& rhs) const {
+	return tie(state, key) < tie(rhs.state, rhs.key);
+}
+
+static void bind_key_fn(Input* const input, const string_view& str, bool raw){
+	char buff[str.size()+1] = {};
+	str.copy(buff, str.size());
 	
-	return key && act;
+	char* state = nullptr;
+	char* key = strtok_r(buff   , " \t", &state);
+	char* act = strtok_r(nullptr, " \t", &state);
+	
+	if(key && act){
+		input->bind(Input::Key(key, raw), str_hash(act));
+	}
 }
 
 Input::Input(Engine& e)
@@ -17,34 +66,16 @@ Input::Input(Engine& e)
 , bound_actions()
 , current_state(nullptr){
 
-	e.cfg.addVar("bind", CVarFunc([&](const string_view& str){
-		char buff[str.size()+1] = {}, *key = nullptr, *act = nullptr;
-		str.copy(buff, str.size());
-		
-		if(parse_bind(buff, key, act)){
-			this->bind(key, str_hash(act));
-		}
-	}));
-	e.cfg.addVar("bind_raw", CVarFunc([&](const string_view& str){
-		char buff[str.size()+1] = {}, *key = nullptr, *act = nullptr;
-		str.copy(buff, str.size());
-		
-		if(parse_bind(buff, key, act)){
-			auto code = static_cast<SDL_Scancode>(strtol(key, nullptr, 0));
-			this->bindRaw(code, str_hash(act));
-		}
-	}));
+	using namespace std::placeholders;
+
+	e.cfg.addVar("bind",     CVarFunc(std::bind(&bind_key_fn, this, _1, false)));
+	e.cfg.addVar("bind_raw", CVarFunc(std::bind(&bind_key_fn, this, _1, true)));
 
 	SDL_StopTextInput();
 }
 
-void Input::bind(const char* input_name, uint32_t action){
-	SDL_Scancode key = SDL_GetScancodeFromName(input_name);
-	bindRaw(key, action);
-}
-
-void Input::bindRaw(SDL_Scancode key, uint32_t action){
-	if(key != SDL_SCANCODE_UNKNOWN){
+void Input::bind(Key key, uint32_t action){
+	if(key.code != SDL_SCANCODE_UNKNOWN){
 		binds.emplace(action, key);
 		
 		auto pair = bound_actions.equal_range(action);
@@ -55,13 +86,8 @@ void Input::bindRaw(SDL_Scancode key, uint32_t action){
 	}
 }
 
-void Input::unbind(const char* input_name){
-	SDL_Scancode key = SDL_GetScancodeFromName(input_name);
-	unbindRaw(key);
-}
-
-void Input::unbindRaw(SDL_Scancode key){
-	if(key != SDL_SCANCODE_UNKNOWN){
+void Input::unbind(Key key){
+	if(key.code != SDL_SCANCODE_UNKNOWN){
 		for(auto it = binds.begin(); it != binds.end(); /**/){
 			if(it->second == key){
 				binds.erase(it++);
@@ -119,7 +145,7 @@ void Input::enableText(GameState* gs, bool enable, const SDL_Rect& pos){
 	}
 }
 
-bool Input::getKeyAction(GameState* s, SDL_Scancode key, int& action_id){
+bool Input::getKeyAction(GameState* s, const Key& key, int& action_id){
 
 	auto it = active_binds.find(StateKey{s, key});
 	

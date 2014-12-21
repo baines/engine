@@ -63,14 +63,12 @@ Text& Text::operator=(Text&& other){
 }
 
 bool Text::update(const string_view& newstr){
-	if(!engine || !font) return false;
-
-	return engine->text.updateText(*this, newstr);
+	return update(newstr, pos); 
 }
 
 bool Text::update(const string_view& newstr, glm::ivec2 newpos){
-	pos = newpos;
-	return update(newstr);
+	if(!engine || !font) return false;
+	return engine->text.updateText(*this, newstr, newpos);
 }
 
 void Text::draw(Renderer& r){

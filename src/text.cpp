@@ -68,6 +68,8 @@ bool Text::update(const string_view& newstr){
 
 bool Text::update(const string_view& newstr, glm::ivec2 newpos){
 	if(!engine || !font) return false;
+	if(newstr == str && newpos == pos) return true;
+
 	return engine->text.updateText(*this, newstr, newpos);
 }
 

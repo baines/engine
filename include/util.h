@@ -5,8 +5,7 @@
 #include <cstring>
 #include <array>
 
-/* Integer sequence stuff since C++14 isn't out yet */
-
+/* Integer sequence stuff to unwrap tuples since C++14 isn't out yet */
 template<unsigned...> 
 struct seq { using type = seq; };
 
@@ -23,7 +22,6 @@ template<> struct gen_seq<0> : seq<>{};
 template<> struct gen_seq<1> : seq<0>{};
 
 /* Get the arity (number of args) from a member function */
-
 template<class T>
 struct mf_arity;
 
@@ -32,6 +30,7 @@ struct mf_arity<R(C::*)(Args...)> {
 	static const size_t value = sizeof...(Args);
 };
 
+/* type to store multiple types with correct alignment */
 template<class T, class... Ts>
 struct variant {
 
@@ -54,10 +53,12 @@ struct variant {
 	using type = typename std::aligned_storage<union_size, alignment>::type;
 };
 
+/* fast integer log2 */
 inline unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
+/* fast string hashing functions */
 inline constexpr uint32_t str_hash(const char* str, uint32_t hash = 6159){
 	return *str ? str_hash(str+1, 187 * hash + *str) : hash;
 }
@@ -76,6 +77,7 @@ inline uint32_t str_hash(const string_view& str){
 	return str_hash_len(str.data(), str.size());
 }
 
+/* constant-expression string class */
 struct str_const {
 
 	template<size_t N>
@@ -99,20 +101,24 @@ struct str_const {
 	const uint32_t hash;
 };
 
+/* makes an array from variadic args */
 template<class T, class... Args>
 constexpr typename std::array<T, sizeof...(Args)> make_array(Args&&... args){
 	return {{ T(std::forward<Args>(args))... }};
 }
 
+/* specialization of make_array for str_const used in enums.h */
 template<class... Args>
 constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... args){
 	return make_array<str_const>(std::forward<Args>(args)...);
 }
 
+/* array deletion functor for use with std::shared_ptr */
 struct ArrayDeleter {
 	void operator()(const uint8_t* arr) const { delete [] arr; }
 };
 
+/* convert string to bool */
 //XXX: std::numpunct::truename()?
 inline bool str_to_bool(const char* str){
 	return str[0] == '1' 
@@ -124,8 +130,7 @@ inline constexpr bool str_to_bool(const string_view& str){
 	return str[0] == '1' || str.compare(0, 4, string_view("true", 4)) == 0;
 }
 
-/* GLM stuff */
-
+/* GLM stuff to determine if a type is a vector or matrix */
 #include <glm/glm.hpp>
 
 template<template<class, glm::precision> class V, class T>
@@ -152,5 +157,5 @@ struct is_glm_matrix {
 	;
 };
 
-
 #endif
+

@@ -17,14 +17,15 @@ struct CLI : public GameState {
 	
 	void toggle(void);
 	bool execute(const char* line);
-	void printf(const char* fmt, ...);
-	
+	//void printf(const char* fmt, ...);
+	void echo(const string_view& str);
+
 	~CLI();
 private:
 	void updateCursor();
 
 	Engine& engine;
-	bool active, ignore_next_text, show_cursor;
+	bool active, ignore_next_text, show_cursor, output_dirty;
 	int blink_timer;
 
 	CVarInt* scrollback_lines;
@@ -35,12 +36,15 @@ private:
 	Resource<Font, uint16_t> font;
 	
 	std::vector<Text> output_text;
-	std::unique_ptr<char[]> output_buffer;
+	std::vector<std::string> output_lines;
+	size_t output_line_idx;
 	
 	Text input_text;
 	std::string input_str;
 
 	Text cursor_text;
+
+	std::vector<CVar*> autocompletions;
 };
 
 #endif

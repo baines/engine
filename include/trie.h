@@ -85,10 +85,10 @@ struct Trie {
 		return storage[node_idx].val;
 	}
 	
-	bool prefixExtend(std::string& prefix){
+	bool prefixExtend(std::string& prefix, size_t offset){
 		bool modified = false;
-		if(unsigned node_idx = find_idx(prefix.c_str())){			
-			for(Node* n = &storage[node_idx]; __builtin_popcountll(n->bitset) == 1; n = &storage[n->children_idx]){
+		if(unsigned node_idx = find_idx(prefix.c_str()+offset)){			
+			for(Node* n = &storage[node_idx]; !n->val && __builtin_popcountll(n->bitset) == 1; n = &storage[n->children_idx]){
 				prefix += inv_index(log2ll(n->bitset));
 				modified = true;
 			} 

@@ -62,8 +62,8 @@ struct Config {
 		return evalVar(key.hash, value, hook);
 	}
 	
-	bool extendPrefix(std::string& prefix){
-		return cvar_trie.prefixExtend(prefix);
+	bool extendPrefix(std::string& prefix, size_t offset = 0){
+		return cvar_trie.prefixExtend(prefix, offset);
 	}
 	
 	void getVarsWithPrefix(const char* prefix, std::vector<CVar*>& output){

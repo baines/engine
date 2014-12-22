@@ -105,24 +105,18 @@ bool TextSystem::updateText(Text& t, const string_view& newstr, glm::ivec2 newpo
 		t.str.append(suffix.data(), suffix.size());
 
 	} else {
-		// if the new text is a substring of the old text then don't add to the vertex buffer,
-		// just adjust the renderable's count and offset and invalidate the old bits.
+		// if the new text is a substring of the old text starting at offset 0, then don't 
+		// add to the vertex buffer, just lower the renderable's count and invalidate the end.
 		auto i = t.str.find(newstr.data(), 0, newstr.size());
-		if(i != std::string::npos && !pos_changed){
+		if(i == 0 && !pos_changed){
 			size_t start = t.renderable->offset * sizeof(TextVert),
 			       count = t.renderable->count * sizeof(TextVert),
 			       v_diff = (t.str.size() - newstr.size()) * 4,
 			       diff = v_diff * sizeof(TextVert);
 
-			BufferRange r_lo = { start, i * sizeof(TextVert) * 4, this },
-						r_hi = { (start + count) - diff, diff, this };
+			text_buffer.invalidate(BufferRange{ (start + count) - diff, diff, this });
 
-			if(r_hi.len > 0) text_buffer.invalidate(std::move(r_hi));
-			if(r_lo.len > 0) text_buffer.invalidate(std::move(r_lo));
-
-			t.renderable->offset += i;
-			t.renderable->count  -= v_diff;
-
+			t.renderable->count -= v_diff;
 			t.str = std::move(newstr.to_string());
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.

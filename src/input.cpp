@@ -16,7 +16,12 @@ Input::Key::Key(const SDL_Keysym& k)
 
 }
 
-Input::Key::Key(const char* str, bool raw_scancode){
+Input::Key::Key(const char* str, bool raw_scancode)
+: code(SDL_SCANCODE_UNKNOWN)
+, shift(false)
+, ctrl(false)
+, alt(false) {
+
 	const char* mod_separator = nullptr;
 
 	if(str[0] != '-' && (mod_separator = strchr(str, '-'))){
@@ -80,7 +85,7 @@ void Input::bind(Key key, uint32_t action){
 		
 		auto pair = bound_actions.equal_range(action);
 		for(auto i = pair.first, j = pair.second; i != j; ++i){
-			StateAction& sa =i->second;
+			StateAction& sa = i->second;
 			active_binds.emplace(StateKey{sa.state, key}, sa.id);
 		}
 	}
@@ -126,7 +131,7 @@ void Input::onStateChange(GameState* s){
 void Input::watchAction(GameState* s, const str_const& action, int action_id){
 
 	bound_actions.emplace(action.hash, StateAction{s, action_id});
-	
+
 	auto it = binds.find(action.hash);
 	if(it != binds.end()){
 		active_binds.emplace(StateKey{s, it->second}, action_id);

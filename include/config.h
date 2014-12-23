@@ -40,6 +40,18 @@ struct Config {
 			return nullptr;
 		}
 	}
+
+	template<class Var>
+	Var* getVar(uint32_t hash){
+		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const CVar& cv){
+			return cv.name.hash == hash;
+		});
+		if(it != cvars.end()){
+			return it->template get<Var>();
+		} else {
+			return nullptr;
+		}
+	}
 	
 	// sets value to val or calls function with val for CVarFuncs
 	bool evalVar(uint32_t hash, const string_view& str, bool hook = false){

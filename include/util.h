@@ -4,6 +4,7 @@
 #include <memory>
 #include <cstring>
 #include <array>
+#include <SDL2/SDL_stdinc.h>
 
 /* Integer sequence stuff to unwrap tuples since C++14 isn't out yet */
 template<unsigned...> 
@@ -121,13 +122,11 @@ struct ArrayDeleter {
 /* convert string to bool */
 //XXX: std::numpunct::truename()?
 inline bool str_to_bool(const char* str){
-	return str[0] == '1' 
-	    || (tolower(str[0]) == 't' && tolower(str[1]) == 'r' 
-	    &&  tolower(str[2]) == 'u' && tolower(str[3]) == 'e');
+	return str[0] == '1' || SDL_strncasecmp(str, "true", 4) == 0; 
 }
 
 inline constexpr bool str_to_bool(const string_view& str){
-	return str[0] == '1' || str.compare(0, 4, string_view("true", 4)) == 0;
+	return str[0] == '1' || str.compare(0, 4, "true", 4) == 0;
 }
 
 /* GLM stuff to determine if a type is a vector or matrix */

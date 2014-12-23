@@ -19,6 +19,7 @@ struct CLI : public GameState {
 	bool execute(const char* line);
 	//void printf(const char* fmt, ...);
 	void echo(const string_view& str);
+	void printVarInfo(const CVar& cvar);
 
 	~CLI();
 private:

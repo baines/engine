@@ -19,7 +19,7 @@ enum CVarType {
 template<class T>
 struct CVarNumeric {
 	CVarNumeric() : CVarNumeric(0, 0, 0){}
-	CVarNumeric(T init, T min, T max) : val(init), min(min), max(max){}
+	CVarNumeric(T init, T min, T max) : init(init), val(init), min(min), max(max){}
 
 	bool set(T v){
 		if(v >= min && v <= max){
@@ -30,6 +30,7 @@ struct CVarNumeric {
 		}
 	}
 
+	const T init;
 	T val, min, max;
 };
 
@@ -37,7 +38,7 @@ typedef CVarNumeric<int>   CVarInt;
 typedef CVarNumeric<float> CVarFloat;
 
 struct CVarString {
-	CVarString(const char* str) : str(str){}
+	CVarString(const char* str) : init(str), str(str){}
 	bool set(const string_view& s){
 		str = std::move(s.to_string());
 		return true;
@@ -46,6 +47,7 @@ struct CVarString {
 		str = std::move(s);
 		return true;
 	}
+	const char* const init;
 	std::string str;
 };
 
@@ -53,6 +55,7 @@ struct CVarEnum {
 	template<size_t N>
 	CVarEnum(const std::array<str_const, N>& strs, size_t index)
 	: strs(strs.begin(), strs.end())
+	, init(index)
 	, index(index){
 
 	}
@@ -73,20 +76,22 @@ struct CVarEnum {
 		return false;
 	}
 	
-	const str_const& get(){
+	const str_const& get() const {
 		return strs[index];
 	}
 
 	std::vector<str_const> strs;
+	const size_t init;
 	size_t index;
 };
 
 struct CVarBool {
-	CVarBool(bool b) : val(b){}
+	CVarBool(bool b) : init(b), val(b){}
 	bool set(bool b){
 		val = b;
 		return true;
 	}
+	const bool init;
 	bool val;
 };
 
@@ -115,10 +120,29 @@ struct CVar {
 	, value(){
 		new(&value) Var(std::move(v));
 	}
+	
+	template<class T>
+	typename std::enable_if<std::is_same<T, CVar>::value, T*>::type get(void) const {
+		return this;
+	}
 
 	template<class T>
-	T* get(void) {
-		if(type == cvar_id<T>::value){
+	typename std::enable_if<!std::is_same<T, CVar>::value, T*>::type get(void) const {
+		if(type == cvar_id<typename std::remove_const<T>::type>::value){
+			return reinterpret_cast<T*>(&value);
+		} else {
+			return nullptr;
+		}
+	}
+	
+	template<class T>
+	typename std::enable_if<std::is_same<T, CVar>::value, T*>::type get(void){
+		return this;
+	}
+
+	template<class T>
+	typename std::enable_if<!std::is_same<T, CVar>::value, T*>::type get(void){
+		if(type == cvar_id<typename std::remove_const<T>::type>::value){
 			return reinterpret_cast<T*>(&value);
 		} else {
 			return nullptr;

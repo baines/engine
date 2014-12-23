@@ -72,11 +72,23 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		int var_name_sz = split_idx - 2;
 		
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
-		if(e.cfg.evalVar(hash, &input_str[split_idx])){
+
+		if(input_str.find_first_not_of(' ', split_idx) == std::string::npos){
+			auto* v = e.cfg.getVar<CVar>(hash);
+			if(v->type != CVAR_FUNC){
+				printVarInfo(*v);
+			}
+			
+			input_str.assign("> ");
+			
+			return true;
+		}
+
+		if(e.cfg.evalVar(hash, &input_str[split_idx+1])){
 			echo("Ok.");
 		} else {
-			char buf[81] = {};
-			size_t len = snprintf(buf, sizeof(buf)-1, "Unknown var \"%.*s\".", var_name_sz, var_name);
+			char buf[80] = {};
+			size_t len = snprintf(buf, sizeof(buf), "Unknown var \"%.*s\".", var_name_sz, var_name);
 			echo(string_view(buf, len));
 		}
 
@@ -93,9 +105,25 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		input_str.erase(input_str.begin() + j, input_str.end());
 
-	} else if(action == ACT_AUTOCOMPLETE){
+	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > 2){
 		
-		if(!e.cfg.extendPrefix(input_str, 2)){
+		if(input_str.back() == ' '){
+			CVar* cvar = nullptr;
+			uint32_t hash = str_hash_len(input_str.c_str()+2, input_str.size()-3);
+			if((cvar = e.cfg.getVar<CVar>(hash))){
+				printVarInfo(*cvar);
+			}
+			return true;
+		}
+		
+		autocompletions.clear();
+		e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
+		
+		if(e.cfg.extendPrefix(input_str, 2)){
+			if(autocompletions.size() == 1){
+				input_str.append(1, ' ');
+			}
+		} else {
 			autocompletions.clear();
 			e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
 
@@ -198,6 +226,55 @@ void CLI::echo(const string_view& str){
 	output_lines[output_line_idx].assign(std::move(str.to_string()));
 	output_line_idx = (output_line_idx + 1) % output_lines.size();
 	output_dirty = true;
+}
+
+void CLI::printVarInfo(const CVar& cvar){
+	char buf[80] = {};
+	size_t off = snprintf(buf, sizeof(buf), " '%s' = ", cvar.name.str);
+	size_t len = sizeof(buf) - off;
+	char* p = buf + off;
+
+	if(auto i = cvar.get<const CVarInt>()){
+		snprintf(p, len, 
+			"%d (default %d) [int: %d < x < %d]",
+			 i->val,     i->init,  i->min,  i->max
+		);
+	} else
+	if(auto f = cvar.get<const CVarFloat>()){
+		snprintf(p, len, 
+			"%.2f (default %.2f) [float: %.2f < x < %.2f]", 
+			 f->val,       f->init,      f->min,    f->max
+		);
+	} else
+	if(auto b = cvar.get<const CVarBool>()){
+		const char* bstr[] = { "false", "true" };
+
+		snprintf(p, len, "%s (default %s) [bool]", bstr[b->val], bstr[b->init]);
+	} else
+	if(auto s = cvar.get<const CVarString>()){
+		snprintf(p, len, "\"%s\" (default \"%s\") [string]", s->str.c_str(), s->init);
+	} else
+	if(auto e = cvar.get<const CVarEnum>()){
+		//TODO: needs word wrapping...
+
+		snprintf(p, len, "'%s' (default '%s') [enum: {",
+			e->get().str, e->strs[e->init].str
+		);
+		echo(buf);
+		memset(buf, 0, sizeof(buf));
+
+		for(size_t n = 0; n < e->strs.size(); ++n){
+			SDL_strlcat(buf, e->strs[n].str, sizeof(buf));
+			if(n != e->strs.size() - 1) SDL_strlcat(buf, ", ", sizeof(buf));
+		}
+		SDL_strlcat(buf, " }]", sizeof(buf));
+	} else
+	if(cvar.get<const CVarFunc>()){
+		//TODO: get usage info from the CVarFunc somehow.
+		snprintf(p, len, "<function>");
+	}
+	
+	echo(buf);
 }
 
 void CLI::updateCursor(){

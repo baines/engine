@@ -32,9 +32,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 		memset(img.mem + (prev_w * prev_h), 0, (img.w * img.h) - (prev_w * prev_h));
 	}
 
-	const int rows_avail = std::min<int>(
-		img.line_height, img.line_height - (img.ascender - glyph.bearing_y)
-	);
+	const int rows_avail = std::min<int>(img.line_height, img.descender + glyph.bearing_y);
 	const int rows = std::min(rows_avail, bmp->rows);
 	
 	for(int i = 0; i < rows; ++i){
@@ -157,8 +155,9 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			render_unknown = false;
 			--i;
 		}
-		
-		const FT_Int32 flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
+
+		FT_Int32 flags = FT_LOAD_RENDER;
+		if(height <= 16) flags |= FT_LOAD_FORCE_AUTOHINT;
 		
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
 			const GlyphBitmapInfo bmpinfo = {

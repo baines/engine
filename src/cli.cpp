@@ -75,13 +75,11 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		if(input_str.find_first_not_of(' ', split_idx) == std::string::npos){
 			auto* v = e.cfg.getVar<CVar>(hash);
-			if(v->type != CVAR_FUNC){
+			if(v && v->type != CVAR_FUNC){
 				printVarInfo(*v);
+				input_str.assign("> ");
+				return true;
 			}
-			
-			input_str.assign("> ");
-			
-			return true;
 		}
 
 		if(e.cfg.evalVar(hash, &input_str[split_idx+1])){

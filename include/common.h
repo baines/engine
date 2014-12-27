@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <experimental/string_view>
 using string_view = std::experimental::string_view;
+using u32string_view = std::experimental::u32string_view;
 
 #include "log.h"
 

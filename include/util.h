@@ -129,6 +129,29 @@ inline constexpr bool str_to_bool(const string_view& str){
 	return str[0] == '1' || str.compare(0, 4, "true", 4) == 0;
 }
 
+inline std::u32string to_utf32(const string_view& s){
+/* XXX: GCC doesn't have <codecvt> yet, despite it being part of the C++11 standard...
+	
+	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv("");
+	return conv.from_bytes(s.data(), s.data()+s.size());
+*/
+	size_t u32str_max = s.size() * sizeof(char32_t);
+
+	char32_t* u32str = SDL_stack_alloc(char32_t, s.size());
+
+	char* out        = reinterpret_cast<char*>(u32str);
+	const char* in   = s.data();
+	size_t out_sz    = u32str_max;
+	size_t in_sz     = s.size();
+
+	auto ctx = SDL_iconv_open("UTF-32LE", "UTF-8");
+	SDL_iconv(ctx, &in, &in_sz, &out, &out_sz);
+	
+	auto ret = std::u32string(u32str, (u32str_max - out_sz) / sizeof(char32_t));
+	SDL_stack_free(u32str);
+	return ret;
+}
+
 /* GLM stuff to determine if a type is a vector or matrix */
 #include <glm/glm.hpp>
 

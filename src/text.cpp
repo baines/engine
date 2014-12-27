@@ -8,8 +8,8 @@
 Text::Text()
 : engine(nullptr)
 , font(nullptr)
-, pos()
-, total_width(0)
+, start_pos()
+, end_pos()
 , str()
 , uniforms()
 , renderable(nullptr) {
@@ -20,9 +20,9 @@ Text::Text()
 Text::Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s)
 : engine(&e)
 , font(&f)
-, pos(pos)
-, total_width(0)
-, str(std::move(s.to_string()))
+, start_pos(pos)
+, end_pos()
+, str(to_utf32(s))
 , uniforms()
 , renderable(nullptr) {
 
@@ -34,8 +34,8 @@ Text::Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s)
 Text::Text(Text&& other)
 : engine(other.engine)
 , font(other.font)
-, pos(other.pos)
-, total_width(other.total_width)
+, start_pos(other.start_pos)
+, end_pos(other.end_pos)
 , str(std::move(other.str))
 , uniforms(std::move(other.uniforms))
 , renderable(other.renderable) {
@@ -48,8 +48,8 @@ Text::Text(Text&& other)
 Text& Text::operator=(Text&& other){
 	engine = other.engine;
 	font = other.font;
-	pos = other.pos;
-	total_width = other.total_width;
+	start_pos = other.start_pos;
+	end_pos = other.end_pos;
 	str = std::move(other.str);
 	uniforms = std::move(other.uniforms);
 	renderable = other.renderable;
@@ -63,14 +63,19 @@ Text& Text::operator=(Text&& other){
 }
 
 bool Text::update(const string_view& newstr){
-	return update(newstr, pos); 
+	return update(newstr, start_pos); 
 }
 
 bool Text::update(const string_view& newstr, glm::ivec2 newpos){
 	if(!engine || !font) return false;
-	if(newstr == str && newpos == pos) return true;
 
-	return engine->text.updateText(*this, newstr, newpos);
+	std::u32string u32str = to_utf32(newstr);
+
+	if(u32str == str && newpos == start_pos){
+		return true;
+	} else {
+		return engine->text.updateText(*this, u32str, newpos);
+	}
 }
 
 void Text::draw(Renderer& r){

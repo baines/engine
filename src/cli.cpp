@@ -94,6 +94,9 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 	} else if(action == ACT_BACKSPACE && input_str.size() > 2){
 
+		while((input_str.back() & 0xC0) == 0x80){
+			input_str.pop_back();
+		}
 		input_str.pop_back();
 
 	} else if(action == ACT_DEL_WORD && input_str.size() > 2){
@@ -276,8 +279,8 @@ void CLI::printVarInfo(const CVar& cvar){
 }
 
 void CLI::updateCursor(){
-	glm::ivec2 pos = cursor_text.getPos();
-	glm::ivec2 newpos = glm::ivec2(input_str.size() * (font->getLineHeight()/2), pos.y);
+	glm::ivec2 pos = cursor_text.getStartPos();
+	glm::ivec2 newpos = glm::ivec2(input_text.size() * (font->getLineHeight()/2), pos.y);
 
 	if(pos != newpos){
 		cursor_text.update("_", newpos);

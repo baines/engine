@@ -19,12 +19,12 @@ struct Text {
 
 	void draw(Renderer& r);
 
-	const std::string& getStr() const {
-		return str;
+	glm::ivec2 getStartPos() const {
+		return start_pos;
 	}
 
-	glm::ivec2 getPos() const {
-		return pos;
+	size_t size() const {
+		return str.size();
 	}
 
 	~Text();
@@ -35,9 +35,8 @@ private:
 
 	Engine* engine;
 	const Font* font;
-	glm::ivec2 pos;
-	size_t total_width;
-	std::string str;
+	glm::ivec2 start_pos, end_pos;
+	std::u32string str;
 	ShaderUniforms uniforms;
 	Renderable* renderable;
 };

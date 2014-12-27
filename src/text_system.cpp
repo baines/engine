@@ -26,7 +26,7 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const string_view& str){
+GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
 	const Font& f = *t.font;
 	size_t str_len = str.size(), x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
 	
@@ -36,18 +36,27 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const string_view& str)
 	int tw = 0, th = 0;
 	std::tie(tw, th) = f.getTexture()->getSize();
 	float x_scale = USHRT_MAX / (float)tw, y_scale = USHRT_MAX / (float)th;
-	
+
 	for(size_t i = 0; i < str_len; ++i){
-		//TODO: SDL_iconv to UTF-32
-		int32_t letter = std::max(0, (str[i] + 1) - utf_lo);
+		
+		if(str[i] == '\n'){
+			text_buffer.push(TextVert(x + w, y + h, 0, 0));
+			w = 0;
+			y += h;
+			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
+
+			//XXX: two unnecessary vertices, but adding them means num_verts == num_chars * 4.
+			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
+			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
+			continue;
+		}
+
+		uint32_t letter = std::max(0, int32_t(str[i] + 1) - int32_t(utf_lo));
 		if(letter >= utf_hi) letter = 0;
 		
 		const Font::GlyphInfo* ginfo = f.getGlyphInfo(letter);
 		assert(ginfo);
 				
-		DEBUGF("[TEXT] '%c' -> [%d], x: %d, y: %d, w: %d",
-			str[i], letter, ginfo->x, ginfo->y, ginfo->width);
-						
 		uint16_t tx0 = ginfo->x * x_scale,
 		         ty0 = ginfo->y * y_scale,
 		         tx1 = (ginfo->x + ginfo->width) * x_scale,
@@ -62,14 +71,16 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const string_view& str)
 		text_buffer.push(TextVert(x + w, y + h, tx1, ty1));
 	}
 
-	t.total_width += w;
+	SDL_stack_free(utf32_str);
+
+	t.end_pos = glm::ivec2(x + w, y);
 
 	return str_len * 4;
 }
 
 void TextSystem::addText(Text& t){
 	const GLint off = text_buffer.getSize() / sizeof(TextVert);
-	const GLsizei count = writeString(t, t.pos, t.str);
+	const GLsizei count = writeString(t, t.start_pos, t.str);
 
 	text_renderables.push_back(
 		Renderable(
@@ -85,10 +96,10 @@ void TextSystem::addText(Text& t){
 	t.setRenderable(&text_renderables.back());
 }
 
-bool TextSystem::updateText(Text& t, const string_view& newstr, glm::ivec2 newpos){
+bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 newpos){
 	if(!t.renderable) return false;
 
-	bool pos_changed = t.pos != newpos;
+	bool pos_changed = t.start_pos != newpos;
 	// if this is only appending text, and it's at the end of the vertex buffer,
 	// then we can just push the new characters on the end.
 	if(!pos_changed
@@ -96,10 +107,10 @@ bool TextSystem::updateText(Text& t, const string_view& newstr, glm::ivec2 newpo
 	&& (t.renderable->offset + t.renderable->count) * sizeof(TextVert) == text_buffer.getSize()
 	&& newstr.find(t.str) == 0){
 
-		auto suffix = string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
+		auto suffix = u32string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
 		t.renderable->count += writeString(
 			t,
-			glm::ivec2(t.pos.x + t.total_width, t.pos.y),
+			t.end_pos,
 			suffix
 		);
 		t.str.append(suffix.data(), suffix.size());
@@ -122,7 +133,7 @@ bool TextSystem::updateText(Text& t, const string_view& newstr, glm::ivec2 newpo
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);
 			t.str = std::move(newstr.to_string());
-			t.pos = newpos;
+			t.start_pos = newpos;
 			addText(t);
 		}
 	}
@@ -148,7 +159,6 @@ void TextSystem::delText(Text& t){
 	}
 	assert(i != text_renderables.end());
 	text_renderables.erase(i);
-	t.total_width = 0;
 	t.renderable = nullptr;
 }
 

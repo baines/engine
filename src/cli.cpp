@@ -19,16 +19,19 @@ CLI::CLI(Engine& e)
 , ignore_next_text (false)
 , show_cursor      (true)
 , output_dirty     (false)
+, input_dirty      (false)
 , blink_timer      (0)
 , scrollback_lines (e.cfg.addVar("cli_scrollback_lines", CVarInt(64, 1, 8192)))
 , visible_lines    (e.cfg.addVar("cli_visible_lines",    CVarInt(5, 1, 64)))
 , font_height      (e.cfg.addVar("cli_font_height",      CVarInt(16, 8, 32)))
 , cursor_blink_ms  (e.cfg.addVar("cli_cursor_blink_ms",  CVarInt(500, 100, 10000)))
 , font             (e, { "DejaVuSansMono.ttf" }, font_height->val)
-, output_text      ()
+, output_text      (e, *font, { 0, 0 }, "")
 , output_lines     (scrollback_lines->val)
 , output_line_idx  (0)
 , input_text       (e, *font, { 0, font_height->val * visible_lines->val}, "> ")
+, input_history    ()
+, history_idx      (0)
 , input_str        ("> ")
 //FIXME: cursor position will break for non-monospace non-8x16 fonts.
 , cursor_text      (e, *font, {font_height->val, 2 + font_height->val*visible_lines->val}, "_"){
@@ -36,13 +39,11 @@ CLI::CLI(Engine& e)
 	e.input.watchAction(this, "cli_backspace",    ACT_BACKSPACE);
 	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
 	e.input.watchAction(this, "cli_del_word",     ACT_DEL_WORD);
+	e.input.watchAction(this, "cli_cursor_up",    ACT_CURSOR_UP);
+	e.input.watchAction(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
 	e.input.watchAction(this, "console",          ACT_IGNORE_TEXT);
 
 	e.input.enableText(this, true, { 0, font_height->val * (visible_lines->val + 1) });
-
-	for(int i = visible_lines->val-1; i >= 0; --i){
-		output_text.emplace_back(e, *font, glm::ivec2(0, font_height->val * i), ""); 
-	}
 }
 
 void CLI::toggle(){
@@ -72,17 +73,13 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		int var_name_sz = split_idx - 2;
 		
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
+		auto* v = e.cfg.getVar<CVar>(hash);
 
-		if(input_str.find_first_not_of(' ', split_idx) == std::string::npos){
-			auto* v = e.cfg.getVar<CVar>(hash);
-			if(v && v->type != CVAR_FUNC){
-				printVarInfo(*v);
-				input_str.assign("> ");
-				return true;
-			}
-		}
-
-		if(e.cfg.evalVar(hash, &input_str[split_idx+1])){
+		if(v
+		&& v->type != CVAR_FUNC 
+		&& input_str.find_first_not_of(' ', split_idx) == std::string::npos){
+			printVarInfo(*v);
+		} else if(e.cfg.evalVar(hash, &input_str[split_idx+1])){
 			echo("Ok.");
 		} else {
 			char buf[80] = {};
@@ -90,7 +87,10 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			echo(string_view(buf, len));
 		}
 
+		input_history.push_back(std::move(input_str));
+		history_idx = input_history.size();
 		input_str.assign("> ");
+		input_dirty = true;
 
 	} else if(action == ACT_BACKSPACE && input_str.size() > 2){
 
@@ -98,6 +98,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			input_str.pop_back();
 		}
 		input_str.pop_back();
+		input_dirty = true;
 
 	} else if(action == ACT_DEL_WORD && input_str.size() > 2){
 	
@@ -105,9 +106,10 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		size_t j = std::max<size_t>(2, input_str.find_last_of(' ', i));
 
 		input_str.erase(input_str.begin() + j, input_str.end());
+		input_dirty = true;
 
 	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > 2){
-		
+
 		if(input_str.back() == ' '){
 			CVar* cvar = nullptr;
 			uint32_t hash = str_hash_len(input_str.c_str()+2, input_str.size()-3);
@@ -124,6 +126,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			if(autocompletions.size() == 1){
 				input_str.append(1, ' ');
 			}
+			input_dirty = true;
 		} else {
 			autocompletions.clear();
 			e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
@@ -172,6 +175,24 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			}
 		}
 
+	} else if(action == ACT_CURSOR_UP){
+	
+		if(history_idx > 0){
+			input_str = input_history[--history_idx];
+			input_dirty = true;
+		}
+		
+	} else if(action == ACT_CURSOR_DOWN){
+
+		if(history_idx < input_history.size()){
+			if(++history_idx == input_history.size()){
+				input_str.assign("> ");
+			} else {
+				input_str = input_history[history_idx];
+			}
+			input_dirty = true;
+		}
+
 	} else if(action == ACT_IGNORE_TEXT){
 		ignore_next_text = true;
 		return false; // let the event pass down to root_state which will close the console.
@@ -187,6 +208,7 @@ void CLI::onText(Engine& e, const char* text){
 	}
 
 	input_str += text;
+	input_dirty = true;
 }
 
 void CLI::update(Engine& e, uint32_t delta){
@@ -200,21 +222,21 @@ void CLI::update(Engine& e, uint32_t delta){
 void CLI::draw(Renderer& r){
 	if(!active) return;
 	
-	int i = output_line_idx;
-
-	for(auto& t : output_text){
-		if(output_dirty){
-			if(--i < 0){
-				i = output_lines.size() - 1;
-			}
-			t.update(output_lines[i]);
+	if(output_dirty){
+		std::string output_concat;
+		for(int i = visible_lines->val; i > 0; --i){
+			int idx = (output_line_idx + (output_lines.size() - i)) % output_lines.size();
+			output_concat.append(output_lines[idx]).append(1, '\n');
 		}
-
-		t.draw(r);
+		output_text.update(std::move(output_concat));
+		output_dirty = false;
 	}
-	output_dirty = false;
+	output_text.draw(r);
 
-	input_text.update(input_str);
+	if(input_dirty){
+		input_text.update(input_str, { 0, font_height->val * visible_lines->val });
+		input_dirty = false;
+	}
 	input_text.draw(r);
 
 	if(show_cursor){
@@ -280,7 +302,11 @@ void CLI::printVarInfo(const CVar& cvar){
 
 void CLI::updateCursor(){
 	glm::ivec2 pos = cursor_text.getStartPos();
-	glm::ivec2 newpos = glm::ivec2(input_text.size() * (font->getLineHeight()/2), pos.y);
+	
+	glm::ivec2 newpos = glm::ivec2(
+		input_text.size() * (font->getLineHeight()/2),
+		font_height->val * visible_lines->val
+	);
 
 	if(pos != newpos){
 		cursor_text.update("_", newpos);

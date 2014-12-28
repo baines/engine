@@ -26,7 +26,7 @@ private:
 	void updateCursor();
 
 	Engine& engine;
-	bool active, ignore_next_text, show_cursor, output_dirty;
+	bool active, ignore_next_text, show_cursor, output_dirty, input_dirty;
 	int blink_timer;
 
 	CVarInt* scrollback_lines;
@@ -36,11 +36,13 @@ private:
 
 	Resource<Font, uint16_t> font;
 	
-	std::vector<Text> output_text;
+	Text output_text;
 	std::vector<std::string> output_lines;
 	size_t output_line_idx;
 	
 	Text input_text;
+	std::vector<std::string> input_history; //XXX unbounded history is probably a bad idea..
+	size_t history_idx;
 	std::string input_str;
 
 	Text cursor_text;

@@ -146,7 +146,8 @@ inline std::u32string to_utf32(const string_view& s){
 
 	auto ctx = SDL_iconv_open("UTF-32LE", "UTF-8");
 	SDL_iconv(ctx, &in, &in_sz, &out, &out_sz);
-	
+	SDL_iconv_close(ctx);
+
 	auto ret = std::u32string(u32str, (u32str_max - out_sz) / sizeof(char32_t));
 	SDL_stack_free(u32str);
 	return ret;

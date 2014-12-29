@@ -23,6 +23,10 @@ struct Text {
 		return start_pos;
 	}
 
+	glm::ivec2 getEndPos() const {
+		return end_pos;
+	}
+
 	size_t size() const {
 		return str.size();
 	}

@@ -78,12 +78,11 @@ const Texture2D* Font::getTexture() const {
 	return &atlas;
 }
 
-const Font::GlyphInfo* Font::getGlyphInfo(size_t idx) const {
-	if(idx >= glyph_info.size()){
-		return nullptr;
-	} else {
-		return &glyph_info[idx];
-	}
+const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
+	size_t idx = std::max<int>(0, (c + 1) - (int)utf_lo);
+	if(idx >= glyph_info.size()) idx = 0;
+
+	return glyph_info[idx];
 }
 
 bool Font::loadFromResource(Engine& e, const ResourceHandle& res){

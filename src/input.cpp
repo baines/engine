@@ -4,15 +4,18 @@
 
 using namespace std;
 
-Input::Key::Key() : code(SDL_SCANCODE_UNKNOWN), shift(false), ctrl(false), alt(false){}
+Input::Key::Key()
+: code(SDL_SCANCODE_UNKNOWN), shift(false), ctrl(false), alt(false), ignore_mods(false){}
 
-Input::Key::Key(SDL_Scancode code) : code(code), shift(false), ctrl(false), alt(false){}
+Input::Key::Key(SDL_Scancode code)
+: code(code), shift(false), ctrl(false), alt(false), ignore_mods(false){}
 
 Input::Key::Key(const SDL_Keysym& k)
 : code  (k.scancode)
 , shift (k.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
 , ctrl  (k.mod & (KMOD_LCTRL  | KMOD_RCTRL))
-, alt   (k.mod & (KMOD_LALT   | KMOD_RALT)){
+, alt   (k.mod & (KMOD_LALT   | KMOD_RALT))
+, ignore_mods(false) {
 
 }
 
@@ -20,7 +23,8 @@ Input::Key::Key(const char* str, bool raw_scancode)
 : code(SDL_SCANCODE_UNKNOWN)
 , shift(false)
 , ctrl(false)
-, alt(false) {
+, alt(false)
+, ignore_mods(false){
 
 	const char* mod_separator = nullptr;
 
@@ -29,6 +33,7 @@ Input::Key::Key(const char* str, bool raw_scancode)
 			if(*p == 's' || *p == 'S') shift = true;
 			if(*p == 'c' || *p == 'C') ctrl  = true;
 			if(*p == 'a' || *p == 'A') alt   = true;
+			if(*p == '*') ignore_mods = true;
 		}
 		str = mod_separator+1;
 	}
@@ -41,11 +46,19 @@ Input::Key::Key(const char* str, bool raw_scancode)
 }
 
 bool Input::Key::operator<(const Key& rhs) const {
-	return tie(code, shift, ctrl, alt) < tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);	
+	if(ignore_mods || rhs.ignore_mods){
+		return code < rhs.code;
+	} else {
+		return tie(code, shift, ctrl, alt) < tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);
+	}
 }
 
 bool Input::Key::operator==(const Key& rhs) const {
-	return tie(code, shift, ctrl, alt) == tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);
+	if(ignore_mods || rhs.ignore_mods){
+		return code == rhs.code;
+	} else {
+		return tie(code, shift, ctrl, alt) == tie(rhs.code, rhs.shift, rhs.ctrl, rhs.alt);
+	}
 }
 
 bool Input::StateKey::operator<(const StateKey& rhs) const {

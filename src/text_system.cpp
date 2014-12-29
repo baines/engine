@@ -30,9 +30,6 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 	const Font& f = *t.font;
 	size_t str_len = str.size(), x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
 	
-	uint16_t utf_lo = 0, utf_hi = 0;
-	std::tie(utf_lo, utf_hi) = f.getUTFRange();
-	
 	int tw = 0, th = 0;
 	std::tie(tw, th) = f.getTexture()->getSize();
 	float x_scale = USHRT_MAX / (float)tw, y_scale = USHRT_MAX / (float)th;
@@ -51,27 +48,21 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 			continue;
 		}
 
-		uint32_t letter = std::max(0, int32_t(str[i] + 1) - int32_t(utf_lo));
-		if(letter >= utf_hi) letter = 0;
-		
-		const Font::GlyphInfo* ginfo = f.getGlyphInfo(letter);
-		assert(ginfo);
+		const Font::GlyphInfo& ginfo = f.getGlyphInfo(str[i]);
 				
-		uint16_t tx0 = ginfo->x * x_scale,
-		         ty0 = ginfo->y * y_scale,
-		         tx1 = (ginfo->x + ginfo->width) * x_scale,
-		         ty1 = (ginfo->y + h) * y_scale;
+		uint16_t tx0 = ginfo.x * x_scale,
+		         ty0 = ginfo.y * y_scale,
+		         tx1 = (ginfo.x + ginfo.width) * x_scale,
+		         ty1 = (ginfo.y + h) * y_scale;
 		
 		text_buffer.push(TextVert(x + w, y + 0, tx0, ty0));
 		text_buffer.push(TextVert(x + w, y + h, tx0, ty1));
 		
-		w += ginfo->width;
+		w += ginfo.width;
 		
 		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0));
 		text_buffer.push(TextVert(x + w, y + h, tx1, ty1));
 	}
-
-	SDL_stack_free(utf32_str);
 
 	t.end_pos = glm::ivec2(x + w, y);
 
@@ -128,6 +119,16 @@ bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			text_buffer.invalidate(BufferRange{ (start + count) - diff, diff, this });
 
 			t.renderable->count -= v_diff;
+	
+			t.end_pos = t.start_pos;
+			for(const char32_t* c = newstr.data(); *c; ++c){
+				if(*c == '\n'){
+					t.end_pos.y += t.font->getLineHeight();
+				} else {
+					t.end_pos.x += t.font->getGlyphInfo(*c).width;
+				}
+			}
+
 			t.str = std::move(newstr.to_string());
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.

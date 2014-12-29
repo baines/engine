@@ -19,7 +19,7 @@ struct Input {
 		bool operator==(const Key& k) const;
 
 		SDL_Scancode code;
-		bool shift, ctrl, alt;
+		bool shift, ctrl, alt, ignore_mods;
 	};
 
 	Input(Engine& e);

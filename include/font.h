@@ -15,7 +15,7 @@ struct Font {
 	
 	std::tuple<uint16_t, uint16_t> getUTFRange() const;
 	size_t getLineHeight() const;
-	const GlyphInfo* getGlyphInfo(size_t idx) const;
+	const GlyphInfo& getGlyphInfo(char32_t c) const;
 	const Texture2D* getTexture() const;
 	
 	bool loadFromResource(Engine& e, const ResourceHandle& rh);

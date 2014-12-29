@@ -13,6 +13,9 @@ enum {
 	ACT_AUTOCOMPLETE
 };
 
+//TODO: dynamically adjust max cols based on screen size / cvar?
+static const size_t MAX_COLS = 80;
+
 CLI::CLI(Engine& e)
 : engine           (e)
 , active           (false)
@@ -33,8 +36,7 @@ CLI::CLI(Engine& e)
 , input_history    ()
 , history_idx      (0)
 , input_str        ("> ")
-//FIXME: cursor position will break for non-monospace non-8x16 fonts.
-, cursor_text      (e, *font, {font_height->val, 2 + font_height->val*visible_lines->val}, "_"){
+, cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), "_"){
 	e.input.watchAction(this, "cli_submit",       ACT_SUBMIT);
 	e.input.watchAction(this, "cli_backspace",    ACT_BACKSPACE);
 	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
@@ -82,7 +84,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		} else if(e.cfg.evalVar(hash, &input_str[split_idx+1])){
 			echo("Ok.");
 		} else {
-			char buf[80] = {};
+			char buf[MAX_COLS] = {};
 			size_t len = snprintf(buf, sizeof(buf), "Unknown var \"%.*s\".", var_name_sz, var_name);
 			echo(string_view(buf, len));
 		}
@@ -111,13 +113,14 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > 2){
 
 		if(input_str.back() == ' '){
-			CVar* cvar = nullptr;
 			uint32_t hash = str_hash_len(input_str.c_str()+2, input_str.size()-3);
-			if((cvar = e.cfg.getVar<CVar>(hash))){
+			if(CVar* cvar = e.cfg.getVar<CVar>(hash)){
 				printVarInfo(*cvar);
 			}
 			return true;
 		}
+
+		//TODO: maybe implement autocompletion of function args + enums too?
 		
 		autocompletions.clear();
 		e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
@@ -128,8 +131,6 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			}
 			input_dirty = true;
 		} else {
-			autocompletions.clear();
-			e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
 
 			// figure out a pretty column layout for the list of completions.
 			size_t rows = 0, row_width;
@@ -153,7 +154,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 				++rows;
 
-			} while(row_width > 80); //FIXME: don't hardcode 80 cols max.
+			} while(row_width > MAX_COLS);
 			
 			echo(input_str);
 
@@ -252,7 +253,7 @@ void CLI::echo(const string_view& str){
 }
 
 void CLI::printVarInfo(const CVar& cvar){
-	char buf[80] = {};
+	char buf[MAX_COLS] = {};
 	size_t off = snprintf(buf, sizeof(buf), " '%s' = ", cvar.name.str);
 	size_t len = sizeof(buf) - off;
 	char* p = buf + off;
@@ -278,19 +279,25 @@ void CLI::printVarInfo(const CVar& cvar){
 		snprintf(p, len, "\"%s\" (default \"%s\") [string]", s->str.c_str(), s->init);
 	} else
 	if(auto e = cvar.get<const CVarEnum>()){
-		//TODO: needs word wrapping...
+		//TODO: needs better word wrapping...
 
-		snprintf(p, len, "'%s' (default '%s') [enum: {",
+		snprintf(p, len, "'%s' (default '%s')",
 			e->get().str, e->strs[e->init].str
 		);
 		echo(buf);
-		memset(buf, 0, sizeof(buf));
+		memcpy(buf, " [enum: ", 9);
 
+		size_t sz = 0;
 		for(size_t n = 0; n < e->strs.size(); ++n){
-			SDL_strlcat(buf, e->strs[n].str, sizeof(buf));
+			if(sz + e->strs[n].size > MAX_COLS){
+				echo(buf);
+				memcpy(buf, "        ", 9);
+				sz = 0;
+			}
+			sz = SDL_strlcat(buf, e->strs[n].str, sizeof(buf));
 			if(n != e->strs.size() - 1) SDL_strlcat(buf, ", ", sizeof(buf));
 		}
-		SDL_strlcat(buf, " }]", sizeof(buf));
+		SDL_strlcat(buf, " ]", sizeof(buf));
 	} else
 	if(cvar.get<const CVarFunc>()){
 		//TODO: get usage info from the CVarFunc somehow.
@@ -302,11 +309,7 @@ void CLI::printVarInfo(const CVar& cvar){
 
 void CLI::updateCursor(){
 	glm::ivec2 pos = cursor_text.getStartPos();
-	
-	glm::ivec2 newpos = glm::ivec2(
-		input_text.size() * (font->getLineHeight()/2),
-		font_height->val * visible_lines->val
-	);
+	glm::ivec2 newpos = input_text.getEndPos() + glm::ivec2(0, 2);
 
 	if(pos != newpos){
 		cursor_text.update("_", newpos);

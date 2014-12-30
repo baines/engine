@@ -1,6 +1,18 @@
 #include "cli.h"
 #include "engine.h"
 
+/* TODO:
+ * Cursor left / right:
+ *     backspace -> delete from left of cursor exclusive
+ *     delete    -> delete from right of cursor inclusive
+ * Scroll through history:
+ *     pageup    -> scroll 1 line up in history
+ *     pagedown  -> scroll 1 line down in history
+ *     Add some indication that it's not at the bottom.
+ *         maybe replace bottom line with "v v v v v v v" or something.
+ *         if/when Text supports colours, make it red.
+ */
+
 enum {
 	ACT_SUBMIT,
 	ACT_BACKSPACE,

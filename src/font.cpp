@@ -5,7 +5,7 @@
 
 struct GlyphBitmapInfo {
 	FT_Bitmap* bmp;
-	int bearing_x, bearing_y;
+	int bearing_x, bearing_y, advance;
 };
 
 struct GlyphTextureAtlas {
@@ -21,7 +21,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	const FT_Bitmap* bmp = glyph.bmp;
 	int prev_w = img.w, prev_h = img.h;
 	
-	if(img.pen_x + glyph.bearing_x + glyph.bmp->width > img.w){
+	if(img.pen_x + glyph.bearing_x + glyph.advance > img.w){
 		img.pen_x = 0;
 		img.pen_y += img.line_height;
 	}
@@ -156,22 +156,25 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		}
 
 		FT_Int32 flags = FT_LOAD_RENDER;
-		if(height <= 16) flags |= FT_LOAD_FORCE_AUTOHINT;
+		if(height >= 16) flags |= FT_LOAD_FORCE_AUTOHINT;
 		
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
+
+			glyph.width = face->glyph->advance.x >> 6;
+
 			const GlyphBitmapInfo bmpinfo = {
 				&face->glyph->bitmap,
 				face->glyph->bitmap_left,
-				face->glyph->bitmap_top
+				face->glyph->bitmap_top,
+				std::max<int>(glyph.width, face->glyph->bitmap.width)
 			};
 		
 			render_glyph(bmpinfo, img);
 			
-			glyph.width = face->glyph->advance.x >> 6;
 			glyph.x = img.pen_x;
 			glyph.y = img.pen_y - img.line_height;
 			
-			img.pen_x += 1 + std::max<int>(glyph.width, face->glyph->bitmap.width);
+			img.pen_x += 1 + bmpinfo.advance;
 		}
 		
 		glyph_info.push_back(glyph);

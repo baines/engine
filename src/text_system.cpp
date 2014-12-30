@@ -4,7 +4,9 @@
 #include <algorithm>
 
 struct TextVert {
-	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty) : x(x), y(y), tex_x(tx), tex_y(ty){}
+	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty)
+	: x(x), y(y), tex_x(tx), tex_y(ty){}
+
 	int16_t x, y;
 	uint16_t tex_x, tex_y;
 };
@@ -28,11 +30,18 @@ FT_Library& TextSystem::getLib(){
 
 GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
 	const Font& f = *t.font;
-	size_t str_len = str.size(), x = pos.x, y = pos.y, w = 0, h = f.getLineHeight();
+
+	size_t str_len = str.size(),
+		   x = pos.x,
+		   y = pos.y,
+		   w = 0,
+		   h = f.getLineHeight();
 	
 	int tw = 0, th = 0;
 	std::tie(tw, th) = f.getTexture()->getSize();
-	float x_scale = USHRT_MAX / (float)tw, y_scale = USHRT_MAX / (float)th;
+
+	float x_scale = USHRT_MAX / (float)tw,
+		  y_scale = USHRT_MAX / (float)th;
 
 	for(size_t i = 0; i < str_len; ++i){
 		
@@ -49,7 +58,9 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 		}
 
 		const Font::GlyphInfo& ginfo = f.getGlyphInfo(str[i]);
-				
+
+		DEBUGF("TEXT: %c -> [x: %d, y: %d, w: %d]", str[i], ginfo.x, ginfo.y, ginfo.width);	
+
 		uint16_t tx0 = ginfo.x * x_scale,
 		         ty0 = ginfo.y * y_scale,
 		         tx1 = (ginfo.x + ginfo.width) * x_scale,
@@ -123,6 +134,7 @@ bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			t.end_pos = t.start_pos;
 			for(const char32_t* c = newstr.data(); *c; ++c){
 				if(*c == '\n'){
+					t.end_pos.x = t.start_pos.x;
 					t.end_pos.y += t.font->getLineHeight();
 				} else {
 					t.end_pos.x += t.font->getGlyphInfo(*c).width;

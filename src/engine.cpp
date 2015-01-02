@@ -9,7 +9,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , text       (*this)
 , state      ()
 , cli        (*this)
-, max_fps    (cfg.addVar("max_fps", CVarInt(200, 1, 1000)))
+, max_fps    (cfg.addVar<CVarInt>("max_fps", 200, 1, 1000))
 , running    (true)
 , prev_ticks (0)
 , root_state (*this) {

@@ -65,7 +65,7 @@ bool Input::StateKey::operator<(const StateKey& rhs) const {
 	return tie(state, key) < tie(rhs.state, rhs.key);
 }
 
-static void bind_key_fn(Input* const input, const string_view& str, bool raw){
+static bool bind_key_fn(Input* const input, const string_view& str, bool raw){
 	char buff[str.size()+1] = {};
 	str.copy(buff, str.size());
 	
@@ -75,6 +75,9 @@ static void bind_key_fn(Input* const input, const string_view& str, bool raw){
 	
 	if(key && act){
 		input->bind(Input::Key(key, raw), str_hash(act));
+		return true;
+	} else {
+		return false;
 	}
 }
 
@@ -86,8 +89,17 @@ Input::Input(Engine& e)
 
 	using namespace std::placeholders;
 
-	e.cfg.addVar("bind",     CVarFunc(std::bind(&bind_key_fn, this, _1, false)));
-	e.cfg.addVar("bind_raw", CVarFunc(std::bind(&bind_key_fn, this, _1, true)));
+	e.cfg.addVar<CVarFunc>(
+		"bind",
+		std::bind(&bind_key_fn, this, _1, false),
+		"Usage: bind <key_name> <action>"
+	);
+
+	e.cfg.addVar<CVarFunc>(
+		"bind_raw",
+		std::bind(&bind_key_fn, this, _1, true),
+		"Usage: bind_raw <scancode> <action>"
+	);
 
 	SDL_StopTextInput();
 }

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <experimental/string_view>
+
 using string_view = std::experimental::string_view;
 using u32string_view = std::experimental::u32string_view;
 
@@ -19,6 +20,7 @@ struct Renderable;
 struct Renderer;
 struct GameState;
 struct ResourceHandle;
+struct CLI;
 
 #endif
 

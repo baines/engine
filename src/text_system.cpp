@@ -41,7 +41,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 	std::tie(tw, th) = f.getTexture()->getSize();
 
 	float x_scale = USHRT_MAX / (float)tw,
-		  y_scale = USHRT_MAX / (float)th;
+	      y_scale = USHRT_MAX / (float)th;
 
 	for(size_t i = 0; i < str_len; ++i){
 		

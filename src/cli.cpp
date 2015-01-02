@@ -36,10 +36,10 @@ CLI::CLI(Engine& e)
 , output_dirty     (false)
 , input_dirty      (false)
 , blink_timer      (0)
-, scrollback_lines (e.cfg.addVar("cli_scrollback_lines", CVarInt(64, 1, 8192)))
-, visible_lines    (e.cfg.addVar("cli_visible_lines",    CVarInt(5, 1, 64)))
-, font_height      (e.cfg.addVar("cli_font_height",      CVarInt(16, 8, 32)))
-, cursor_blink_ms  (e.cfg.addVar("cli_cursor_blink_ms",  CVarInt(500, 100, 10000)))
+, scrollback_lines (e.cfg.addVar<CVarInt>("cli_scrollback_lines", 64, 1, 8192))
+, visible_lines    (e.cfg.addVar<CVarInt>("cli_visible_lines",    5, 1, 64))
+, font_height      (e.cfg.addVar<CVarInt>("cli_font_height",      16, 8, 32))
+, cursor_blink_ms  (e.cfg.addVar<CVarInt>("cli_cursor_blink_ms",  500, 100, 10000))
 , font             (e, { "DejaVuSansMono.ttf" }, font_height->val)
 , output_text      (e, *font, { 0, 0 }, "")
 , output_lines     (scrollback_lines->val)
@@ -93,8 +93,14 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		&& v->type != CVAR_FUNC 
 		&& input_str.find_first_not_of(' ', split_idx) == std::string::npos){
 			printVarInfo(*v);
-		} else if(e.cfg.evalVar(hash, &input_str[split_idx+1])){
-			echo("Ok.");
+		} else if(v && v->eval(&input_str[split_idx+1])){
+			if(auto* str = v->getReloadVar()){
+				echo({ "New value will take effect on ", str, "." });
+			} else {
+				echo("Ok.");
+			}
+		} else if(v){
+			echo(v->getErrorString());
 		} else {
 			char buf[MAX_COLS] = {};
 			size_t len = snprintf(buf, sizeof(buf), "Unknown var \"%.*s\".", var_name_sz, var_name);
@@ -259,7 +265,15 @@ void CLI::draw(Renderer& r){
 }
 
 void CLI::echo(const string_view& str){
-	output_lines[output_line_idx].assign(std::move(str.to_string()));
+	echo({ str });
+}
+
+void CLI::echo(std::initializer_list<string_view> strs){
+	output_lines[output_line_idx].clear();
+	
+	for(auto& str : strs){
+		output_lines[output_line_idx].append(str.data(), str.size());
+	}
 	output_line_idx = (output_line_idx + 1) % output_lines.size();
 	output_dirty = true;
 }
@@ -267,56 +281,8 @@ void CLI::echo(const string_view& str){
 void CLI::printVarInfo(const CVar& cvar){
 	char buf[MAX_COLS] = {};
 	size_t off = snprintf(buf, sizeof(buf), " '%s' = ", cvar.name.str);
-	size_t len = sizeof(buf) - off;
-	char* p = buf + off;
 
-	if(auto i = cvar.get<const CVarInt>()){
-		snprintf(p, len, 
-			"%d (default %d) [int: %d < x < %d]",
-			 i->val,     i->init,  i->min,  i->max
-		);
-	} else
-	if(auto f = cvar.get<const CVarFloat>()){
-		snprintf(p, len, 
-			"%.2f (default %.2f) [float: %.2f < x < %.2f]", 
-			 f->val,       f->init,      f->min,    f->max
-		);
-	} else
-	if(auto b = cvar.get<const CVarBool>()){
-		const char* bstr[] = { "false", "true" };
-
-		snprintf(p, len, "%s (default %s) [bool]", bstr[b->val], bstr[b->init]);
-	} else
-	if(auto s = cvar.get<const CVarString>()){
-		snprintf(p, len, "\"%s\" (default \"%s\") [string]", s->str.c_str(), s->init);
-	} else
-	if(auto e = cvar.get<const CVarEnum>()){
-		//TODO: needs better word wrapping...
-
-		snprintf(p, len, "'%s' (default '%s')",
-			e->get().str, e->strs[e->init].str
-		);
-		echo(buf);
-		memcpy(buf, " [enum: ", 9);
-
-		size_t sz = 0;
-		for(size_t n = 0; n < e->strs.size(); ++n){
-			if(sz + e->strs[n].size > MAX_COLS){
-				echo(buf);
-				memcpy(buf, "        ", 9);
-				sz = 0;
-			}
-			sz = SDL_strlcat(buf, e->strs[n].str, sizeof(buf));
-			if(n != e->strs.size() - 1) SDL_strlcat(buf, ", ", sizeof(buf));
-		}
-		SDL_strlcat(buf, " ]", sizeof(buf));
-	} else
-	if(cvar.get<const CVarFunc>()){
-		//TODO: get usage info from the CVarFunc somehow.
-		snprintf(p, len, "<function>");
-	}
-	
-	echo(buf);
+	cvar.printInfo(*this, buf, buf+off, sizeof(buf) - off);
 }
 
 void CLI::updateCursor(){

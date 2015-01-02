@@ -100,7 +100,7 @@ GLContext::GLContext()
 bool GLContext::createContext(Engine& e, SDL_Window* w){
 	if(sdl_context) return true;
 	
-	streaming_mode = e.cfg.addVar("gl_streaming_mode", CVarEnum(gl_streaming_enum, 0));
+	streaming_mode = e.cfg.addVar<CVarEnum>("gl_streaming_mode", gl_streaming_enum, 0);
 	
 	int maj = 0, min = 0;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);

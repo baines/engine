@@ -114,6 +114,11 @@ constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... ar
 	return make_array<str_const>(std::forward<Args>(args)...);
 }
 
+template<class T, class... Args>
+constexpr std::initializer_list<T> init_list(Args&&... args){
+	return std::initializer_list<T>{ std::forward<Args>(args)... };
+}
+
 /* array deletion functor for use with std::shared_ptr */
 struct ArrayDeleter {
 	void operator()(const uint8_t* arr) const { delete [] arr; }

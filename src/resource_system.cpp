@@ -37,8 +37,10 @@ ResourceSystem::ResourceSystem(const char* argv0){
 ResourceHandle ResourceSystem::load(const char* name){
 	auto it = resources.find(str_hash(name));
 	if(it != resources.end()){
+		DEBUGF("Resource '%s' loaded from map.", name);
 		return it->second;
 	} else {
+		DEBUGF("Resource '%s' not in map, loading via PHYSFS.", name);
 		ResourceHandle h = import(name);
 		resources.emplace(str_hash(name), h);
 		return h;

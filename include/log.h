@@ -11,7 +11,8 @@ namespace logging {
 		error = 1,
 		warn  = 2,
 		info  = 3,
-		debug = 4
+		debug = 4,
+		trace = 5
 	};
 
 	void log(level l, const char* fmt, ...);

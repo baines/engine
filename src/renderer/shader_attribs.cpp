@@ -41,7 +41,7 @@ bool ShaderAttribs::bind(uint32_t hash, GLuint index) const {
 		gl.VertexAttribIFormat(index, it->nelem, it->type, it->off);
 	} else {
 		bool norm = it->flags & ATR_NORM;
-		DEBUGF("Set VertexAttribFormat: idx: %d, nelem: %d, type: %x, norm? %d, off: %d",
+		TRACEF("Set VertexAttribFormat: idx: %d, nelem: %d, type: %x, norm? %d, off: %d",
 			index, it->nelem, it->type, norm, it->off);
 		gl.VertexAttribFormat(index, it->nelem, it->type, norm, it->off);
 	}

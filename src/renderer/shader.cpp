@@ -52,7 +52,7 @@ GLuint ShaderBase::getID(void) const {
 
 ShaderBase::~ShaderBase(){
 	if(gl.initialized() && id){
-		DEBUGF("Deleting shader %d.", id);
+		TRACEF("Deleting shader %d.", id);
 		gl.DeleteShader(id);
 	}
 }

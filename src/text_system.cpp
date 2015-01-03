@@ -59,7 +59,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 
 		const Font::GlyphInfo& ginfo = f.getGlyphInfo(str[i]);
 
-		DEBUGF("TEXT: %c -> [x: %d, y: %d, w: %d]", str[i], ginfo.x, ginfo.y, ginfo.width);	
+		TRACEF("TEXT: %c -> [x: %d, y: %d, w: %d]", str[i], ginfo.x, ginfo.y, ginfo.width);	
 
 		uint16_t tx0 = ginfo.x * x_scale,
 		         ty0 = ginfo.y * y_scale,

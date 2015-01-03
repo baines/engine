@@ -35,6 +35,9 @@ static const char* gl_dbgsev2str(GLenum sev){
 	switch(sev){
 		case GL_DEBUG_SEVERITY_HIGH:   return "HIGH";
 		case GL_DEBUG_SEVERITY_MEDIUM: return "MED";
+#ifdef GL_DEBUG_SEVERITY_NOTIFICATION
+		case GL_DEBUG_SEVERITY_NOTIFICATION: return "INFO";
+#endif
 		default:
 		case GL_DEBUG_SEVERITY_LOW:    return "LOW";
 	}
@@ -42,8 +45,16 @@ static const char* gl_dbgsev2str(GLenum sev){
 
 static void gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
 GLsizei len, const char* msg, const void* p){
-	log(logging::debug,
-	    "[GL-%s-%s-%s] [%u] %s\n",
+	logging::level lvl = logging::debug;
+
+#ifdef GL_DEBUG_SEVERITY_NOTIFICATION
+	if(sev == GL_DEBUG_SEVERITY_NOTIFICATION){
+		lvl = logging::trace;
+	}
+#endif
+
+	log(lvl,
+	    "[GL-%s-%s-%s] [%u] %s",
 	    gl_dbgsrc2str(src),
 	    gl_dbgtype2str(type),
 	    gl_dbgsev2str(sev),

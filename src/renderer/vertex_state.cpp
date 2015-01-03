@@ -14,9 +14,10 @@ void VertexState::setVertexBuffers(std::initializer_list<VertexBuffer*> buffers)
 	
 	GLint vbo_bind_point = 0;
 	for(auto* buf : buffers){
-		DEBUGF("BindVertexBuffer: bind_point: %d, id: %d, stride: %d.", 
-		vbo_bind_point, buf->getID(), buf->getStride());
-		gl.BindBuffer(GL_ARRAY_BUFFER, buf->getID());
+		DEBUGF(
+			"BindVertexBuffer: bind_point: %d, id: %d, stride: %d.", 
+			vbo_bind_point, buf->getID(), buf->getStride()
+		);
 		gl.BindVertexBuffer(vbo_bind_point++, buf->getID(), 0, buf->getStride());
 		vertex_buffers.push_back(buf);
 	}
@@ -35,12 +36,12 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		
 	std::bitset<16> new_enabled_arrays;
 	
-	DEBUGF("Need to set %ld attribs.", std::distance(new_attrs.begin(), new_attrs.end()));
+	TRACEF("Need to set %ld attribs.", std::distance(new_attrs.begin(), new_attrs.end()));
 	
 	for(const auto& a : new_attrs){
 		if(active_attrs.containsAttrib(a.name_hash, a.index)){
 			new_enabled_arrays[a.index] = 1;
-			DEBUGF("Attrib %#x already active, skip.", a.name_hash);
+			TRACEF("Attrib %#x already active, skip.", a.name_hash);
 			continue;
 		}
 		

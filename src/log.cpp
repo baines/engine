@@ -34,6 +34,7 @@ namespace {
 			case logging::warn  : return "[WARN]  ";
 			case logging::info  : return "[INFO]  ";
 			case logging::debug : return "[DEBUG] ";
+			case logging::trace : return "[TRACE] ";
 			default             : return "";
 		}
 	}

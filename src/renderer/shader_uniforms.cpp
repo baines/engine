@@ -119,13 +119,13 @@ bool ShaderUniforms::operator==(const ShaderUniforms& other) const {
 bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	const ustorage* p = uniforms.data();
 	
-	DEBUGF("ucount: %d, active ucount: %d.", uniform_info.size(), active.uniform_info.size());
+	TRACEF("ucount: %d, active ucount: %d.", uniform_info.size(), active.uniform_info.size());
 	
 	for(auto& i : uniform_info){
 		
 		auto ai = std::find(active.uniform_info.begin(), active.uniform_info.end(), i.name_hash);
 		if(ai == active.uniform_info.end()){
-			DEBUGF("Uniform %#x not available in actives.", i.name_hash);
+			TRACEF("Uniform %#x not available in actives.", i.name_hash);
 			continue;
 		} else if(i.type != ai->type || i.rows != ai->rows || i.cols != ai->cols || i.count != ai->count){
 			DEBUGF("Uniform incompatible:\nt: %#x\t%#x\nr: %d\t%d\nc: %d\t%d\nn: %d\t%d",
@@ -136,11 +136,11 @@ bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 		const size_t sz = i.rows * i.cols * i.count * 4;
 			
 		if(memcmp(p + i.storage_index, active.uniforms.data() + ai->storage_index, sz) == 0){
-			DEBUGF("Skip uniform %d, already set.", ai->idx);
+			TRACEF("Skip uniform %d, already set.", ai->idx);
 			continue;
 		}
 		
-		DEBUGF("Updating uniform %d...", ai->idx);
+		TRACEF("Updating uniform %d...", ai->idx);
 		memcpy(active.uniforms.data() + ai->storage_index, p + i.storage_index, sz);
 		
 		const GLint idx = ai->idx;

@@ -28,7 +28,7 @@ struct FragShader : ShaderBase {
 };
 
 struct ShaderProgram {
-	ShaderProgram(const VertShader& v, const FragShader& f);
+	ShaderProgram(const std::shared_ptr<VertShader>& v, const std::shared_ptr<FragShader>& f);
 	bool link(void);
 	bool bind(RenderState& rs);
 	void setUniforms(const ShaderUniforms& uniforms);
@@ -36,8 +36,8 @@ struct ShaderProgram {
 
 	~ShaderProgram();
 private:
-	const VertShader& vs;
-	const FragShader& fs;
+	std::shared_ptr<VertShader> vs;
+	std::shared_ptr<FragShader> fs;
 	GLuint program_id;
 
 	ShaderUniforms uniforms;

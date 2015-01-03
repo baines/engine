@@ -71,6 +71,7 @@ void CVarEnum::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
 	snprintf(p, sz, "'%s' (default '%s')", strs[index].str, strs[init].str);
 	cli.echo(buf);
 
+	sz += (p - buf);
 	memcpy(buf, " [enum: ", std::min<size_t>(9, sz));
 
 	size_t len = 0;

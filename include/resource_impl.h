@@ -13,6 +13,18 @@ Resource<T, Args...>::Resource(Engine& e, std::initializer_list<const char*> nam
 }
 
 template<class T, class... Args>
+Resource<T, Args...>& Resource<T, Args...>::operator=(Resource<T, Args...>&& other){
+	std::swap(res_names, other.res_names);
+	std::swap(res_handle, other.res_handle);
+	std::swap(data, other.data);
+	std::swap(args, other.args);
+
+	if(!data) load();
+
+	return *this;
+}
+
+template<class T, class... Args>
 bool Resource<T, Args...>::load(){
 	if(data) return true;
 	
@@ -49,14 +61,15 @@ bool Resource<T, Args...>::isLoaded(void) const {
 template<class T, class... Args>
 const T* Resource<T, Args...>::operator->(void) {
 	if(!data) load();
+	assert(data);
 	return data.get();
 }
 	
 template<class T, class... Args>
-const T& Resource<T, Args...>::operator*(void) {
+const std::shared_ptr<T>& Resource<T, Args...>::operator*(void) {
 	if(!data) load();
 	assert(data);
-	return *data;
+	return data;
 }
 
 #endif

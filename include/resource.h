@@ -9,12 +9,13 @@
 template<class T, class... Args>
 struct Resource {
 	Resource(Engine& e, std::initializer_list<const char*> names, Args&&... args);
+	Resource& operator=(Resource&& other);
 
 	bool load();
 	bool isLoaded(void) const;
 
 	const T* operator->(void);
-	const T& operator*(void);
+	const std::shared_ptr<T>& operator*(void);
 	
 private:
 	template<unsigned... S>

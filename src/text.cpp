@@ -17,7 +17,7 @@ Text::Text()
 	uniforms.setUniform("u_samp", { 0 });
 }
 
-Text::Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s)
+Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s)
 : engine(&e)
 , font(&f)
 , start_pos(pos)
@@ -91,6 +91,6 @@ Text::~Text(){
 void Text::setRenderable(Renderable* r){
 	renderable = r;
 	renderable->uniforms = &uniforms;
-	renderable->textures[0] = font->getTexture();
+	renderable->textures[0] = (*font)->getTexture();
 }
 

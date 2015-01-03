@@ -57,7 +57,7 @@ ShaderBase::~ShaderBase(){
 	}
 }
 
-ShaderProgram::ShaderProgram(const VertShader& v, const FragShader& f)
+ShaderProgram::ShaderProgram(const std::shared_ptr<VertShader>& v, const std::shared_ptr<FragShader>& f)
 : vs(v)
 , fs(f)
 , program_id(0)
@@ -71,8 +71,8 @@ bool ShaderProgram::link(void){
 	
 	program_id = gl.CreateProgram();
 	
-	gl.AttachShader(program_id, vs.getID());
-	gl.AttachShader(program_id, fs.getID());
+	gl.AttachShader(program_id, vs->getID());
+	gl.AttachShader(program_id, fs->getID());
 
 	gl.LinkProgram(program_id);
 	

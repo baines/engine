@@ -10,7 +10,7 @@ struct Font;
 
 struct Text {
 	Text();
-	Text(Engine& e, const Font& f, glm::ivec2 pos, const string_view& s);
+	Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s);
 	Text(Text&&);
 	Text& operator=(Text&&);
 	
@@ -38,7 +38,7 @@ private:
 	void setRenderable(Renderable* r);
 
 	Engine* engine;
-	const Font* font;
+	const std::shared_ptr<Font>* font;
 	glm::ivec2 start_pos, end_pos;
 	std::u32string str;
 	ShaderUniforms uniforms;

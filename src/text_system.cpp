@@ -29,7 +29,7 @@ FT_Library& TextSystem::getLib(){
 }
 
 GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
-	const Font& f = *t.font;
+	const Font& f = *(*t.font);
 
 	size_t str_len = str.size(),
 		   x = pos.x,
@@ -135,9 +135,9 @@ bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			for(const char32_t* c = newstr.data(); *c; ++c){
 				if(*c == '\n'){
 					t.end_pos.x = t.start_pos.x;
-					t.end_pos.y += t.font->getLineHeight();
+					t.end_pos.y += (*t.font)->getLineHeight();
 				} else {
-					t.end_pos.x += t.font->getGlyphInfo(*c).width;
+					t.end_pos.x += (*t.font)->getGlyphInfo(*c).width;
 				}
 			}
 

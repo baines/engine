@@ -236,6 +236,13 @@ void CLI::update(Engine& e, uint32_t delta){
 		blink_timer = 0;
 		show_cursor = !show_cursor;
 	}
+
+	if((size_t)font_height->val != font->getLineHeight()){
+		font = Resource<Font, uint16_t>(e, { "DejaVuSansMono.ttf" }, font_height->val);
+		output_dirty = true;
+		input_dirty = true;
+	}
+
 }
 
 void CLI::draw(Renderer& r){

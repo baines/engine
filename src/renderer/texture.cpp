@@ -200,7 +200,6 @@ void Texture2D::onGLContextRecreate(){
 	// Whatever is managing it instead is responsible for recreating it.
 	// The id is set to 0 so that the destuctor doesn't attempt to delete an invalid id.
 	id = 0;
-	puts("reloading texture WITHOUT resource.");
 }
 
 Texture2D::~Texture2D(){

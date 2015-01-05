@@ -68,17 +68,18 @@ GLsizei len, const char* msg, const void* p){
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
 , render_state     ()
-, gl_debug         (e.cfg.addVar<CVarBool>   ("gl_debug",        true))
-, gl_fwd_compat    (e.cfg.addVar<CVarBool>   ("gl_fwd_compat",   true))
-, gl_core_profile  (e.cfg.addVar<CVarBool>   ("gl_core_profile", true))
-, gl_multi_draw    (e.cfg.addVar<CVarBool>   ("gl_multi_draw",   true))
-, libgl            (e.cfg.addVar<CVarString> ("gl_library",      ""))
-, window_width     (e.cfg.addVar<CVarInt>    ("vid_width" ,      640, 320, INT_MAX))
-, window_height    (e.cfg.addVar<CVarInt>    ("vid_height",      480, 240, INT_MAX))
-, vsync            (e.cfg.addVar<CVarInt>    ("vid_vsync",       1, -2, 2))
-, fov              (e.cfg.addVar<CVarInt>    ("vid_fov",         90, 45, 135))
-, fullscreen       (e.cfg.addVar<CVarBool>   ("vid_fullscreen",  false))
-, resizable        (e.cfg.addVar<CVarBool>   ("vid_resizable",   true))
+, gl_debug         (e.cfg.addVar<CVarBool>   ("gl_debug",          true))
+, gl_fwd_compat    (e.cfg.addVar<CVarBool>   ("gl_fwd_compat",     true))
+, gl_core_profile  (e.cfg.addVar<CVarBool>   ("gl_core_profile",   true))
+, gl_multi_draw    (e.cfg.addVar<CVarBool>   ("gl_multi_draw",     true))
+, libgl            (e.cfg.addVar<CVarString> ("gl_library",        ""))
+, window_width     (e.cfg.addVar<CVarInt>    ("vid_width" ,        640, 320, INT_MAX))
+, window_height    (e.cfg.addVar<CVarInt>    ("vid_height",        480, 240, INT_MAX))
+, vsync            (e.cfg.addVar<CVarInt>    ("vid_vsync",         1, -2, 2))
+, fov              (e.cfg.addVar<CVarInt>    ("vid_fov",           90, 45, 135))
+, display_index    (e.cfg.addVar<CVarInt>    ("vid_display_index", 0, 0, 100))
+, fullscreen       (e.cfg.addVar<CVarBool>   ("vid_fullscreen",    false))
+, resizable        (e.cfg.addVar<CVarBool>   ("vid_resizable",     true))
 , window_title     (name)
 , window           (nullptr)
 , main_uniforms    ()
@@ -86,16 +87,56 @@ Renderer::Renderer(Engine& e, const char* name)
 , window_h         (window_height->val) {
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
+	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
-	e.cfg.addVar<CVarFunc>("dbg_vid_reload", [&](const string_view&){
+	e.cfg.addVar<CVarFunc>("vid_reload", [&](const string_view&){
 		reload(e);
 		return true;
 	});
+
+	std::initializer_list<CVar*> reload_vars = {
+		gl_debug,      gl_fwd_compat, gl_core_profile, libgl,
+		window_width,  window_height, vsync,           fov,
+		display_index, fullscreen,    resizable
+	};
+
+	for(auto* v : reload_vars){
+		v->setReloadVar("vid_reload");
+	}
+
+	e.cfg.addVar<CVarFunc>("vid_display_info", [&](const string_view&){
+		char buf[80];
+		SDL_Rect r;
+		e.cli.echo("Displays:");
+
+		int num_disp = SDL_GetNumVideoDisplays();
+		for(int i = 0; i < num_disp; ++i){
+			SDL_GetDisplayBounds(i, &r);
+			const char* name = SDL_GetDisplayName(i);
+
+			snprintf(buf, sizeof(buf), "  %d: [%dx%d+%d+%d] '%s'",
+				i, r.w, r.h, r.x, r.y, name ? name : "(no name)"
+			);
+			e.cli.echo(buf);
+		}
+		return true;
+	}, "Show info about available displays / monitors");
 
 	reload(e);
 }
 
 void Renderer::reload(Engine& e){
+	//TODO: check if we can get away with just using SDL_SetWindow{Size, Position} e.t.c.
+	//      instead of destroying the window & GL context.
+
+	if(gl.initialized()){
+		gl.deleteContext();
+	}
+
+	if(window){
+		SDL_DestroyWindow(window);
+		window = nullptr;
+	}
 
 	SDL_GL_UnloadLibrary();
 
@@ -104,9 +145,6 @@ void Renderer::reload(Engine& e){
 	}
 
 	render_state = {};
-
-	if(window) SDL_DestroyWindow(window);
-	if(gl.initialized()) gl.deleteContext();
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE     , 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE   , 8);
@@ -153,10 +191,12 @@ void Renderer::reload(Engine& e){
 			window_flags |= SDL_WINDOW_RESIZABLE;
 		}
 	
+		display_index->val = std::min(display_index->val, SDL_GetNumVideoDisplays()-1);
+
 		window = SDL_CreateWindow(
 			window_title,
-			SDL_WINDOWPOS_CENTERED,
-			SDL_WINDOWPOS_CENTERED,
+			SDL_WINDOWPOS_UNDEFINED_DISPLAY(display_index->val),
+			SDL_WINDOWPOS_UNDEFINED_DISPLAY(display_index->val),
 			window_width->val,
 			window_height->val,
 			window_flags
@@ -172,7 +212,8 @@ void Renderer::reload(Engine& e){
 	if(!created){
 		log(logging::fatal, "Couldn't get an OpenGL context of any version!");
 	}
-	
+
+	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);	
 	SDL_ShowWindow(window);
 	
 	if(gl.DebugMessageCallback){

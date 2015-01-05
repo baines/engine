@@ -97,7 +97,8 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			if(auto* str = v->getReloadVar()){
 				echo({ "New value will take effect on ", str, "." });
 			} else {
-				echo("Ok.");
+				// unsure if this is useful or annoying.
+				// echo("Ok.");
 			}
 		} else if(v){
 			echo(v->getErrorString());

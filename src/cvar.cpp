@@ -49,7 +49,14 @@ void CVarString::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
 	cli.echo(buf);
 }
 
-bool CVarString::set(const string_view& s){
+bool CVarString::set(const string_view& view){
+	auto s = view;
+	if(  s.size() > 1
+	&& ((s.front() == s.back() && s.front() == '\'')
+	||  (s.front() == s.back() && s.front() == '"'))){
+		s.remove_prefix(1);
+		s.remove_suffix(1);
+	}
 	str = std::move(s.to_string());
 	return true;
 }
@@ -62,7 +69,16 @@ bool CVarString::set(std::string&& s){
 /* CVarEnum */
 
 bool CVarEnum::eval(const string_view& s){
-	return set(str_hash_len(s.data(), s.size()));
+	const char* ptr = s.data();
+	size_t len = s.size();
+	if(len > 1
+	&& ((s.front() == s.back() && s.front() == '\'')
+	||  (s.front() == s.back() && s.front() == '"'))){
+		++ptr;
+		len -= 2;
+	}
+
+	return set(str_hash_len(ptr, len));
 }
 
 void CVarEnum::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
@@ -119,8 +135,16 @@ const str_const& CVarEnum::get() const {
 CVarBool::CVarBool(const str_const& name, bool b)
 : CVar(name, this), init(b), val(b){}
 
-bool CVarBool::eval(const string_view& val){
-	return set(str_to_bool(val));
+bool CVarBool::eval(const string_view& s){
+	const char* ptr = s.data();
+	size_t len = s.size();
+	if(len > 1
+	&& ((s.front() == s.back() && s.front() == '\'')
+	||  (s.front() == s.back() && s.front() == '"'))){
+		++ptr;
+		len -= 2;
+	}
+	return set(str_to_bool(string_view(ptr, len)));
 }
 
 void CVarBool::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
@@ -136,8 +160,8 @@ bool CVarBool::set(bool b){
 
 /* CVarFunc */
 
-bool CVarFunc::eval(const string_view& str){
-	return call(str);
+bool CVarFunc::eval(const string_view& s){
+	return call(s);
 }
 
 void CVarFunc::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
@@ -149,8 +173,16 @@ const char* CVarFunc::getErrorString() const {
 	return usage_str ? usage_str : "Function returned error.";
 }
 
-bool CVarFunc::call(const string_view& str){
-	return func(str);
+bool CVarFunc::call(const string_view& s){
+	const char* ptr = s.data();
+	size_t len = s.size();
+	if(len > 1
+	&& ((s.front() == s.back() && s.front() == '\'')
+	||  (s.front() == s.back() && s.front() == '"'))){
+		++ptr;
+		len -= 2;
+	}
+	return func(s);
 }
 
 

@@ -41,6 +41,7 @@ private:
 	CVarInt* window_height;
 	CVarInt* vsync;
 	CVarInt* fov;
+	CVarInt* display_index;
 	CVarBool* fullscreen;
 	CVarBool* resizable;
 	

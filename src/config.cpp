@@ -29,7 +29,7 @@ static struct Args {
 			exit(0);
 		}
 	}, {
-		{"-ll"}, {"--log-level"}, "<0-4>",
+		{"-ll"}, {"--log-level"}, "<0-5>",
 		[](Config& c, ArgContext& ctx){
 			int level;
 			if(ctx.getNextArg(level)){

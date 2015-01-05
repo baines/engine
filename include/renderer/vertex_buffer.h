@@ -5,13 +5,13 @@
 #include "resource_system.h"
 #include "shader_attribs.h"
 
-struct VertexBuffer {
+struct VertexBuffer : public GLObject {
 	virtual const ShaderAttribs& getShaderAttribs() const = 0;
 	virtual GLint  getStride() const = 0;
 	virtual size_t getSize() const = 0;
 	virtual GLuint getID() const = 0;
 	virtual void update() = 0;
-
+	virtual void onGLContextRecreate(){};
 	virtual ~VertexBuffer(){};
 };
 
@@ -23,6 +23,7 @@ struct StaticVertexBuffer : VertexBuffer {
 	virtual size_t getSize() const;
 	virtual GLuint getID() const;
 	virtual void update();
+	virtual void onGLContextRecreate();
 	~StaticVertexBuffer();
 private:
 	void parseAttribs(const char* fmt);
@@ -52,7 +53,8 @@ struct DynamicVertexBuffer : VertexBuffer {
 	void invalidate(BufferRange&& range);
 	
 	void clear();
-
+	
+	virtual void onGLContextRecreate();
 	virtual const ShaderAttribs& getShaderAttribs() const;
 	virtual GLint getStride() const;
 	virtual size_t getSize() const;

@@ -27,7 +27,8 @@ struct ShaderAttribs {
 	void initAttrib(uint32_t name_hash, GLint index);
 	void setAttribFormat(uint32_t hash, GLenum type, int nelem, int off, uint32_t flags);
 	bool bind(uint32_t hash, GLuint index) const;
-	
+	void clear();
+
 	bool containsAttrib(uint32_t hash, GLint at_index = -1) const;
 	
 	const Attrib* begin() const;

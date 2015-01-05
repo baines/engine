@@ -144,6 +144,16 @@ void StreamingBuffer::update(){
 
 }
 
+void StreamingBuffer::onGLContextRecreate(){
+	int old_id = id;
+	gl.GenBuffers(1, &id);
+	DEBUGF("Reloading streaming_buf. id [%d] -> [%d].", old_id, id);
+
+	prev_capacity = 0;
+	prev_size = 0;
+	dirty = true;
+}
+
 StreamingBuffer::~StreamingBuffer(){
 	if(id && gl.initialized()){
 		gl.DeleteBuffers(1, &id);

@@ -195,6 +195,14 @@ bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 	return true;
 }
 
+void Texture2D::onGLContextRecreate(){
+	// If this is called, then this is a texture not managed by a Resource<>..
+	// Whatever is managing it instead is responsible for recreating it.
+	// The id is set to 0 so that the destuctor doesn't attempt to delete an invalid id.
+	id = 0;
+	puts("reloading texture WITHOUT resource.");
+}
+
 Texture2D::~Texture2D(){
 	if(id) gl.DeleteTextures(1, &id);
 }

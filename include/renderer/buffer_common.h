@@ -13,13 +13,14 @@ struct BufferRange {
 	BufferInvalidateListener* callback;
 };
 
-struct StreamingBuffer {
+struct StreamingBuffer : public GLObject {
 
 	StreamingBuffer();
 	StreamingBuffer(GLenum type, std::vector<uint8_t>& buff);
 	void mark();
 	void invalidate(BufferRange&& range);
 	void update();
+	void onGLContextRecreate();
 	GLuint getID() const {
 		return id;
 	}

@@ -21,16 +21,16 @@ extern "C" {
 
 ResourceSystem::ResourceSystem(const char* argv0){
 	if(!PHYSFS_init(argv0)){
-		fprintf(stderr, "PhysFS init Error: %s\n", PHYSFS_getLastError());
+		log(logging::error, "PhysFS init Error: %s", PHYSFS_getLastError());
 	}
 	
 	const size_t sz = _internal_zip_end - _internal_zip_start;
 
 	if(!PHYSFS_mountMemory(_internal_zip_start, sz, NULL, "internal.zip", NULL, 0)){
-		log(logging::error, "PhysFS mount Error: %s\n", PHYSFS_getLastError());
+		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
 	if(!PHYSFS_mount(PHYSFS_getBaseDir(), NULL, 0)){
-		log(logging::error, "PhysFS mount Error: %s\n", PHYSFS_getLastError());
+		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
 }
 

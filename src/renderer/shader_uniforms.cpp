@@ -241,6 +241,11 @@ void ShaderUniforms::initUniform(const char* name, GLuint prog, GLint idx, GLuin
 	uniform_info.push_back({ hash, rows, cols, 1, storage_idx, subtype, idx });
 }
 
+void ShaderUniforms::clear(){
+	uniforms.clear();
+	uniform_info.clear();
+}
+
 void ShaderUniforms::_setUniform(uint32_t hash, uint32_t rows, uint32_t cols, uint32_t count, GLenum type, const void* ptr){
 	const ustorage* storage_ptr = reinterpret_cast<const ustorage*>(ptr);
 	const int limit = rows * cols * count;

@@ -155,6 +155,14 @@ void StaticVertexBuffer::update(){
 
 }
 
+void StaticVertexBuffer::onGLContextRecreate() {
+	int old_id = id;
+	gl.GenBuffers(1, &id);
+	DEBUGF("Reloading static vbo: [%d] -> [%d].", old_id, id);
+	gl.BindBuffer(GL_ARRAY_BUFFER, id);
+	gl.BufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+}
+
 StaticVertexBuffer::~StaticVertexBuffer(){
 	if(id && gl.initialized()){
 		gl.DeleteBuffers(1, &id);
@@ -187,6 +195,10 @@ void DynamicVertexBuffer::invalidate(BufferRange&& range){
 	stream_buf.invalidate(std::move(range));
 }
 
+void DynamicVertexBuffer::onGLContextRecreate(){
+	gl.validateObject(stream_buf);
+}
+
 const ShaderAttribs& DynamicVertexBuffer::getShaderAttribs() const {
 	return attrs;
 }
@@ -206,4 +218,5 @@ GLuint DynamicVertexBuffer::getID() const {
 void DynamicVertexBuffer::update(){
 	stream_buf.update();
 }
+
 

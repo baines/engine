@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <SDL2/SDL.h>
+#include <map>
 #include <unordered_set>
 #include "gl_functions.h"
 #include "util.h"
@@ -14,7 +15,11 @@ struct GLContext {
 	void deleteContext(void);
 	bool hasExtension(const char* ext);
 	bool initialized();
-	
+
+	void registerObject(GLObject& obj);
+	void validateObject(GLObject& obj);
+	void unregisterObject(GLObject& obj);
+
 	uint32_t version;
 	
 	CVarEnum* streaming_mode;
@@ -33,9 +38,20 @@ private:
 	bool loadAllFuncs(void);
 	void loadExtensions(void);
 	std::unordered_set<uint32_t> extensions;
+	std::map<GLObject*, bool> objects;
 	SDL_GLContext sdl_context;
 };
 
 extern GLContext gl;
+
+struct GLObject {
+	GLObject(){
+		gl.registerObject(*this);
+	}
+	virtual ~GLObject(){
+		gl.unregisterObject(*this);
+	}
+	virtual void onGLContextRecreate(){}
+};
 
 #endif

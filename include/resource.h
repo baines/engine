@@ -12,15 +12,25 @@ struct Resource {
 	Resource& operator=(Resource&& other);
 
 	bool load();
-	bool isLoaded(void) const;
+	bool isLoaded() const;
+	bool forceReload();
 
-	const T* operator->(void);
-	const std::shared_ptr<T>& operator*(void);
+	const T* operator->();
+	const std::shared_ptr<T>& operator*();
 	
 private:
+	friend struct GLRes;
+	struct GLRes : public T {
+		GLRes(Resource* res, Args... args) : T(std::forward<Args>(args)...), res(res){}
+		virtual void onGLContextRecreate() {
+			res->forceReload();
+		}
+		Resource* res;
+	};
+
 	template<unsigned... S>
 	void create_data(seq<S...>){
-		data = std::make_shared<T>(std::get<S>(args)...);
+		data = std::make_shared<GLRes>(this, std::get<S>(args)...);
 	}
 
 	std::vector<const char*> res_names;

@@ -9,7 +9,7 @@
 
 struct VertexState;
 
-struct ShaderBase {
+struct ShaderBase : public GLObject {
 	ShaderBase(GLenum type);
 	bool loadFromResource(Engine& e, const ResourceHandle& data);
 	GLuint getID() const;
@@ -27,12 +27,13 @@ struct FragShader : ShaderBase {
 	FragShader() : ShaderBase(GL_FRAGMENT_SHADER){}
 };
 
-struct ShaderProgram {
+struct ShaderProgram : public GLObject {
 	ShaderProgram(const std::shared_ptr<VertShader>& v, const std::shared_ptr<FragShader>& f);
 	bool link(void);
 	bool bind(RenderState& rs);
 	void setUniforms(const ShaderUniforms& uniforms);
 	void setAttribs(RenderState& rs, VertexState& vstate);
+	virtual void onGLContextRecreate();
 
 	~ShaderProgram();
 private:

@@ -23,6 +23,7 @@ struct Renderer;
 struct GameState;
 struct ResourceHandle;
 struct CLI;
+struct GLObject;
 
 #endif
 

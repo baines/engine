@@ -26,8 +26,8 @@ Resource<T, Args...>& Resource<T, Args...>::operator=(Resource<T, Args...>&& oth
 
 template<class T, class... Args>
 bool Resource<T, Args...>::load(){
-	if(data) return true;
-	
+	if(isLoaded()) return true;
+
 	bool loaded = false;
 	
 	for(auto* n : res_names){
@@ -54,19 +54,28 @@ bool Resource<T, Args...>::load(){
 }
 
 template<class T, class... Args>
-bool Resource<T, Args...>::isLoaded(void) const {
+bool Resource<T, Args...>::isLoaded() const {
 	return data.get() != nullptr;
 }
 
 template<class T, class... Args>
-const T* Resource<T, Args...>::operator->(void) {
+bool Resource<T, Args...>::forceReload() {
+	if(!data){
+		return load();
+	} else {
+		return data->loadFromResource(e, res_handle);
+	}
+}
+
+template<class T, class... Args>
+const T* Resource<T, Args...>::operator->() {
 	if(!data) load();
 	assert(data);
 	return data.get();
 }
 	
 template<class T, class... Args>
-const std::shared_ptr<T>& Resource<T, Args...>::operator*(void) {
+const std::shared_ptr<T>& Resource<T, Args...>::operator*() {
 	if(!data) load();
 	assert(data);
 	return data;

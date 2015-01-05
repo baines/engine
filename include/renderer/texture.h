@@ -15,7 +15,7 @@ struct Texture {
 	virtual ~Texture(){}
 };
 
-struct Texture2D : Texture {
+struct Texture2D : public Texture, public GLObject {
 	Texture2D();
 	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* data);
 	Texture2D& operator=(const Texture2D&) = delete;
@@ -28,8 +28,8 @@ struct Texture2D : Texture {
 	std::tuple<int, int> getSize() const;
 	bool bind(size_t tex_unit, RenderState& rs) const;
 	bool setSwizzle(const std::array<GLint, 4>& swizzle);
-	
-	~Texture2D();
+	virtual void onGLContextRecreate();	
+	virtual ~Texture2D();
 private:
 	GLuint id;
 	int w, h;

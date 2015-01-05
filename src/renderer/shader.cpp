@@ -147,6 +147,18 @@ void ShaderProgram::setAttribs(RenderState& rs, VertexState& vstate){
 	vstate.setAttribArrays(rs, attribs);
 }
 
+void ShaderProgram::onGLContextRecreate(){
+	program_id = 0;
+
+	gl.validateObject(*vs);
+	gl.validateObject(*fs);
+
+	uniforms.clear();
+	attribs.clear();
+
+	link();
+}
+
 ShaderProgram::~ShaderProgram(){
 	if(program_id && gl.initialized()){
 		gl.DeleteProgram(program_id);

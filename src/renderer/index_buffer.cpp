@@ -28,6 +28,13 @@ GLenum StaticIndexBuffer::getID() const {
 	return id;
 }
 
+void StaticIndexBuffer::onGLContextRecreate(){
+	gl.GenBuffers(1, &id);
+	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+
+}
+
 StaticIndexBuffer::~StaticIndexBuffer(){
 	gl.DeleteBuffers(1, &id);
 }

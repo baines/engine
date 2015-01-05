@@ -86,15 +86,27 @@ Renderer::Renderer(Engine& e, const char* name)
 , window_h         (window_height->val) {
 
 	SDL_InitSubSystem(SDL_INIT_VIDEO);
-	
-	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
-		log(logging::fatal, "Couldn't load OpenGL library! (%s).", SDL_GetError());
-	}
-	
+
+	e.cfg.addVar<CVarFunc>("dbg_vid_reload", [&](const string_view&){
+		reload(e);
+		return true;
+	});
+
 	reload(e);
 }
 
 void Renderer::reload(Engine& e){
+
+	SDL_GL_UnloadLibrary();
+
+	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
+		log(logging::fatal, "Couldn't load OpenGL library! (%s).", SDL_GetError());
+	}
+
+	render_state = {};
+
+	if(window) SDL_DestroyWindow(window);
+	if(gl.initialized()) gl.deleteContext();
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE     , 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE   , 8);

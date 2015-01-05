@@ -100,7 +100,9 @@ GLContext::GLContext()
 bool GLContext::createContext(Engine& e, SDL_Window* w){
 	if(sdl_context) return true;
 	
-	streaming_mode = e.cfg.addVar<CVarEnum>("gl_streaming_mode", gl_streaming_enum, 0);
+	if(!streaming_mode){
+		streaming_mode = e.cfg.addVar<CVarEnum>("gl_streaming_mode", gl_streaming_enum, 0);
+	}
 	
 	int maj = 0, min = 0;
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
@@ -109,6 +111,14 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 	if((sdl_context = SDL_GL_CreateContext(w))){
 		log(logging::info, "Got OpenGL %d.%d context.", maj, min);
 		loadAllFuncs();
+
+		for(auto& pair : objects){
+			if(!pair.second){
+				pair.first->onGLContextRecreate();
+				pair.second = true;
+			}
+		}
+
 		return true;
 	} else {
 		log(logging::debug, "OpenGL %d.%d context unavailable.", maj, min);
@@ -121,6 +131,14 @@ void GLContext::deleteContext(void){
 		SDL_GL_DeleteContext(sdl_context);
 		sdl_context = nullptr;
 	}
+
+	// invalidate objects
+	for(auto& pair : objects){
+		pair.second = false;
+	}
+
+	extensions.clear();
+
 	#define GLFUNC(type, name, ...) \
 		name = nullptr;
 	#include "gl_functions.h"
@@ -136,6 +154,22 @@ bool GLContext::hasExtension(const char* ext){
 
 bool GLContext::initialized(){
 	return sdl_context != nullptr;
+}
+
+void GLContext::registerObject(GLObject& obj){
+	objects.emplace(&obj, true);
+}
+
+void GLContext::validateObject(GLObject& obj){
+	auto it = objects.find(&obj);
+	if(it != objects.end() && !it->second){
+		it->first->onGLContextRecreate();
+		it->second = true;
+	}
+}
+
+void GLContext::unregisterObject(GLObject& obj){
+	objects.erase(&obj);
 }
 
 bool GLContext::loadAllFuncs(void){

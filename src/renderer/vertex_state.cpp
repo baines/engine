@@ -95,6 +95,30 @@ void VertexState::bind(RenderState& rs){
 	}
 }
 
+void VertexState::onGLContextRecreate(){
+	int old_id = id;
+
+	enabled_arrays.reset();
+	active_attrs.clear();
+
+	gl.GenVertexArrays(1, &id);
+	gl.BindVertexArray(id);
+
+	DEBUGF("Reloading VState: vao id [%d] -> [%d].", old_id, id);
+
+	GLint vbo_bind_point = 0;
+	for(auto* buf : vertex_buffers){
+		gl.validateObject(*buf);
+		DEBUGF(
+			"BindVertexBuffer: bind_point: %d, id: %d, stride: %d.", 
+			vbo_bind_point, buf->getID(), buf->getStride()
+		);
+		gl.BindVertexBuffer(vbo_bind_point++, buf->getID(), 0, buf->getStride());
+	}
+
+	if(index_buffer) gl.validateObject(*index_buffer);
+}
+
 VertexState::~VertexState(){
 	if(id && gl.initialized()){
 		gl.DeleteVertexArrays(1, &id);

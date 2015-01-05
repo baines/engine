@@ -5,7 +5,7 @@
 #include FT_FREETYPE_H
 #include "texture.h"
 
-struct Font {
+struct Font : public GLObject {
 	struct GlyphInfo {
 		FT_UInt index;
 		uint32_t width, x, y;

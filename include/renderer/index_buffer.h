@@ -4,10 +4,11 @@
 #include "buffer_common.h"
 #include "resource_system.h"
 
-struct IndexBuffer {
+struct IndexBuffer : public GLObject {
 	virtual void   bind()          = 0;
 	virtual GLenum getType() const = 0;
 	virtual GLuint getID()   const = 0;
+	virtual void onGLContextRecreate(){}
 	virtual ~IndexBuffer(){}
 };
 
@@ -17,6 +18,7 @@ struct StaticIndexBuffer : public IndexBuffer {
 	void bind();
 	GLenum getType() const;
 	GLuint getID() const;
+	void onGLContextRecreate();
 	~StaticIndexBuffer();
 private:
 	ResourceHandle data;
@@ -61,6 +63,10 @@ struct DynamicIndexBuffer : public IndexBuffer {
 	void bind(){
 		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, stream_buf.getID());
 	}	
+
+	virtual void onGLContextRecreate(){
+		gl.validateObject(stream_buf);
+	}
 
 private:
 	std::vector<uint8_t> indices;

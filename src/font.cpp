@@ -86,6 +86,9 @@ const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
 }
 
 bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
+	glyph_info.clear();
+	face = nullptr;
+
 	FT_Library& ft_lib = e.text.getLib();
 	
 	assert(FT_New_Memory_Face(ft_lib, res.data(), res.size(), 0, &face) == 0);
@@ -198,6 +201,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		do_swizzle = true;
 	}
 	
+	gl.validateObject(atlas);
 	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, img.w, img.h, img.mem);
 	if(do_swizzle){
 		atlas.setSwizzle({ GL_ZERO, GL_ZERO, GL_ZERO, GL_RED });

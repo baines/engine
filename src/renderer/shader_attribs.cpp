@@ -49,6 +49,10 @@ bool ShaderAttribs::bind(uint32_t hash, GLuint index) const {
 	return true;
 }
 
+void ShaderAttribs::clear() {
+	attribs.clear();	
+}
+
 const ShaderAttribs::Attrib* ShaderAttribs::begin() const {
 	return attribs.data();
 }

@@ -12,6 +12,7 @@ struct CLI : public GameState {
 	
 	virtual bool onInput(Engine& e, int action, bool pressed);
 	virtual void onText(Engine& e, const char* text);
+	virtual void onStateChange(Engine& e, bool activated);
 	virtual void update(Engine& e, uint32_t delta);
 	virtual void draw(Renderer& r);
 	
@@ -27,7 +28,7 @@ private:
 	void updateCursor();
 
 	Engine& engine;
-	bool active, ignore_next_text, show_cursor, output_dirty, input_dirty;
+	bool toggling, active, ignore_next_text, show_cursor, output_dirty, input_dirty;
 	int blink_timer;
 
 	CVarInt* scrollback_lines;

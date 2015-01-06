@@ -30,6 +30,7 @@ static const size_t MAX_COLS = 80;
 
 CLI::CLI(Engine& e)
 : engine           (e)
+, toggling         (false)
 , active           (false)
 , ignore_next_text (false)
 , show_cursor      (true)
@@ -60,15 +61,22 @@ CLI::CLI(Engine& e)
 	e.input.enableText(this, true, { 0, font_height->val * (visible_lines->val + 1) });
 }
 
+void CLI::onStateChange(Engine& e, bool activated){
+	active = activated;
+	toggling = false;
+}
+
 void CLI::toggle(){
+	if(toggling) return;
+
 	if(active){
 		engine.state.pop(1);
 		//XXX: what if it's not top-most?
 	} else {
 		engine.state.push(this);
 	}
-	
-	active = !active;
+
+	toggling = true;
 }
 
 bool CLI::onInput(Engine& e, int action, bool pressed){
@@ -93,7 +101,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		&& v->type != CVAR_FUNC 
 		&& input_str.find_first_not_of(' ', split_idx) == std::string::npos){
 			printVarInfo(*v);
-		} else if(v && v->eval(&input_str[split_idx+1])){
+		} else if(v && v->eval(&input_str[std::min(input_str.size(), split_idx+1)])){
 			if(auto* str = v->getReloadVar()){
 				echo({ "New value will take effect on ", str, "." });
 			} else {
@@ -159,10 +167,11 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 				row_width = 1;
 				col_widths.clear();
 
-				for(size_t i = 0; i < autocompletions.size(); i += (rows+1)){
+				size_t ac_sz = autocompletions.size();
+				for(size_t i = 0; i < ac_sz; i += (rows+1)){
 					col_widths.push_back(std::accumulate(
 						autocompletions.begin() + i,
-						autocompletions.begin() + i + rows + 1,
+						autocompletions.begin() + std::min(ac_sz, i + rows + 1),
 						0,
 						[](size_t sz, CVar* c){
 							return std::max(sz, c->name.size + 1);

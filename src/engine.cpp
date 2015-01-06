@@ -13,7 +13,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , running    (true)
 , prev_ticks (0)
 , root_state (*this) {
-	state.push(&root_state);
+	addState(&root_state);
 }
 
 void Engine::addState(GameState* s){
@@ -31,7 +31,9 @@ bool Engine::run(void){
 	}
 	prev_ticks += delta;
 	delta = std::min(delta, 100);
-	
+
+	state.processStateChanges(*this);
+
 	SDL_Event e;
 	
 	while(SDL_PollEvent(&e)){

@@ -327,12 +327,12 @@ void Renderer::addRenderable(Renderable& r){
 
 Renderer::~Renderer(){
 	gl.deleteContext();
-	SDL_GL_UnloadLibrary();
 	
 	if(window){
 		SDL_DestroyWindow(window);
 	}
-	
+
+	SDL_GL_UnloadLibrary();
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 

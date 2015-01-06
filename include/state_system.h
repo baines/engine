@@ -13,7 +13,8 @@ struct StateSystem {
 	void onInput(Engine& e, SDL_Event& event);
 	void onMotion(Engine& e, SDL_Event& event);
 	void onText(Engine& e, SDL_TextInputEvent& event);
-	
+
+	void processStateChanges(Engine& e);
 	void update(Engine& e, uint32_t delta);
 	void draw(Renderer& r);
 private:

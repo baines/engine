@@ -51,7 +51,7 @@ void StateSystem::onText(Engine& e, SDL_TextInputEvent& ev){
 	states.back()->onText(e, ev.text);
 }
 
-void StateSystem::update(Engine& e, uint32_t delta){
+void StateSystem::processStateChanges(Engine& e){
 	GameState* current_state = states.empty() ? nullptr : states.back();
 	
 	while(pop_num > 0 && !states.empty()){
@@ -77,8 +77,11 @@ void StateSystem::update(Engine& e, uint32_t delta){
 		current_state->onStateChange(e, true);
 		e.input.onStateChange(current_state);
 	}
+}
 
-	current_state->update(e, delta);
+void StateSystem::update(Engine& e, uint32_t delta){
+	assert(!states.empty());
+	states.back()->update(e, delta);
 }
 
 void StateSystem::draw(Renderer& r){

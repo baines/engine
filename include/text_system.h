@@ -18,7 +18,7 @@ struct TextSystem : public BufferInvalidateListener {
 	FT_Library& getLib();
 	
 	void addText(Text& t);
-	bool updateText(Text& t, const u32string_view& newstr, glm::ivec2 newpos);
+	void updateText(Text& t, const u32string_view& newstr, glm::ivec2 newpos);
 	void delText(Text& t);
 
 	virtual void onBufferRangeInvalidated(size_t off, size_t len); 

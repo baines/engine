@@ -153,6 +153,18 @@ inline std::u32string to_utf32(const string_view& s){
 	return ret;
 }
 
+inline size_t utf8_char_index(const string_view& str, size_t utf32_index){
+	for(size_t i = 0; i < str.size(); ++i){
+		if(!((str[i] & 0xC0) == 0x80)){
+			if(utf32_index-- == 0){
+				return i;
+			}
+		}
+	}
+
+	return str.size();	
+}
+
 /* GLM stuff to determine if a type is a vector or matrix */
 #include <glm/glm.hpp>
 

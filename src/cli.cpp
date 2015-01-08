@@ -2,9 +2,6 @@
 #include "engine.h"
 
 /* TODO:
- * Cursor left / right:
- *     backspace -> delete from left of cursor exclusive
- *     delete    -> delete from right of cursor inclusive
  * Scroll through history:
  *     pageup    -> scroll 1 line up in history
  *     pagedown  -> scroll 1 line down in history
@@ -16,13 +13,16 @@
 enum {
 	ACT_SUBMIT,
 	ACT_BACKSPACE,
+	ACT_DELETE,
 	ACT_DEL_WORD,
 	ACT_CURSOR_LEFT,
 	ACT_CURSOR_RIGHT,
 	ACT_CURSOR_UP,
 	ACT_CURSOR_DOWN,
-	ACT_IGNORE_TEXT,
-	ACT_AUTOCOMPLETE
+	ACT_HOME,
+	ACT_END,
+	ACT_AUTOCOMPLETE,
+	ACT_IGNORE_TEXT
 };
 
 //TODO: dynamically adjust max cols based on screen size / cvar?
@@ -49,13 +49,20 @@ CLI::CLI(Engine& e)
 , input_history    ()
 , history_idx      (0)
 , input_str        ("> ")
-, cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), "_"){
+, cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), "_")
+, cursor_idx       (2)
+, autocompletions  () {
 	e.input.watchAction(this, "cli_submit",       ACT_SUBMIT);
 	e.input.watchAction(this, "cli_backspace",    ACT_BACKSPACE);
-	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
+	e.input.watchAction(this, "cli_delete",       ACT_DELETE);
 	e.input.watchAction(this, "cli_del_word",     ACT_DEL_WORD);
 	e.input.watchAction(this, "cli_cursor_up",    ACT_CURSOR_UP);
 	e.input.watchAction(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
+	e.input.watchAction(this, "cli_cursor_left",  ACT_CURSOR_LEFT);
+	e.input.watchAction(this, "cli_cursor_right", ACT_CURSOR_RIGHT);
+	e.input.watchAction(this, "cli_home",         ACT_HOME);
+	e.input.watchAction(this, "cli_end",          ACT_END);
+	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
 	e.input.watchAction(this, "console",          ACT_IGNORE_TEXT);
 
 	e.input.enableText(this, true, { 0, font_height->val * (visible_lines->val + 1) });
@@ -121,20 +128,36 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		input_str.assign("> ");
 		input_dirty = true;
 
-	} else if(action == ACT_BACKSPACE && input_str.size() > 2){
+	} else if(action == ACT_BACKSPACE && cursor_idx > 2){
 
-		while((input_str.back() & 0xC0) == 0x80){
-			input_str.pop_back();
+		size_t end_idx = utf8_char_index(input_str, cursor_idx);
+		size_t start_idx = end_idx - 1;
+		for(; start_idx >= 2; --start_idx){
+			if(!((input_str[start_idx] & 0xC0) == 0x80)) break;
 		}
-		input_str.pop_back();
+
+		input_str.erase(input_str.begin() + start_idx, input_str.begin() + end_idx);
 		input_dirty = true;
 
-	} else if(action == ACT_DEL_WORD && input_str.size() > 2){
-	
-		size_t i = std::max<size_t>(2, input_str.find_last_not_of(' '));
-		size_t j = std::max<size_t>(2, input_str.find_last_of(' ', i));
+	} else if(action == ACT_DELETE){
+		
+		size_t i = utf8_char_index(input_str, cursor_idx);
+		if(i < input_str.size()){
+			do {
+				input_str.erase(i, 1);
+			} while((input_str[i] & 0xC0) == 0x80);
 
-		input_str.erase(input_str.begin() + j, input_str.end());
+			input_dirty = true;
+			++cursor_idx;
+		}	
+		
+	} else if(action == ACT_DEL_WORD && input_str.size() > 2){
+
+		size_t end_idx = utf8_char_index(input_str, cursor_idx);
+		size_t mid_idx = std::max<size_t>(2, input_str.find_last_not_of(' ', end_idx));
+		size_t beg_idx = std::max<size_t>(2, input_str.find_last_of(' ', mid_idx));
+
+		input_str.erase(input_str.begin() + beg_idx, input_str.begin() + end_idx);
 		input_dirty = true;
 
 	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > 2){
@@ -222,6 +245,22 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			input_dirty = true;
 		}
 
+	} else if(action == ACT_CURSOR_LEFT){
+	
+		cursor_idx = std::max<int>(2, cursor_idx - 1);
+		
+	} else if(action == ACT_CURSOR_RIGHT){
+	
+		cursor_idx = std::min<int>(input_text.size(), cursor_idx + 1);
+
+	} else if(action == ACT_HOME){
+		
+		cursor_idx = 2;
+		
+	} else if(action == ACT_END){
+	
+		cursor_idx = input_text.size();
+
 	} else if(action == ACT_IGNORE_TEXT){
 		ignore_next_text = true;
 		return false; // let the event pass down to root_state which will close the console.
@@ -235,8 +274,9 @@ void CLI::onText(Engine& e, const char* text){
 		ignore_next_text = false;
 		return;
 	}
-
-	input_str += text;
+	
+	size_t i = utf8_char_index(input_str, cursor_idx);
+	input_str.insert(i, text);
 	input_dirty = true;
 }
 
@@ -253,6 +293,9 @@ void CLI::update(Engine& e, uint32_t delta){
 		input_dirty = true;
 	}
 
+	if((size_t)scrollback_lines->val != output_lines.size()){
+		output_lines.resize(scrollback_lines->val);
+	}
 }
 
 void CLI::draw(Renderer& r){
@@ -270,13 +313,17 @@ void CLI::draw(Renderer& r){
 	output_text.draw(r);
 
 	if(input_dirty){
-		input_text.update(input_str, { 0, font_height->val * visible_lines->val });
+		int char_diff = input_text.update(
+			input_str, 
+			{ 0, font_height->val * visible_lines->val }
+		);
+		cursor_idx += char_diff;
 		input_dirty = false;
 	}
 	input_text.draw(r);
 
+	updateCursor();
 	if(show_cursor){
-		updateCursor();
 		cursor_text.draw(r);
 	}
 }
@@ -304,7 +351,7 @@ void CLI::printVarInfo(const CVar& cvar){
 
 void CLI::updateCursor(){
 	glm::ivec2 pos = cursor_text.getStartPos();
-	glm::ivec2 newpos = input_text.getEndPos() + glm::ivec2(0, 2);
+	glm::ivec2 newpos = input_text.getPos(cursor_idx) + glm::ivec2(0, 2);
 
 	if(pos != newpos){
 		cursor_text.update("_", newpos);

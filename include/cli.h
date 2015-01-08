@@ -48,6 +48,7 @@ private:
 	std::string input_str;
 
 	Text cursor_text;
+	size_t cursor_idx;
 
 	std::vector<CVar*> autocompletions;
 };

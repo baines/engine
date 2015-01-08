@@ -14,18 +14,18 @@ struct Text {
 	Text(Text&&);
 	Text& operator=(Text&&);
 	
-	bool update(const string_view& newstr);
-	bool update(const string_view& newstr, glm::ivec2 newpos);
+	int update(const string_view& newstr);
+	int update(const string_view& newstr, glm::ivec2 newpos);
 
 	void draw(Renderer& r);
 
 	glm::ivec2 getStartPos() const {
 		return start_pos;
 	}
-
 	glm::ivec2 getEndPos() const {
 		return end_pos;
 	}
+	glm::ivec2 getPos(size_t index) const;
 
 	size_t size() const {
 		return str.size();

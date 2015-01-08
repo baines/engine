@@ -98,8 +98,8 @@ void TextSystem::addText(Text& t){
 	t.setRenderable(&text_renderables.back());
 }
 
-bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 newpos){
-	if(!t.renderable) return false;
+void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 newpos){
+	if(!t.renderable) return;
 
 	bool pos_changed = t.start_pos != newpos;
 	// if this is only appending text, and it's at the end of the vertex buffer,
@@ -150,7 +150,6 @@ bool TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			addText(t);
 		}
 	}
-	return true;
 }
 
 void TextSystem::delText(Text& t){

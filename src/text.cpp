@@ -62,19 +62,21 @@ Text& Text::operator=(Text&& other){
 	return *this;
 }
 
-bool Text::update(const string_view& newstr){
+int Text::update(const string_view& newstr){
 	return update(newstr, start_pos); 
 }
 
-bool Text::update(const string_view& newstr, glm::ivec2 newpos){
-	if(!engine || !font) return false;
+int Text::update(const string_view& newstr, glm::ivec2 newpos){
+	if(!engine || !font) return 0;
 
 	std::u32string u32str = to_utf32(newstr);
 
 	if(u32str == str && newpos == start_pos){
-		return true;
+		return 0;
 	} else {
-		return engine->text.updateText(*this, u32str, newpos);
+		int char_count_diff = u32str.size() - str.size();
+		engine->text.updateText(*this, u32str, newpos);
+		return char_count_diff;
 	}
 }
 
@@ -92,5 +94,23 @@ void Text::setRenderable(Renderable* r){
 	renderable = r;
 	renderable->uniforms = &uniforms;
 	renderable->textures[0] = (*font)->getTexture();
+}
+
+glm::ivec2 Text::getPos(size_t index) const {
+	glm::ivec2 result = start_pos;
+	index = std::min(index, str.size());
+
+	for(size_t i = 0; i < index; ++ i){
+		char32_t c = str[i];
+
+		if(c == '\n'){
+			result.x = start_pos.x;
+			result.y += (*font)->getLineHeight();
+		} else {
+			result.x += (*font)->getGlyphInfo(c).width;
+		}
+	}
+
+	return result;
 }
 

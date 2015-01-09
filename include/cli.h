@@ -21,6 +21,7 @@ struct CLI : public GameState {
 	
 	void echo(const string_view& str);
 	void echo(const std::initializer_list<string_view> str);
+	void printf(const char* fmt, ...);
 	void printVarInfo(const CVar& cvar);
 
 	~CLI();

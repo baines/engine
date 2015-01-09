@@ -110,7 +110,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			printVarInfo(*v);
 		} else if(v && v->eval(&input_str[std::min(input_str.size(), split_idx+1)])){
 			if(auto* str = v->getReloadVar()){
-				echo({ "New value will take effect on ", str, "." });
+				echo({ " New value will take effect on ", str, "." });
 			} else {
 				// unsure if this is useful or annoying.
 				// echo("Ok.");
@@ -118,9 +118,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		} else if(v){
 			echo(v->getErrorString());
 		} else {
-			char buf[MAX_COLS] = {};
-			size_t len = snprintf(buf, sizeof(buf), "Unknown var \"%.*s\".", var_name_sz, var_name);
-			echo(string_view(buf, len));
+			this->printf(" Unknown var \"%.*s\".\n", var_name_sz, var_name);
 		}
 
 		input_history.push_back(std::move(input_str));
@@ -317,7 +315,7 @@ void CLI::draw(Renderer& r){
 			input_str, 
 			{ 0, font_height->val * visible_lines->val }
 		);
-		cursor_idx += char_diff;
+		cursor_idx = clamp<int>(cursor_idx + char_diff, 2, input_text.size());
 		input_dirty = false;
 	}
 	input_text.draw(r);
@@ -342,11 +340,30 @@ void CLI::echo(std::initializer_list<string_view> strs){
 	output_dirty = true;
 }
 
-void CLI::printVarInfo(const CVar& cvar){
+void CLI::printf(const char* fmt, ...){
+	va_list v;
+	va_start(v, fmt);
 	char buf[MAX_COLS] = {};
-	size_t off = snprintf(buf, sizeof(buf), " '%s' = ", cvar.name.str);
+	vsnprintf(buf, sizeof(buf), fmt, v);
+	const char *start = buf, *end = "";
 
-	cvar.printInfo(*this, buf, buf+off, sizeof(buf) - off);
+	do {
+		end = strchrnul(start, '\n');
+		output_lines[output_line_idx].append(start, end);
+		if(*end){
+			start = end + 1;
+			output_line_idx = (output_line_idx + 1) % output_lines.size();
+			output_lines[output_line_idx].clear();
+		}
+	} while(*end);
+
+	output_dirty = true;
+	va_end(v);
+}
+
+void CLI::printVarInfo(const CVar& cvar){
+	this->printf(" '%s' = ", cvar.name.str);
+	cvar.printInfo(*this);
 }
 
 void CLI::updateCursor(){

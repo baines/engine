@@ -61,8 +61,7 @@ struct CVar {
 	
 	virtual bool eval(const string_view& val) = 0;
 
-	//TODO: Fix this awful function signature
-	virtual void printInfo(CLI& cli, char* buf, char* p, size_t sz) const = 0;
+	virtual void printInfo(CLI& cli) const = 0;
 	
 	void setReloadVar(const char* str){
 		reload_var = str;
@@ -90,7 +89,7 @@ struct CVarNumeric : public CVar {
 	: CVar(name, this), init(init), val(init), min(min), max(max){}
 
 	bool eval(const string_view& s);
-	void printInfo(CLI& cli, char* buf, char* p, size_t sz) const;
+	void printInfo(CLI& cli) const;
 
 	bool set(T v){
 		if(v >= min && v <= max){
@@ -111,7 +110,7 @@ typedef CVarNumeric<float> CVarFloat;
 struct CVarString : public CVar {
 	CVarString(const str_const& name, const char* str);
 	bool eval(const string_view& s);
-	void printInfo(CLI& cli, char* buf, char* p, size_t sz) const;
+	void printInfo(CLI& cli) const;
 	bool set(const string_view& s);
 	bool set(std::string&& s);
 
@@ -130,7 +129,7 @@ struct CVarEnum : public CVar {
 	}
 
 	bool eval(const string_view& s);
-	void printInfo(CLI& cli, char* buf, char* p, size_t sz) const;
+	void printInfo(CLI& cli) const;
 	bool set(const str_const& s);
 	bool set(uint32_t hash);
 	const str_const& get() const;
@@ -143,7 +142,7 @@ struct CVarEnum : public CVar {
 struct CVarBool : public CVar {
 	CVarBool(const str_const& name, bool b);
 	bool eval(const string_view& val);
-	void printInfo(CLI& cli, char* buf, char* p, size_t sz) const;
+	void printInfo(CLI& cli) const;
 	bool set(bool b);
 
 	const bool init;
@@ -155,7 +154,7 @@ struct CVarFunc : public CVar {
 	CVarFunc(const str_const& name, F&& fn, const char* usage = nullptr)
 	: CVar(name, this), func(std::forward<F>(fn)), usage_str(usage){}	
 	bool eval(const string_view& str);
-	void printInfo(CLI& cli, char* buf, char* p, size_t sz) const;
+	void printInfo(CLI& cli) const;
 	const char* getErrorString() const;
 	bool call(const string_view& str);
 

@@ -7,13 +7,8 @@ template<> bool CVarNumeric<int>::eval(const string_view& str){
 	return set(strtol(str.data(), nullptr, 0));
 }
 
-template<> void CVarNumeric<int>::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
-	snprintf(
-		p, sz,
-		"%d (default %d) [int: %d < x < %d]",
-		val, init, min, max
-	);
-	cli.echo(buf);
+template<> void CVarNumeric<int>::printInfo(CLI& cli) const {
+	cli.printf("%d (default %d) [int: %d < x < %d]\n", val, init, min, max);
 }
 
 /* CVarNumeric: float */
@@ -22,13 +17,8 @@ template<> bool CVarNumeric<float>::eval(const string_view& str){
 	return set(strtof(str.data(), nullptr));
 }
 
-template<> void CVarNumeric<float>::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
-	snprintf(
-		buf, sz,
-		"%.2f (default %.2f) [float: %.2f < x < %.2f]",
-		val, init, min, max
-	);
-	cli.echo(buf);
+template<> void CVarNumeric<float>::printInfo(CLI& cli) const {
+	cli.printf("%.2f (default %.2f) [int: %.2f < x < %.2f]\n", val, init, min, max);
 }
 
 /* CVarString */
@@ -44,9 +34,8 @@ bool CVarString::eval(const string_view& s){
 	return set(s);
 }
 
-void CVarString::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
-	snprintf(p, sz, "\"%s\" (default \"%s\") [string]", str.c_str(), init);
-	cli.echo(buf);
+void CVarString::printInfo(CLI& cli) const {
+	cli.printf("\"%s\" (default \"%s\") [string]\n", str.c_str(), init);
 }
 
 bool CVarString::set(const string_view& view){
@@ -81,33 +70,20 @@ bool CVarEnum::eval(const string_view& s){
 	return set(str_hash_len(ptr, len));
 }
 
-void CVarEnum::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
-	//TODO: needs better word wrapping...
+void CVarEnum::printInfo(CLI& cli) const {
+	cli.printf("'%s' (default '%s')\n[enum: ", strs[index].str, strs[init].str);
 
-	snprintf(p, sz, "'%s' (default '%s')", strs[index].str, strs[init].str);
-	cli.echo(buf);
-
-	sz += (p - buf);
-	memcpy(buf, " [enum: ", std::min<size_t>(9, sz));
-
-	size_t len = 0;
-
+	const size_t max_sz = 80;
+	size_t cur_sz = 0;
 	for(size_t i = 0; i < strs.size(); ++i){
-		if(len + strs[i].size > sz){
-			cli.echo(buf);
-			memcpy(buf, "        ", std::min<size_t>(9, sz));
-			len = 0;
+		if(cur_sz + strs[i].size > max_sz){
+			cli.printf("\n        ");
+			cur_sz = 0;
 		}
 		
-		len = SDL_strlcat(buf, strs[i].str, sz);
-		
-		if(i != strs.size() - 1){
-			len = SDL_strlcat(buf, ", ", sz);
-		}
+		cli.printf("%s%s", strs[i].str, (i == strs.size() - 1) ? "" : ", ");
 	}
-	SDL_strlcat(buf, " ]", sz);
-
-	cli.echo(buf);
+	cli.printf(" ]\n");
 }	
 
 bool CVarEnum::set(const str_const& s){
@@ -147,10 +123,9 @@ bool CVarBool::eval(const string_view& s){
 	return set(str_to_bool(string_view(ptr, len)));
 }
 
-void CVarBool::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
+void CVarBool::printInfo(CLI& cli) const {
 	const char* bstr[] = { "false", "true" };
-	snprintf(p, sz, "%s (default %s) [bool]", bstr[val], bstr[init]);
-	cli.echo(buf);
+	cli.printf("%s (default %s) [bool]\n", bstr[val], bstr[init]);
 }
 
 bool CVarBool::set(bool b){
@@ -164,9 +139,8 @@ bool CVarFunc::eval(const string_view& s){
 	return call(s);
 }
 
-void CVarFunc::printInfo(CLI& cli, char* buf, char* p, size_t sz) const {
-	snprintf(p, sz, "[func] %s.", usage_str ? usage_str : "");
-	cli.echo(buf);
+void CVarFunc::printInfo(CLI& cli) const {
+	cli.printf("[func] %s\n", usage_str ? usage_str : "");
 }
 
 const char* CVarFunc::getErrorString() const {

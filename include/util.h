@@ -31,6 +31,11 @@ struct mf_arity<R(C::*)(Args...)> {
 	static const size_t value = sizeof...(Args);
 };
 
+template<class T>
+T clamp(T val, T min, T max){
+	return std::max<T>(min, std::min<T>(max, val));
+}
+
 /* type to store multiple types with correct alignment */
 template<class T, class... Ts>
 struct variant {

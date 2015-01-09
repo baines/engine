@@ -26,7 +26,10 @@ enum {
 };
 
 //TODO: dynamically adjust max cols based on screen size / cvar?
-static const size_t MAX_COLS = 80;
+static const size_t MAX_COLS  = 80;
+static const char   PROMPT[]  = "> ";
+static const size_t PROMPT_SZ = sizeof(PROMPT) - 1;
+static const char   CURSOR[]  = "_";
 
 CLI::CLI(Engine& e)
 : engine           (e)
@@ -45,12 +48,12 @@ CLI::CLI(Engine& e)
 , output_text      (e, *font, { 0, 0 }, "")
 , output_lines     (scrollback_lines->val)
 , output_line_idx  (0)
-, input_text       (e, *font, { 0, font_height->val * visible_lines->val}, "> ")
+, input_text       (e, *font, { 0, font_height->val * visible_lines->val}, PROMPT)
 , input_history    ()
 , history_idx      (0)
-, input_str        ("> ")
-, cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), "_")
-, cursor_idx       (2)
+, input_str        (PROMPT)
+, cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), CURSOR)
+, cursor_idx       (PROMPT_SZ)
 , autocompletions  () {
 	e.input.watchAction(this, "cli_submit",       ACT_SUBMIT);
 	e.input.watchAction(this, "cli_backspace",    ACT_BACKSPACE);
@@ -89,17 +92,17 @@ void CLI::toggle(){
 bool CLI::onInput(Engine& e, int action, bool pressed){
 	if(!pressed) return true;
 
-	if(action == ACT_SUBMIT && input_str.size() > 2){
+	if(action == ACT_SUBMIT && input_str.size() > PROMPT_SZ){
 
 		echo(input_str);
 
-		auto split_idx = input_str.find_first_of(' ', 2);
+		auto split_idx = input_str.find_first_of(' ', PROMPT_SZ);
 		if(split_idx == std::string::npos){
 			split_idx = input_str.size();
 		}
 
-		const char* var_name = input_str.c_str() + 2;
-		int var_name_sz = split_idx - 2;
+		const char* var_name = input_str.c_str() + PROMPT_SZ;
+		int var_name_sz = split_idx - PROMPT_SZ;
 		
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
 		auto* v = e.cfg.getVar<CVar>(hash);
@@ -123,14 +126,14 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		input_history.push_back(std::move(input_str));
 		history_idx = input_history.size();
-		input_str.assign("> ");
+		input_str.assign(PROMPT);
 		input_dirty = true;
 
-	} else if(action == ACT_BACKSPACE && cursor_idx > 2){
+	} else if(action == ACT_BACKSPACE && cursor_idx > PROMPT_SZ){
 
 		size_t end_idx = utf8_char_index(input_str, cursor_idx);
 		size_t start_idx = end_idx - 1;
-		for(; start_idx >= 2; --start_idx){
+		for(; start_idx >= PROMPT_SZ; --start_idx){
 			if(!((input_str[start_idx] & 0xC0) == 0x80)) break;
 		}
 
@@ -149,19 +152,22 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			++cursor_idx;
 		}	
 		
-	} else if(action == ACT_DEL_WORD && input_str.size() > 2){
+	} else if(action == ACT_DEL_WORD && input_str.size() > PROMPT_SZ){
 
 		size_t end_idx = utf8_char_index(input_str, cursor_idx);
-		size_t mid_idx = std::max<size_t>(2, input_str.find_last_not_of(' ', end_idx));
-		size_t beg_idx = std::max<size_t>(2, input_str.find_last_of(' ', mid_idx));
+		size_t mid_idx = std::max(PROMPT_SZ, input_str.find_last_not_of(' ', end_idx));
+		size_t beg_idx = std::max(PROMPT_SZ, input_str.find_last_of(' ', mid_idx));
 
 		input_str.erase(input_str.begin() + beg_idx, input_str.begin() + end_idx);
 		input_dirty = true;
 
-	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > 2){
+	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > PROMPT_SZ){
 
 		if(input_str.back() == ' '){
-			uint32_t hash = str_hash_len(input_str.c_str()+2, input_str.size()-3);
+			uint32_t hash = str_hash_len(
+				input_str.c_str() + PROMPT_SZ,
+				input_str.size() - (PROMPT_SZ+1)
+			);
 			if(CVar* cvar = e.cfg.getVar<CVar>(hash)){
 				printVarInfo(*cvar);
 			}
@@ -171,9 +177,9 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		//TODO: maybe implement autocompletion of function args + enums too?
 		
 		autocompletions.clear();
-		e.cfg.getVarsWithPrefix(input_str.c_str()+2, autocompletions);
+		e.cfg.getVarsWithPrefix(input_str.c_str()+PROMPT_SZ, autocompletions);
 		
-		if(e.cfg.extendPrefix(input_str, 2)){
+		if(e.cfg.extendPrefix(input_str, PROMPT_SZ)){
 			if(autocompletions.size() == 1){
 				input_str.append(1, ' ');
 			}
@@ -236,7 +242,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		if(history_idx < input_history.size()){
 			if(++history_idx == input_history.size()){
-				input_str.assign("> ");
+				input_str.assign(PROMPT);
 			} else {
 				input_str = input_history[history_idx];
 			}
@@ -245,7 +251,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 	} else if(action == ACT_CURSOR_LEFT){
 	
-		cursor_idx = std::max<int>(2, cursor_idx - 1);
+		cursor_idx = std::max<int>(PROMPT_SZ, cursor_idx - 1);
 		
 	} else if(action == ACT_CURSOR_RIGHT){
 	
@@ -253,7 +259,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 	} else if(action == ACT_HOME){
 		
-		cursor_idx = 2;
+		cursor_idx = PROMPT_SZ;
 		
 	} else if(action == ACT_END){
 	
@@ -315,7 +321,7 @@ void CLI::draw(Renderer& r){
 			input_str, 
 			{ 0, font_height->val * visible_lines->val }
 		);
-		cursor_idx = clamp<int>(cursor_idx + char_diff, 2, input_text.size());
+		cursor_idx = clamp<int>(cursor_idx + char_diff, PROMPT_SZ, input_text.size());
 		input_dirty = false;
 	}
 	input_text.draw(r);
@@ -371,7 +377,7 @@ void CLI::updateCursor(){
 	glm::ivec2 newpos = input_text.getPos(cursor_idx) + glm::ivec2(0, 2);
 
 	if(pos != newpos){
-		cursor_text.update("_", newpos);
+		cursor_text.update(CURSOR, newpos);
 		show_cursor = true;
 		blink_timer = 0;
 	}

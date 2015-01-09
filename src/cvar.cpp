@@ -71,16 +71,17 @@ bool CVarEnum::eval(const string_view& s){
 }
 
 void CVarEnum::printInfo(CLI& cli) const {
-	cli.printf("'%s' (default '%s')\n[enum: ", strs[index].str, strs[init].str);
+	cli.printf("'%s' (default '%s')\n [enum: ", strs[index].str, strs[init].str);
 
 	const size_t max_sz = 80;
-	size_t cur_sz = 0;
+	size_t cur_sz = 9;
 	for(size_t i = 0; i < strs.size(); ++i){
 		if(cur_sz + strs[i].size > max_sz){
 			cli.printf("\n        ");
-			cur_sz = 0;
+			cur_sz = 9;
 		}
 		
+		cur_sz += strs[i].size;
 		cli.printf("%s%s", strs[i].str, (i == strs.size() - 1) ? "" : ", ");
 	}
 	cli.printf(" ]\n");

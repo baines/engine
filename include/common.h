@@ -2,6 +2,7 @@
 #define COMMON_H_
 #include <array>
 #include <cstdint>
+#include <glm/glm.hpp>
 #include <experimental/string_view>
 
 using string_view = std::experimental::string_view;
@@ -24,6 +25,9 @@ struct GameState;
 struct ResourceHandle;
 struct CLI;
 struct GLObject;
+struct Sprite;
+struct SpriteBatch;
+struct Material;
 
 #endif
 

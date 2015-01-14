@@ -3,7 +3,6 @@
 #include "common.h"
 #include "gl_context.h"
 #include "util.h"
-#include <glm/glm.hpp>
 #include <vector>
 #include <initializer_list>
 

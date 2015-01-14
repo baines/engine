@@ -171,7 +171,6 @@ inline size_t utf8_char_index(const string_view& str, size_t utf32_index){
 }
 
 /* GLM stuff to determine if a type is a vector or matrix */
-#include <glm/glm.hpp>
 
 template<template<class, glm::precision> class V, class T>
 struct is_glm_vector {

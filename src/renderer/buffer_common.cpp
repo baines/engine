@@ -59,6 +59,11 @@ void StreamingBuffer::invalidate(BufferRange&& range){
 	unused_ranges.push_back(std::move(range));
 }
 
+void StreamingBuffer::invalidateAll(){
+	unused_bytes = data->capacity();
+	dirty = true;
+}
+
 void StreamingBuffer::update(){
 /* TODO: more efficient buffer streaming
 	https://www.opengl.org/wiki/Buffer_Object_Streaming

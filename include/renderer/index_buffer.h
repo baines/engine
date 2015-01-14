@@ -38,6 +38,16 @@ struct DynamicIndexBuffer : public IndexBuffer {
 	, stream_buf(GL_ELEMENT_ARRAY_BUFFER, indices){
 
 	}
+
+	void replace(size_t index, T val){
+		if((index + 1) * sizeof(T) > indices.size()) return;
+
+		stream_buf.invalidateAll();
+		auto* p = reinterpret_cast<const uint8_t*>(&val);
+		for(size_t i = 0; i < sizeof(T); ++i){
+			indices[index * sizeof(T) + i] = p[i];
+		}
+	}
 	
 	void push(T val){
 		auto* p = reinterpret_cast<const uint8_t*>(&val);
@@ -58,6 +68,10 @@ struct DynamicIndexBuffer : public IndexBuffer {
 
 	GLuint getID() const {
 		return stream_buf.getID();
+	}
+
+	size_t getSize() const {
+		return indices.size() / sizeof(T);
 	}
 
 	void bind(){

@@ -19,6 +19,7 @@ struct StreamingBuffer : public GLObject {
 	StreamingBuffer(GLenum type, std::vector<uint8_t>& buff);
 	void mark();
 	void invalidate(BufferRange&& range);
+	void invalidateAll();
 	void update();
 	void onGLContextRecreate();
 	GLuint getID() const {

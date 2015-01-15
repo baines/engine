@@ -2,10 +2,11 @@
 #define SAMPLER_H_
 #include "gl_context.h"
 #include <initializer_list>
+#include <map>
 
 struct RenderState;
 
-struct Sampler {
+struct Sampler : public GLObject {
 	struct Param {
 		GLenum key;
 		GLint val;
@@ -18,7 +19,10 @@ struct Sampler {
 	void setParam(GLenum key, GLint val);
 	
 	void bind(size_t tex_unit, RenderState& rs) const;
+
+	void onGLContextRecreate() override;
 private:
+	std::map<GLenum, GLint> params;
 	GLuint id;
 };
 

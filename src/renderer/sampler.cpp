@@ -1,12 +1,14 @@
 #include "sampler.h"
 #include "render_state.h"
 Sampler::Sampler()
-: id(0){
+: params()
+, id(0){
 	gl.GenSamplers(1, &id);
 }
 
 Sampler::Sampler(std::initializer_list<Param> params)
-: id(0) {
+: params()
+, id(0) {
 	gl.GenSamplers(1, &id);
 	
 	for(auto& p : params){
@@ -19,6 +21,7 @@ void Sampler::setParam(const Param& p){
 }
 
 void Sampler::setParam(GLenum key, GLint val){
+	params[key] = val;
 	gl.SamplerParameteri(id, key, val);
 }
 
@@ -29,3 +32,9 @@ void Sampler::bind(size_t tex_unit, RenderState& rs) const {
 	}
 }
 
+void Sampler::onGLContextRecreate(){
+	gl.GenSamplers(1, &id);
+	for(auto& p : params){
+		setParam(p.first, p.second);
+	}
+}

@@ -99,6 +99,4 @@ private:
 	std::map<uint32_t, ResourceHandle> resources;
 };
 
-//template<class T, class... Args> std::map<std::tuple<std::string, Args...>, T> ResourceSystem::Cache<T, Args...>::entries{};
-
 #endif

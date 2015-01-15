@@ -6,11 +6,17 @@ struct Material {
 
 	Material() = default;
 	Material(ShaderProgram& s)
-		: shader(&s), texture(), sampler(){}
+	: shader(&s), texture(), sampler(){}
+	
 	Material(ShaderProgram& s, Texture& tex)
-		: shader(&s), texture(&tex), sampler(){}
+	: shader(&s), texture(&tex), sampler(){
+		uniforms.setUniform("u_samp", { 0 });
+	}
+	
 	Material(ShaderProgram& s, Texture& tex, Sampler& samp)
-		: shader(&s), texture(&tex), sampler(&samp){}
+	: shader(&s), texture(&tex), sampler(&samp){
+		uniforms.setUniform("u_samp", { 0 });
+	}
 
 	ShaderUniforms uniforms;
 	ShaderProgram* shader;

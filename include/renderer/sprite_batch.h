@@ -7,7 +7,7 @@
 #include "renderable.h"
 #include <map>
 
-struct SpriteBatch {
+struct SpriteBatch : public BufferInvalidateListener {
 
 	SpriteBatch() = default;
 	SpriteBatch(Material& m, glm::ivec2 tex_cells = { 1, 1 });
@@ -22,9 +22,11 @@ struct SpriteBatch {
 
 	void draw(Renderer& r);
 
+	void onBufferRangeInvalidated(size_t off, size_t len) override;
+
 private:
 	struct SpriteInfo {
-		int v_off, i_off;
+		size_t v_off, i_off;
 		bool dirty, hide;
 	};
 

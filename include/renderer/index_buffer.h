@@ -5,10 +5,11 @@
 #include "resource_system.h"
 
 struct IndexBuffer : public GLObject {
-	virtual void   bind()          = 0;
-	virtual GLenum getType() const = 0;
-	virtual GLuint getID()   const = 0;
-	virtual void onGLContextRecreate(){}
+	virtual void   bind()              = 0;
+	virtual GLenum getType() const     = 0;
+	virtual GLuint getID()   const     = 0;
+	virtual void update()              = 0;
+	virtual void onGLContextRecreate() = 0;
 	virtual ~IndexBuffer(){}
 };
 
@@ -18,6 +19,7 @@ struct StaticIndexBuffer : public IndexBuffer {
 	void bind();
 	GLenum getType() const;
 	GLuint getID() const;
+	void update(){};
 	void onGLContextRecreate();
 	~StaticIndexBuffer();
 private:
@@ -35,18 +37,18 @@ template<class T>
 struct DynamicIndexBuffer : public IndexBuffer {
 	DynamicIndexBuffer()
 	: indices()
-	, stream_buf(GL_ELEMENT_ARRAY_BUFFER, indices){
+	, stream_buf(GL_ELEMENT_ARRAY_BUFFER, indices, false){
 
 	}
 
 	void replace(size_t index, T val){
 		if((index + 1) * sizeof(T) > indices.size()) return;
 
-		stream_buf.invalidateAll();
 		auto* p = reinterpret_cast<const uint8_t*>(&val);
 		for(size_t i = 0; i < sizeof(T); ++i){
 			indices[index * sizeof(T) + i] = p[i];
 		}
+		stream_buf.invalidateAll();
 	}
 	
 	void push(T val){
@@ -76,7 +78,11 @@ struct DynamicIndexBuffer : public IndexBuffer {
 
 	void bind(){
 		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, stream_buf.getID());
-	}	
+	}
+
+	void update(){
+		stream_buf.update();
+	}
 
 	virtual void onGLContextRecreate(){
 		gl.validateObject(stream_buf);

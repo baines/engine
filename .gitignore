@@ -3,7 +3,7 @@
 *~
 test/test
 test/*.log
-test/settings.cfg
+test/data/settings.cfg
 build/internal.zip
 *.trace
 engine.vim

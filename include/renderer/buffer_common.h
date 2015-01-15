@@ -16,7 +16,7 @@ struct BufferRange {
 struct StreamingBuffer : public GLObject {
 
 	StreamingBuffer();
-	StreamingBuffer(GLenum type, std::vector<uint8_t>& buff);
+	StreamingBuffer(GLenum type, std::vector<uint8_t>& buff, bool append_only);
 	void mark();
 	void invalidate(BufferRange&& range);
 	void invalidateAll();
@@ -33,7 +33,7 @@ private:
 	GLuint id;
 	GLenum type;
 	size_t prev_size, prev_capacity, unused_bytes;
-	bool dirty;
+	bool dirty, no_async;
 };
 
 #endif

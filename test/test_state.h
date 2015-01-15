@@ -1,9 +1,15 @@
+#ifndef TEST_STATE_H_
+#define TEST_STATE_H_
 #include "engine.h"
 #include "game_state.h"
 #include "resource.h"
 #include "shader.h"
 #include "font.h"
 #include "text.h"
+#include "texture.h"
+#include "material.h"
+#include "sprite_batch.h"
+#include "sprite.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -21,45 +27,66 @@ struct TestState : public GameState {
 
 	TestState(Engine& e)
 	: timer(0)
-	, vbo(make_resource(vertices), "a_pos:2f|a_col:4BN")
-	, vs(e, {"test.glslv"})
-	, fs(e, {"test.glslf"})
-	, shader(*vs, *fs)
-	, vstate()
-	, drawme(&vstate, &shader, &uniforms, RType{GL_TRIANGLES}, RCount{3})
-	, font(e, {"FreeSans.ttf"}, 32)
-	, text(e, *font, { 270, 208 }, "Testing!") {
-
+	, tri_vbo       (make_resource(vertices), "a_pos:2f|a_col:4BN")
+	, tri_vs        (e, {"test.glslv"})
+	, sprite_vs     (e, {"sprite.glslv"})
+	, tri_fs        (e, {"test.glslf"})
+	, sprite_fs     (e, {"sprite.glslf"})
+	, tri_shader    (*tri_vs, *tri_fs)
+	, sprite_shader (*sprite_vs, *sprite_fs)
+	, tri_vstate    ()
+	, triangle      (&tri_vstate, &tri_shader, &tri_uniforms, RType{GL_TRIANGLES}, RCount{3})
+	, font          (e, {"FreeSans.ttf"}, 32)
+	, text          (e, *font, { 270, 208 }, "Testing!")
+	, samp_nearest  ({{ GL_TEXTURE_MAG_FILTER, GL_NEAREST }})
+	, sprite_tex    (e, {"test_sprite.png"})
+	, sprite_mat    (sprite_shader, *(*sprite_tex), samp_nearest)
+	, sprite_batch  (sprite_mat)
+	, test_sprite   (sprite_batch, { 200, 200 }, { 64, 64 }) {
+		tri_vstate.setVertexBuffers({ &tri_vbo });
 	}
 	
 	bool onInit(Engine& e){
-		vs.load();
-		fs.load();
-		shader.link();
-		vstate.setVertexBuffers({ &vbo });
+		tri_shader.link();
+		sprite_shader.link();
 		
 		return true;
 	}
 	
 	void update(Engine& e, uint32_t delta){
-		timer = (timer + delta / 2) % 628;
-		uniforms.setUniform("timer", { 1.0f + sinf(timer / 100.0f) });
+		timer = (timer + delta / 2);
+		float tri_timer    = sinf((timer % 628)  / 100.0f);
+		float sprite_timer = sinf((timer % 1256) / 200.0f);
+
+		tri_uniforms.setUniform("timer", { 1.0f + tri_timer });
+		test_sprite.setPosition({ 320 + sprite_timer * 200.0f, 400.0f });
 	}
 	
-	void draw(Renderer& r){
-		r.addRenderable(drawme);
-		text.draw(r);
+	void draw(Renderer& renderer){
+		renderer.addRenderable(triangle);
+		text.draw(renderer);
+		sprite_batch.draw(renderer);
 	}
 private:
-	int timer;
-	StaticVertexBuffer vbo;
-	Resource<VertShader> vs;
-	Resource<FragShader> fs;
-	ShaderProgram shader;
-	ShaderUniforms uniforms;
-	VertexState vstate;
-	Renderable drawme;
+	unsigned int timer;
+	StaticVertexBuffer tri_vbo;
+
+	Resource<VertShader> tri_vs, sprite_vs;
+	Resource<FragShader> tri_fs, sprite_fs;
+	ShaderProgram tri_shader, sprite_shader;
+
+	ShaderUniforms tri_uniforms;
+	VertexState tri_vstate;
+	Renderable triangle;
 	
 	Resource<Font, uint16_t> font;
 	Text text;
+
+	Sampler samp_nearest;
+	Resource<Texture2D> sprite_tex;
+	Material sprite_mat;
+	SpriteBatch sprite_batch;
+	Sprite test_sprite;
 };
+
+#endif

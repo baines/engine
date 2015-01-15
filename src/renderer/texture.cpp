@@ -149,15 +149,16 @@ Texture2D& Texture2D::operator=(Texture2D&& other){
 	return *this;
 }
 
-void Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
+bool Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	uint8_t* pixels = stbi_load_from_memory(img.data(), img.size(), &w, &h, nullptr, 4);
 	
 	gl.GenTextures(1, &id);
 	gl.BindTexture(GL_TEXTURE_2D, id);
-	gl.TexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA, w, h);
+	gl.TexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
 	gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
 	
 	stbi_image_free(pixels);
+	return true;
 }
 
 bool Texture2D::setSwizzle(const std::array<GLint, 4>& swizzle){

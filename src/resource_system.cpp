@@ -29,7 +29,10 @@ ResourceSystem::ResourceSystem(const char* argv0){
 	if(!PHYSFS_mountMemory(_internal_zip_start, sz, NULL, "internal.zip", NULL, 0)){
 		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
-	if(!PHYSFS_mount(PHYSFS_getBaseDir(), NULL, 0)){
+
+	char path[PATH_MAX] = {};
+	snprintf(path, sizeof(path), "%s%sdata", PHYSFS_getBaseDir(), PHYSFS_getDirSeparator());
+	if(!PHYSFS_mount(path, NULL, 0)){
 		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
 }

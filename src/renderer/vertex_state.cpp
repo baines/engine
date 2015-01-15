@@ -24,8 +24,10 @@ void VertexState::setVertexBuffers(std::initializer_list<VertexBuffer*> buffers)
 }
 
 void VertexState::setIndexBuffer(IndexBuffer* buff){
-	gl.BindVertexArray(id);
-	buff->bind();
+	if(buff){
+		gl.BindVertexArray(id);
+		buff->bind();
+	}
 	
 	index_buffer = buff;
 }
@@ -93,6 +95,7 @@ void VertexState::bind(RenderState& rs){
 	for(auto* vb : vertex_buffers){
 		vb->update();
 	}
+	if(index_buffer) index_buffer->update();
 }
 
 void VertexState::onGLContextRecreate(){

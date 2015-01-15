@@ -21,7 +21,7 @@ struct Texture2D : public Texture, public GLObject {
 	Texture2D& operator=(const Texture2D&) = delete;
 	Texture2D& operator=(Texture2D&&);
 	
-	void loadFromResource(Engine& e, const ResourceHandle& img);
+	bool loadFromResource(Engine& e, const ResourceHandle& img);
 	
 	GLenum getType(void) const;
 	bool isValid(void) const;

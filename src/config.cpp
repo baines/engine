@@ -141,12 +141,6 @@ void ArgContext::parse(Config& c){
 	}
 }
 
-struct Override {
-	str_const name;
-	int type;
-	variant<int, bool, float, str_const, std::string> data;
-};
-
 }
 
 Config::Config(Engine& e, int argc, char** argv){

@@ -81,7 +81,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 }
 
 void TextSystem::addText(Text& t){
-	const GLint off = text_buffer.getSize() / sizeof(TextVert);
+	const GLint off = text_buffer.getSize();
 	const GLsizei count = writeString(t, t.start_pos, t.str);
 
 	text_renderables.push_back(
@@ -106,7 +106,7 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 	// then we can just push the new characters on the end.
 	if(!pos_changed
 	&& newstr.size() >= t.str.size()
-	&& (t.renderable->offset + t.renderable->count) * sizeof(TextVert) == text_buffer.getSize()
+	&& size_t(t.renderable->offset + t.renderable->count) == text_buffer.getSize()
 	&& newstr.find(t.str) == 0){
 
 		auto suffix = u32string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());

@@ -144,7 +144,7 @@ GLint StaticVertexBuffer::getStride(void) const {
 }
 
 size_t StaticVertexBuffer::getSize(void) const {
-	return data.size();
+	return stride ? data.size() / stride : 0;
 }
 
 GLuint StaticVertexBuffer::getID(void) const {
@@ -181,7 +181,7 @@ DynamicVertexBuffer::DynamicVertexBuffer(const char* fmt, size_t initial_capacit
 : data()
 , attrs()
 , stride(0)
-, stream_buf(GL_ARRAY_BUFFER, data) {
+, stream_buf(GL_ARRAY_BUFFER, data, true) {
 	parse_attribs(fmt, attrs, stride);
 	data.reserve(initial_capacity);	
 }
@@ -208,7 +208,7 @@ GLint DynamicVertexBuffer::getStride() const {
 }
 
 size_t DynamicVertexBuffer::getSize() const {
-	return data.size();
+	return stride ? data.size() / stride : 0;
 }
 
 GLuint DynamicVertexBuffer::getID() const {

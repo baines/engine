@@ -51,6 +51,12 @@ void StateSystem::onText(Engine& e, SDL_TextInputEvent& ev){
 	states.back()->onText(e, ev.text);
 }
 
+void StateSystem::onResize(Engine& e, int w, int h){
+	for(auto* s : states){
+		s->onResize(e, w, h);
+	}
+}
+
 void StateSystem::processStateChanges(Engine& e){
 	GameState* current_state = states.empty() ? nullptr : states.back();
 	

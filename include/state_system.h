@@ -14,6 +14,8 @@ struct StateSystem {
 	void onMotion(Engine& e, SDL_Event& event);
 	void onText(Engine& e, SDL_TextInputEvent& event);
 
+	void onResize(Engine& e, int w, int h);
+
 	void processStateChanges(Engine& e);
 	void update(Engine& e, uint32_t delta);
 	void draw(Renderer& r);

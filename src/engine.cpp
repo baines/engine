@@ -60,6 +60,7 @@ bool Engine::run(void){
 			case SDL_WINDOWEVENT: {
 				if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
 					renderer.handleResize(e.window.data1, e.window.data2);
+					state.onResize(*this, e.window.data1, e.window.data2);
 				}
 				break;
 			}

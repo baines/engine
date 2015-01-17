@@ -42,7 +42,8 @@ struct TestState : public GameState {
 	, sprite_tex    (e, {"test_sprite.png"})
 	, sprite_mat    (sprite_shader, *(*sprite_tex), samp_nearest)
 	, sprite_batch  (sprite_mat)
-	, test_sprite   (sprite_batch, { 200, 200 }, { 64, 64 }) {
+	, test_sprite   (sprite_batch, { 200, 200 }, { 64, 64 })
+	, center        ({ 320, 240 }){
 		tri_vstate.setVertexBuffers({ &tri_vbo });
 	}
 	
@@ -52,6 +53,13 @@ struct TestState : public GameState {
 		
 		return true;
 	}
+
+	void onResize(Engine& e, int w, int h){
+		center = { w / 2, h / 2 };
+
+		glm::ivec2 text_sz = text.getEndPos() - text.getStartPos();
+		text.update("Testing!", center - (text_sz / 2));
+	}
 	
 	void update(Engine& e, uint32_t delta){
 		timer = (timer + delta / 2);
@@ -59,7 +67,7 @@ struct TestState : public GameState {
 		float sprite_timer = sinf((timer % 1256) / 200.0f);
 
 		tri_uniforms.setUniform("timer", { 1.0f + tri_timer });
-		test_sprite.setPosition({ 320 + sprite_timer * 200.0f, 400.0f });
+		test_sprite.setPosition({ center.x + sprite_timer * 200.0f, (center.y + 140.0f) });
 	}
 	
 	void draw(Renderer& renderer){
@@ -87,6 +95,8 @@ private:
 	Material sprite_mat;
 	SpriteBatch sprite_batch;
 	Sprite test_sprite;
+
+	glm::ivec2 center;
 };
 
 #endif

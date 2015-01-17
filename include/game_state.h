@@ -12,6 +12,9 @@ struct GameState {
 
 	// window focus gained / lost
 	virtual void onFocus(Engine& e, bool gained){}
+
+	// window resized
+	virtual void onResize(Engine& e, int w, int h){}
 	
 	virtual bool onInput(Engine& e, int action, bool pressed){ 
 		return false;

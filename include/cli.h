@@ -6,6 +6,10 @@
 #include "font.h"
 #include "text.h"
 #include <vector>
+#include "material.h"
+#include "sprite_batch.h"
+#include "sprite.h"
+#include "shader.h"
 
 struct CLI : public GameState {
 	CLI(Engine& e);
@@ -13,6 +17,7 @@ struct CLI : public GameState {
 	virtual bool onInput(Engine& e, int action, bool pressed);
 	virtual void onText(Engine& e, const char* text);
 	virtual void onStateChange(Engine& e, bool activated);
+	virtual void onResize(Engine& e, int w, int h);
 	virtual void update(Engine& e, uint32_t delta);
 	virtual void draw(Renderer& r);
 	
@@ -30,14 +35,22 @@ private:
 
 	Engine& engine;
 	bool toggling, active, ignore_next_text, show_cursor, output_dirty, input_dirty;
-	int blink_timer;
+	int blink_timer, bg_scroll_timer;
 
 	CVarInt* scrollback_lines;
 	CVarInt* visible_lines;
 	CVarInt* font_height;
 	CVarInt* cursor_blink_ms;
 
+	size_t prev_vis_lines;
+
 	Resource<Font, uint16_t> font;
+	Resource<VertShader> bg_vs;
+	Resource<FragShader> bg_fs;
+	ShaderProgram bg_shader;
+	Material bg_material;
+	SpriteBatch bg_batch;
+	Sprite bg_sprite;
 	
 	Text output_text;
 	std::vector<std::string> output_lines;

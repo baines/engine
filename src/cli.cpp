@@ -40,11 +40,19 @@ CLI::CLI(Engine& e)
 , output_dirty     (false)
 , input_dirty      (false)
 , blink_timer      (0)
+, bg_scroll_timer  (0)
 , scrollback_lines (e.cfg.addVar<CVarInt>("cli_scrollback_lines", 64, 1, 8192))
 , visible_lines    (e.cfg.addVar<CVarInt>("cli_visible_lines",    5, 1, 64))
 , font_height      (e.cfg.addVar<CVarInt>("cli_font_height",      16, 8, 32))
 , cursor_blink_ms  (e.cfg.addVar<CVarInt>("cli_cursor_blink_ms",  500, 100, 10000))
+, prev_vis_lines   (visible_lines->val)
 , font             (e, { "DejaVuSansMono.ttf" }, font_height->val)
+, bg_vs            (e, { "cli_bg.glslv" })
+, bg_fs            (e, { "cli_bg.glslf" })
+, bg_shader        (*bg_vs, *bg_fs)
+, bg_material      (bg_shader)
+, bg_batch         (bg_material)
+, bg_sprite        (bg_batch)
 , output_text      (e, *font, { 0, 0 }, "")
 , output_lines     (scrollback_lines->val)
 , output_line_idx  (0)
@@ -68,12 +76,30 @@ CLI::CLI(Engine& e)
 	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
 	e.input.watchAction(this, "console",          ACT_IGNORE_TEXT);
 
-	e.input.enableText(this, true, { 0, font_height->val * (visible_lines->val + 1) });
+	int w = e.cfg.getVar<CVarInt>("vid_width")->val,
+	   	h = font_height->val * (visible_lines->val + 1);
+
+	e.input.enableText(this, true, SDL_Rect{ 0, h });
+
+	bg_shader.link();
+	bg_sprite.setSize({ w, 4 + h });
+	bg_sprite.setPosition({ w / 2, 2 + h / 2 });
+	bg_material.uniforms.setUniform("height", { h + 4.0f });
 }
 
 void CLI::onStateChange(Engine& e, bool activated){
 	active = activated;
 	toggling = false;
+
+	if(active){
+		// this can probably be handled better somehow...
+		onResize(e, e.cfg.getVar<CVarInt>("vid_width")->val, 0);
+	}
+}
+
+void CLI::onResize(Engine& e, int w, int h){
+	bg_sprite.setSize({ w, bg_sprite.getSize().y });
+	bg_sprite.setPosition({ w / 2, bg_sprite.getPosition().y });
 }
 
 void CLI::toggle(){
@@ -291,7 +317,9 @@ void CLI::update(Engine& e, uint32_t delta){
 		show_cursor = !show_cursor;
 	}
 
-	if((size_t)font_height->val != font->getLineHeight()){
+	bool font_size_changed = (size_t) font_height->val != font->getLineHeight();
+
+	if(font_size_changed){
 		font = Resource<Font, uint16_t>(e, { "DejaVuSansMono.ttf" }, font_height->val);
 		output_dirty = true;
 		input_dirty = true;
@@ -300,11 +328,26 @@ void CLI::update(Engine& e, uint32_t delta){
 	if((size_t)scrollback_lines->val != output_lines.size()){
 		output_lines.resize(scrollback_lines->val);
 	}
+
+	if(font_size_changed || (size_t)visible_lines->val != prev_vis_lines){
+		int height = font_height->val * (visible_lines->val + 1);
+
+		bg_sprite.setSize({ bg_sprite.getSize().x, 4 + height });
+		bg_sprite.setPosition({ bg_sprite.getPosition().x, 2 + height / 2 });
+		bg_material.uniforms.setUniform("height", { height + 4.0f });
+
+		prev_vis_lines = visible_lines->val;
+	}
+
+	bg_scroll_timer += delta;
+	bg_material.uniforms.setUniform("timer",  { bg_scroll_timer / 40.0f });
 }
 
 void CLI::draw(Renderer& r){
 	if(!active) return;
 	
+	bg_batch.draw(r);
+
 	if(output_dirty){
 		std::string output_concat;
 		for(int i = visible_lines->val; i > 0; --i){

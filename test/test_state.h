@@ -58,7 +58,17 @@ struct TestState : public GameState {
 		center = { w / 2, h / 2 };
 
 		glm::ivec2 text_sz = text.getEndPos() - text.getStartPos();
-		text.update("Testing!", center - (text_sz / 2));
+		text.update(
+			TXT_RED     "T"
+			TXT_YELLOW  "e"
+			TXT_GREEN   "s"
+			TXT_BLUE    "t"
+			TXT_CYAN    "i"
+			TXT_MAGENTA "n"
+			TXT_WHITE   "g"
+			TXT_BLACK   "!", 
+			center - (text_sz / 2)
+		);
 	}
 	
 	void update(Engine& e, uint32_t delta){

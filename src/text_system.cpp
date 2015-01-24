@@ -4,17 +4,53 @@
 #include <algorithm>
 
 struct TextVert {
-	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty)
-	: x(x), y(y), tex_x(tx), tex_y(ty){}
+	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty, uint32_t c = 0xffffffff)
+	: x(x), y(y), tex_x(tx), tex_y(ty) {
+		color[0] = c >> 24;
+		color[1] = c >> 16;
+		color[2] = c >> 8;
+		color[3] = c;
+	}
 
 	int16_t x, y;
 	uint16_t tex_x, tex_y;
+	uint8_t color[4];
 };
+
+static char32_t COLORCODE_START = 0xfdd0;
+static size_t COLORCODE_COUNT = 16;
+
+bool is_color_code(char32_t c){
+	return c >= COLORCODE_START && c < COLORCODE_START + COLORCODE_COUNT;
+}
+
+bool get_color_code(char32_t c, const std::array<uint32_t, 16>& pal, uint32_t* out = nullptr){
+	if(!is_color_code(c)) return false;
+
+	if(out) *out = pal[c - COLORCODE_START];
+	return true;
+}
+
+size_t count_verts(const u32string_view& str){
+	size_t result = 0;
+
+	for(size_t i = 0; i < str.size(); ++i){
+		if(is_color_code(str[i])){
+			continue;
+		} else if(str[i] == '\n'){
+			result += 2;
+		} else {
+			result += 4;
+		}
+	}
+
+	return result;
+}
 
 TextSystem::TextSystem(Engine& e)
 : ft_lib(nullptr)
 , v_state()
-, text_buffer("a_pos:2s|a_tex:2SN", 512)
+, text_buffer("a_pos:2s|a_tex:2SN|a_col:4BN", 512)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
 , text_shader(*text_vs, *text_fs)
@@ -43,7 +79,14 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 	float x_scale = USHRT_MAX / (float)tw,
 	      y_scale = USHRT_MAX / (float)th;
 
+	uint32_t current_color = 0xffffffff;
+	size_t num_verts = 0;
+	
 	for(size_t i = 0; i < str_len; ++i){
+
+		if(get_color_code(str[i], t.palette, &current_color)){
+			continue;
+		}
 		
 		if(str[i] == '\n'){
 			text_buffer.push(TextVert(x + w, y + h, 0, 0));
@@ -51,9 +94,8 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 			y += h;
 			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
 
-			//XXX: two unnecessary vertices, but adding them means num_verts == num_chars * 4.
-			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
-			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
+			num_verts += 2;
+
 			continue;
 		}
 
@@ -66,18 +108,20 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 		         tx1 = (ginfo.x + ginfo.width) * x_scale,
 		         ty1 = (ginfo.y + h) * y_scale;
 		
-		text_buffer.push(TextVert(x + w, y + 0, tx0, ty0));
-		text_buffer.push(TextVert(x + w, y + h, tx0, ty1));
+		text_buffer.push(TextVert(x + w, y + 0, tx0, ty0, current_color));
+		text_buffer.push(TextVert(x + w, y + h, tx0, ty1, current_color));
 		
 		w += ginfo.width;
 		
-		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0));
-		text_buffer.push(TextVert(x + w, y + h, tx1, ty1));
+		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0, current_color));
+		text_buffer.push(TextVert(x + w, y + h, tx1, ty1, current_color));
+
+		num_verts += 4;
 	}
 
 	t.end_pos = glm::ivec2(x + w, y);
 
-	return str_len * 4;
+	return num_verts;
 }
 
 void TextSystem::addText(Text& t){
@@ -124,24 +168,14 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 		if(i == 0 && !pos_changed){
 			size_t start = t.renderable->offset * sizeof(TextVert),
 			       count = t.renderable->count * sizeof(TextVert),
-			       v_diff = (t.str.size() - newstr.size()) * 4,
-			       diff = v_diff * sizeof(TextVert);
+			       verts = count_verts(newstr),
+				   bytes = verts * sizeof(TextVert);
 
-			text_buffer.invalidate(BufferRange{ (start + count) - diff, diff, this });
+			text_buffer.invalidate(BufferRange{ start + bytes, count - bytes, this });
 
-			t.renderable->count -= v_diff;
-	
-			t.end_pos = t.start_pos;
-			for(const char32_t* c = newstr.data(); *c; ++c){
-				if(*c == '\n'){
-					t.end_pos.x = t.start_pos.x;
-					t.end_pos.y += (*t.font)->getLineHeight();
-				} else {
-					t.end_pos.x += (*t.font)->getGlyphInfo(*c).width;
-				}
-			}
-
+			t.renderable->count = verts;
 			t.str = std::move(newstr.to_string());
+			t.end_pos = t.getPos(newstr.size());
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);

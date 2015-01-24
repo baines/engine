@@ -5,9 +5,36 @@
 #include "engine.h"
 #include <glm/glm.hpp>
 
+static const size_t COLORCODE_START = 0xfdd0;
+static const size_t COLORCODE_COUNT = 16;
+
+static const std::array<uint32_t, COLORCODE_COUNT> default_palette = {
+	0x000000ff,
+	0xa90707ff,
+	0x05801fff,
+	0x8c8e0bff,
+	0x2c2fabff,
+	0x960f8eff,
+	0x0d5ca0ff,
+	0x8d959bff,
+	0x414447ff,
+	0xdc2c2cff,
+	0x28ba1cff,
+	0xece63fff,
+	0x5053c8ff,
+	0xc450c8ff,
+	0x50c8c1ff,
+	0xffffffff
+};
+
+static bool is_color_code(char32_t c){
+	return c >= COLORCODE_START && c < COLORCODE_START + COLORCODE_COUNT;
+}
+
 Text::Text()
 : engine(nullptr)
 , font(nullptr)
+, palette(default_palette)
 , start_pos()
 , end_pos()
 , str()
@@ -20,6 +47,7 @@ Text::Text()
 Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s)
 : engine(&e)
 , font(&f)
+, palette(default_palette)
 , start_pos(pos)
 , end_pos()
 , str(to_utf32(s))
@@ -34,6 +62,7 @@ Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const stri
 Text::Text(Text&& other)
 : engine(other.engine)
 , font(other.font)
+, palette(other.palette)
 , start_pos(other.start_pos)
 , end_pos(other.end_pos)
 , str(std::move(other.str))
@@ -48,6 +77,7 @@ Text::Text(Text&& other)
 Text& Text::operator=(Text&& other){
 	engine = other.engine;
 	font = other.font;
+	palette = other.palette;
 	start_pos = other.start_pos;
 	end_pos = other.end_pos;
 	str = std::move(other.str);
@@ -102,6 +132,7 @@ glm::ivec2 Text::getPos(size_t index) const {
 
 	for(size_t i = 0; i < index; ++ i){
 		char32_t c = str[i];
+		if(is_color_code(c)) continue;
 
 		if(c == '\n'){
 			result.x = start_pos.x;

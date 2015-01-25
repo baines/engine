@@ -17,7 +17,7 @@ struct Texture {
 
 struct Texture2D : public Texture, public GLObject {
 	Texture2D();
-	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* data);
+	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const void* data);
 	Texture2D& operator=(const Texture2D&) = delete;
 	Texture2D& operator=(Texture2D&&);
 	

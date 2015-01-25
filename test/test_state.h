@@ -66,7 +66,7 @@ struct TestState : public GameState {
 			TXT_CYAN    "i"
 			TXT_MAGENTA "n"
 			TXT_WHITE   "g"
-			TXT_BLACK   "!", 
+			TXT_GRAY    "!",
 			center - (text_sz / 2)
 		);
 	}

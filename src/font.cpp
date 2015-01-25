@@ -2,10 +2,11 @@
 #include "engine.h"
 #include "text_system.h"
 #include <tuple>
+#include FT_STROKER_H
 
 struct GlyphBitmapInfo {
 	FT_Bitmap* bmp;
-	int bearing_x, bearing_y, advance;
+	long bearing_x, bearing_y, advance;
 };
 
 struct GlyphTextureAtlas {
@@ -21,7 +22,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	const FT_Bitmap* bmp = glyph.bmp;
 	int prev_w = img.w, prev_h = img.h;
 	
-	if(img.pen_x + glyph.bearing_x + glyph.advance > img.w){
+	if(img.pen_x + glyph.advance > img.w){
 		img.pen_x = 0;
 		img.pen_y += img.line_height;
 	}
@@ -32,7 +33,9 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 		memset(img.mem + (prev_w * prev_h), 0, (img.w * img.h) - (prev_w * prev_h));
 	}
 
-	const int rows_avail = std::min<int>(img.line_height, img.descender + glyph.bearing_y);
+	const int rows_avail = std::min<int>(img.line_height, 
+		img.line_height - (img.ascender - glyph.bearing_y)
+	);
 	const int rows = std::min(rows_avail, bmp->rows);
 	
 	for(int i = 0; i < rows; ++i){
@@ -96,6 +99,16 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	
 	assert(FT_IS_SCALABLE(face));
+
+	FT_Stroker ft_stroker = nullptr;
+	FT_Stroker_New(ft_lib, &ft_stroker);
+	FT_Stroker_Set(
+		ft_stroker,
+		112,
+		FT_STROKER_LINECAP_ROUND,
+		FT_STROKER_LINEJOIN_ROUND,
+		0
+	);
 		
 	double scale = (double)face->units_per_EM / (double)face->height;
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
@@ -137,6 +150,17 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		nullptr
 	};
 	
+	GlyphTextureAtlas outline = {
+		init_w,
+		0,
+		0,
+		static_cast<int>(height),
+		height,
+		face->size->metrics.ascender >> 6,
+		-(face->size->metrics.descender >> 6),
+		nullptr
+	};
+	
 	bool render_unknown = true;
 	
 	for(uint16_t i = utf_lo; i < utf_hi; ++i){
@@ -158,56 +182,90 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			--i;
 		}
 
-		FT_Int32 flags = FT_LOAD_RENDER;
+		FT_Int32 flags = 0;
 		if(height >= 16) flags |= FT_LOAD_FORCE_AUTOHINT;
 		
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
+			FT_Glyph ft_glyph = nullptr, ft_outline = nullptr;
+			assert(FT_Get_Glyph(face->glyph, &ft_glyph) == 0);
+			assert(FT_Glyph_Copy(ft_glyph, &ft_outline) == 0);
 
-			glyph.width = face->glyph->advance.x >> 6;
+			assert(FT_Glyph_StrokeBorder(&ft_outline, ft_stroker, 0, 1) == 0);
+			assert(FT_Glyph_To_Bitmap(&ft_outline, FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
+			assert(FT_Glyph_To_Bitmap(&ft_glyph, FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
 
-			const GlyphBitmapInfo bmpinfo = {
-				&face->glyph->bitmap,
-				face->glyph->bitmap_left,
-				face->glyph->bitmap_top,
-				std::max<int>(glyph.width, face->glyph->bitmap.width)
+			FT_BitmapGlyph ft_bmp = (FT_BitmapGlyph)ft_glyph;
+			FT_BitmapGlyph ft_outline_bmp = (FT_BitmapGlyph)ft_outline;
+
+			long width = std::max<long>({
+				ft_glyph->advance.x >> 16,
+				ft_outline->advance.x >> 16,
+				ft_bmp->bitmap.width,
+				ft_outline_bmp->bitmap.width
+			});
+			
+			const GlyphBitmapInfo outline_info = {
+				&ft_outline_bmp->bitmap,
+				ft_outline_bmp->left,
+				ft_outline_bmp->top,
+				width
+			};
+
+			const GlyphBitmapInfo img_info = {
+				&ft_bmp->bitmap,
+				ft_bmp->left,
+				ft_bmp->top,
+				width
 			};
 		
-			render_glyph(bmpinfo, img);
+			render_glyph(outline_info, outline);
+			render_glyph(img_info, img);
 			
-			glyph.x = img.pen_x;
-			glyph.y = img.pen_y - img.line_height;
+			glyph.width = ft_outline->advance.x >> 16;
+			glyph.x = outline.pen_x;
+			glyph.y = outline.pen_y - outline.line_height;
 			
-			img.pen_x += 1 + bmpinfo.advance;
+			outline.pen_x += 1 + width;
+			img.pen_x += 1 + width;
+
+			FT_Done_Glyph(ft_glyph);
+			FT_Done_Glyph(ft_outline);
 		}
 		
 		glyph_info.push_back(glyph);
 	}
-	
-	int old_h = img.h;
-	img.h = next_pow_of_2(img.h);
-	img.mem = (uint8_t*)realloc(img.mem, img.w * img.h);
-	memset(img.mem + (img.w * old_h), 0, (img.w * img.h) - (img.w * old_h));
+
+	size_t sz = img.w * img.h,
+		   combined_w = img.w,
+		   combined_h = next_pow_of_2(img.h);
+
+	uint8_t* combined = new uint8_t[combined_w * combined_h * 2]();
+
+	for(size_t i = 0; i < sz * 2; ++i){
+		combined[i] = (i % 2) ? outline.mem[i/2] : img.mem[i/2];
+	}
 	
 	bool do_swizzle = false;
-	GLenum int_fmt = GL_ALPHA8;
+	GLenum int_fmt = GL_LUMINANCE8_ALPHA8;
 	
 	//TODO: use glInternalFormatQuery instead of extensions (if available)?
 	if(gl.hasExtension("ARB_texture_compression_rgtc")
 	|| gl.hasExtension("EXT_texture_compression_rgtc")){
-		int_fmt = GL_COMPRESSED_RED_RGTC1;
+		int_fmt = GL_COMPRESSED_RG_RGTC2;
 		do_swizzle = true;
 	} else if(gl.version > 30 || gl.hasExtension("ARB_texture_rg")){
-		int_fmt = GL_R8;
+		int_fmt = GL_RG8;
 		do_swizzle = true;
 	}
 	
 	gl.validateObject(atlas);
-	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, img.w, img.h, img.mem);
+	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, combined_w, combined_h, combined);
 	if(do_swizzle){
-		atlas.setSwizzle({ GL_ZERO, GL_ZERO, GL_ZERO, GL_RED });
+		atlas.setSwizzle({ GL_GREEN, GL_GREEN, GL_GREEN, GL_RED });
 	}
 
 	free(img.mem);
+	delete [] combined;
 	
 	return true;
 }

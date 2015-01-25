@@ -131,7 +131,7 @@ Texture2D::Texture2D()
 
 }
 
-Texture2D::Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const uint8_t* data)
+Texture2D::Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const void* data)
 : id(0)
 , w(w)
 , h(h) {

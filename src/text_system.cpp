@@ -79,7 +79,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 	float x_scale = USHRT_MAX / (float)tw,
 	      y_scale = USHRT_MAX / (float)th;
 
-	uint32_t current_color = 0xffffffff;
+	uint32_t current_color = t.palette[COLORCODE_COUNT - 1]; // white in default palette
 	size_t num_verts = 0;
 	
 	for(size_t i = 0; i < str_len; ++i){

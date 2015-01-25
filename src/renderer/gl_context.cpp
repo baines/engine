@@ -1,8 +1,8 @@
 #include "gl_context.h"
 #include "engine.h"
 #include "enums.h"
+#include "util.h"
 
-#define STRINGIFY(name) #name
 #define GL_STRINGIFY(name) STRINGIFY(gl##name)
 
 GLContext gl;

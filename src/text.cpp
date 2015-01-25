@@ -92,6 +92,18 @@ Text& Text::operator=(Text&& other){
 	return *this;
 }
 
+void Text::setPalette(const std::array<uint32_t, 16>& colors){
+	palette = colors;
+}
+
+void Text::resetPalette(){
+	palette = default_palette;
+}
+
+std::array<uint32_t, 16> Text::getDefaultPalette(){
+	return default_palette;
+}
+
 int Text::update(const string_view& newstr){
 	return update(newstr, start_pos); 
 }

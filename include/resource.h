@@ -28,9 +28,9 @@ private:
 		Resource* res;
 	};
 
-	template<unsigned... S>
-	void create_data(seq<S...>){
-		data = std::make_shared<GLRes>(this, std::get<S>(args)...);
+	template<size_t... I>
+	void create_data(std::index_sequence<I...>){
+		data = std::make_shared<GLRes>(this, std::get<I>(args)...);
 	}
 
 	std::vector<const char*> res_names;

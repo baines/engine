@@ -8,22 +8,24 @@
 
 struct Font;
 
-#define TXT_BLACK         "\xef\xb7\x90"
-#define TXT_DARK_RED      "\xef\xb7\x91"
-#define TXT_DARK_GREEN    "\xef\xb7\x92"
-#define TXT_DARK_YELLOW   "\xef\xb7\x93"
-#define TXT_DARK_BLUE     "\xef\xb7\x94"
-#define TXT_DARK_MAGENTA  "\xef\xb7\x95"
-#define TXT_DARK_CYAN     "\xef\xb7\x96"
-#define TXT_GRAY          "\xef\xb7\x97"
-#define TXT_DARK_GRAY     "\xef\xb7\x98"
-#define TXT_RED           "\xef\xb7\x99"
-#define TXT_GREEN         "\xef\xb7\x9a"
-#define TXT_YELLOW        "\xef\xb7\x9b"
-#define TXT_BLUE          "\xef\xb7\x9c"
-#define TXT_MAGENTA       "\xef\xb7\x9d"
-#define TXT_CYAN          "\xef\xb7\x9e"
-#define TXT_WHITE         "\xef\xb7\x9f"
+#define TXT_COLOR(c)      "\xef\xb7" STRINGIFY(\x9 ## c)
+
+#define TXT_BLACK         TXT_COLOR(0)
+#define TXT_DARK_RED      TXT_COLOR(1)
+#define TXT_DARK_GREEN    TXT_COLOR(2)
+#define TXT_DARK_YELLOW   TXT_COLOR(3)
+#define TXT_DARK_BLUE     TXT_COLOR(4)
+#define TXT_DARK_MAGENTA  TXT_COLOR(5)
+#define TXT_DARK_CYAN     TXT_COLOR(6)
+#define TXT_GRAY          TXT_COLOR(7)
+#define TXT_DARK_GRAY     TXT_COLOR(8)
+#define TXT_RED           TXT_COLOR(9)
+#define TXT_GREEN         TXT_COLOR(a)
+#define TXT_YELLOW        TXT_COLOR(b)
+#define TXT_BLUE          TXT_COLOR(c)
+#define TXT_MAGENTA       TXT_COLOR(d)
+#define TXT_CYAN          TXT_COLOR(e)
+#define TXT_WHITE         TXT_COLOR(f)
 
 struct Text {
 	Text();
@@ -35,6 +37,11 @@ struct Text {
 	int update(const string_view& newstr, glm::ivec2 newpos);
 
 	void draw(Renderer& r);
+
+	void setPalette(const std::array<uint32_t, 16>& colors);
+	void resetPalette();
+
+	static std::array<uint32_t, 16> getDefaultPalette();
 
 	glm::ivec2 getStartPos() const {
 		return start_pos;

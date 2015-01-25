@@ -40,7 +40,7 @@ bool Resource<T, Args...>::load(){
 	if(!data){
 		for(auto* n : res_names){
 			if(ResourceHandle rh = e.res.load(n)){
-				create_data(typename gen_seq<sizeof...(Args)>::type());
+				create_data(std::make_index_sequence<sizeof...(Args)>());
 				loaded = data->loadFromResource(e, rh);
 				
 				e.res.cache<T, Args...>().put(n, data, args);

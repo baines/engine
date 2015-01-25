@@ -6,21 +6,9 @@
 #include <array>
 #include <SDL2/SDL_stdinc.h>
 
-/* Integer sequence stuff to unwrap tuples since C++14 isn't out yet */
-template<unsigned...> 
-struct seq { using type = seq; };
+/* Macros */
 
-template<class S1, class S2> struct concat;
-template<unsigned... I1, unsigned... I2>
-struct concat<seq<I1...>, seq<I2...>>
-  : seq<I1..., (sizeof...(I1)+I2)...>{};
-
-template<unsigned N> struct gen_seq;
-template<unsigned N>
-struct gen_seq : concat<typename gen_seq<N/2>::type, typename gen_seq<N - N/2>::type>::type{};
-
-template<> struct gen_seq<0> : seq<>{};
-template<> struct gen_seq<1> : seq<0>{};
+#define STRINGIFY(x) #x
 
 /* Get the arity (number of args) from a member function */
 template<class T>

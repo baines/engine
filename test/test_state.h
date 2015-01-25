@@ -36,7 +36,7 @@ struct TestState : public GameState {
 	, sprite_shader (*sprite_vs, *sprite_fs)
 	, tri_vstate    ()
 	, triangle      (&tri_vstate, &tri_shader, &tri_uniforms, RType{GL_TRIANGLES}, RCount{3})
-	, font          (e, {"FreeSans.ttf"}, 32)
+	, font          (e, {"FreeSans.ttf"}, 64)
 	, text          (e, *font, { 270, 208 }, "Testing!")
 	, samp_nearest  ({{ GL_TEXTURE_MAG_FILTER, GL_NEAREST }})
 	, sprite_tex    (e, {"test_sprite.png"})

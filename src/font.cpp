@@ -40,7 +40,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	
 	for(int i = 0; i < rows; ++i){
 		
-		const int x = img.pen_x + glyph.bearing_x;
+		const int x = std::max<int>(0, img.pen_x + glyph.bearing_x);
 		const int y = img.pen_y - rows_avail + i;
 		
 		memcpy(img.mem + x + (img.w * y), bmp->buffer + bmp->pitch * i, bmp->width);
@@ -104,10 +104,10 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	FT_Stroker_New(ft_lib, &ft_stroker);
 	FT_Stroker_Set(
 		ft_stroker,
-		112,
-		FT_STROKER_LINECAP_ROUND,
-		FT_STROKER_LINEJOIN_ROUND,
-		0
+		4 * height,
+		FT_STROKER_LINECAP_SQUARE,
+		FT_STROKER_LINEJOIN_MITER_FIXED,
+		4 << 16
 	);
 		
 	double scale = (double)face->units_per_EM / (double)face->height;
@@ -124,7 +124,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	//XXX: cache common constants like this in GLContext
 	gl.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_w);
 	bool got_size = false;
-	
+
 	for(init_w = 256; init_w <= max_w; init_w <<= 1){
 		size_t glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
 		size_t lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
@@ -204,25 +204,33 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 				ft_outline_bmp->bitmap.width
 			});
 			
+			int outline_left = ft_outline_bmp->left, glyph_left = ft_bmp->left;
+			if(outline_left < 0){
+				glyph_left -= outline_left;
+				outline_left = 0;
+			}
 			const GlyphBitmapInfo outline_info = {
 				&ft_outline_bmp->bitmap,
-				ft_outline_bmp->left,
+				outline_left,
 				ft_outline_bmp->top,
 				width
 			};
 
 			const GlyphBitmapInfo img_info = {
 				&ft_bmp->bitmap,
-				ft_bmp->left,
+				glyph_left,
 				ft_bmp->top,
 				width
 			};
-		
+
 			render_glyph(outline_info, outline);
 			render_glyph(img_info, img);
 			
-			glyph.width = ft_outline->advance.x >> 16;
-			glyph.x = outline.pen_x;
+			glyph.width = width - outline_left;
+			glyph.x = std::min(
+				outline.pen_x + outline_info.bearing_x,
+				img.pen_x + img_info.bearing_x
+			);
 			glyph.y = outline.pen_y - outline.line_height;
 			
 			outline.pen_x += 1 + width;
@@ -230,10 +238,14 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 
 			FT_Done_Glyph(ft_glyph);
 			FT_Done_Glyph(ft_outline);
+
+			FT_Stroker_Rewind(ft_stroker);
 		}
 		
 		glyph_info.push_back(glyph);
 	}
+
+	FT_Stroker_Done(ft_stroker);
 
 	size_t sz = img.w * img.h,
 		   combined_w = img.w,

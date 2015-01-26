@@ -273,7 +273,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	gl.validateObject(atlas);
 	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, combined_w, combined_h, combined);
 	if(do_swizzle){
-		atlas.setSwizzle({ GL_GREEN, GL_GREEN, GL_GREEN, GL_RED });
+		atlas.setSwizzle({ GL_RED, GL_RED, GL_RED, GL_GREEN });
 	}
 
 	free(img.mem);

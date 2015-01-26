@@ -9,7 +9,7 @@ void main(void){
 
 	vec4 alpha = texture2D(u_samp, tex);
 	
-	gl_FragColor = vec4(col.r, col.g, col.b, col.a) * alpha.a +
-	               vec4(0.0, 0.0, 0.0, 1.0f) * (alpha.b - alpha.a);
+	gl_FragColor = vec4(col.r, col.g, col.b, col.a) * alpha.b +
+	               vec4(0.0, 0.0, 0.0, 1.0f) * (alpha.a - alpha.b);
 }
 

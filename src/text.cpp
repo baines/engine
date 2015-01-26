@@ -42,6 +42,7 @@ Text::Text()
 , renderable(nullptr) {
 
 	uniforms.setUniform("u_samp", { 0 });
+	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 }
 
 Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s)
@@ -57,6 +58,7 @@ Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const stri
 	e.text.addText(*this);
 
 	uniforms.setUniform("u_samp", { 0 });
+	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 }
 
 Text::Text(Text&& other)
@@ -126,6 +128,16 @@ void Text::draw(Renderer& r){
 	if(renderable){
 		r.addRenderable(*renderable);
 	}
+}
+
+void Text::setOutlineColor(uint32_t col){
+	auto v = glm::fvec4(
+		uint8_t(col >> 24u) / 255.0f,
+		uint8_t(col >> 16u) / 255.0f,
+		uint8_t(col >> 8u ) / 255.0f,
+		uint8_t(col)        / 255.0f
+	);
+	uniforms.setUniform("u_outline_col", { v });
 }
 
 Text::~Text(){

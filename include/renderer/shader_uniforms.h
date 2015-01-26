@@ -32,8 +32,8 @@ struct ShaderUniforms {
 	setUniform(uint32_t hash, std::initializer_list<V<T, P>> vals){
 		_setUniform(
 			hash,
-			vals.begin()->length(),
 			1,
+			vals.begin()->length(),
 			vals.size(),
 			get_glenum<T>::value,
 			reinterpret_cast<const T*>(vals.begin())

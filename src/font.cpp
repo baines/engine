@@ -139,7 +139,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		log(logging::warn, "Font texture might be too big for OpenGL.");
 	}
 		
-	GlyphTextureAtlas img = {
+	GlyphTextureAtlas glyph_tex = {
 		init_w,
 		0,
 		0,
@@ -148,18 +148,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		face->size->metrics.ascender >> 6,
 		-(face->size->metrics.descender >> 6),
 		nullptr
-	};
-	
-	GlyphTextureAtlas outline = {
-		init_w,
-		0,
-		0,
-		static_cast<int>(height),
-		height,
-		face->size->metrics.ascender >> 6,
-		-(face->size->metrics.descender >> 6),
-		nullptr
-	};
+	}, outline_tex = glyph_tex;
 	
 	bool render_unknown = true;
 	
@@ -191,50 +180,50 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			assert(FT_Glyph_Copy(ft_glyph, &ft_outline) == 0);
 
 			assert(FT_Glyph_StrokeBorder(&ft_outline, ft_stroker, 0, 1) == 0);
-			assert(FT_Glyph_To_Bitmap(&ft_outline, FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
-			assert(FT_Glyph_To_Bitmap(&ft_glyph, FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
 
-			FT_BitmapGlyph ft_bmp = (FT_BitmapGlyph)ft_glyph;
+			assert(FT_Glyph_To_Bitmap(&ft_glyph,   FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
+			assert(FT_Glyph_To_Bitmap(&ft_outline, FT_RENDER_MODE_NORMAL, nullptr, 1) == 0);
+
+			FT_BitmapGlyph ft_glyph_bmp   = (FT_BitmapGlyph)ft_glyph;
 			FT_BitmapGlyph ft_outline_bmp = (FT_BitmapGlyph)ft_outline;
 
 			long width = std::max<long>({
 				ft_glyph->advance.x >> 16,
 				ft_outline->advance.x >> 16,
-				ft_bmp->bitmap.width,
+				ft_glyph_bmp->bitmap.width,
 				ft_outline_bmp->bitmap.width
 			});
 			
-			int outline_left = ft_outline_bmp->left, glyph_left = ft_bmp->left;
+			int outline_left = ft_outline_bmp->left, glyph_left = ft_glyph_bmp->left;
 			if(outline_left < 0){
 				glyph_left -= outline_left;
 				outline_left = 0;
 			}
-			const GlyphBitmapInfo outline_info = {
+
+			const GlyphBitmapInfo glyph_info = {
+				&ft_glyph_bmp->bitmap,
+				glyph_left,
+				ft_glyph_bmp->top,
+				width
+			}, outline_info = {
 				&ft_outline_bmp->bitmap,
 				outline_left,
 				ft_outline_bmp->top,
 				width
 			};
 
-			const GlyphBitmapInfo img_info = {
-				&ft_bmp->bitmap,
-				glyph_left,
-				ft_bmp->top,
-				width
-			};
-
-			render_glyph(outline_info, outline);
-			render_glyph(img_info, img);
+			render_glyph(outline_info, outline_tex);
+			render_glyph(glyph_info, glyph_tex);
 			
 			glyph.width = width - outline_left;
 			glyph.x = std::min(
-				outline.pen_x + outline_info.bearing_x,
-				img.pen_x + img_info.bearing_x
+				outline_tex.pen_x + outline_info.bearing_x,
+				glyph_tex.pen_x + glyph_info.bearing_x
 			);
-			glyph.y = outline.pen_y - outline.line_height;
+			glyph.y = outline_tex.pen_y - outline_tex.line_height;
 			
-			outline.pen_x += 1 + width;
-			img.pen_x += 1 + width;
+			glyph_tex.pen_x   += 1 + width;
+			outline_tex.pen_x += 1 + width;
 
 			FT_Done_Glyph(ft_glyph);
 			FT_Done_Glyph(ft_outline);
@@ -247,14 +236,14 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 
 	FT_Stroker_Done(ft_stroker);
 
-	size_t sz = img.w * img.h,
-		   combined_w = img.w,
-		   combined_h = next_pow_of_2(img.h);
+	size_t sz = glyph_tex.w * glyph_tex.h,
+		   combined_w = glyph_tex.w,
+		   combined_h = next_pow_of_2(glyph_tex.h);
 
 	uint8_t* combined = new uint8_t[combined_w * combined_h * 2]();
 
 	for(size_t i = 0; i < sz * 2; ++i){
-		combined[i] = (i % 2) ? outline.mem[i/2] : img.mem[i/2];
+		combined[i] = (i % 2) ? outline_tex.mem[i/2] : glyph_tex.mem[i/2];
 	}
 	
 	bool do_swizzle = false;
@@ -276,7 +265,8 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		atlas.setSwizzle({ GL_RED, GL_RED, GL_RED, GL_GREEN });
 	}
 
-	free(img.mem);
+	free(glyph_tex.mem);
+	free(outline_tex.mem);
 	delete [] combined;
 	
 	return true;

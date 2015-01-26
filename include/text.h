@@ -43,6 +43,8 @@ struct Text {
 
 	static std::array<uint32_t, 16> getDefaultPalette();
 
+	void setOutlineColor(uint32_t col);
+
 	glm::ivec2 getStartPos() const {
 		return start_pos;
 	}

@@ -246,22 +246,19 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		combined[i] = (i % 2) ? outline_tex.mem[i/2] : glyph_tex.mem[i/2];
 	}
 	
-	bool do_swizzle = false;
 	GLenum int_fmt = GL_LUMINANCE8_ALPHA8;
 	
 	//TODO: use glInternalFormatQuery instead of extensions (if available)?
 	if(gl.hasExtension("ARB_texture_compression_rgtc")
 	|| gl.hasExtension("EXT_texture_compression_rgtc")){
 		int_fmt = GL_COMPRESSED_RG_RGTC2;
-		do_swizzle = true;
 	} else if(gl.version > 30 || gl.hasExtension("ARB_texture_rg")){
 		int_fmt = GL_RG8;
-		do_swizzle = true;
 	}
 	
 	gl.validateObject(atlas);
 	atlas = Texture2D(GL_UNSIGNED_BYTE, int_fmt, combined_w, combined_h, combined);
-	if(do_swizzle){
+	if(int_fmt != GL_LUMINANCE8_ALPHA8){
 		atlas.setSwizzle({ GL_RED, GL_RED, GL_RED, GL_GREEN });
 	}
 

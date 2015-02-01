@@ -7,6 +7,7 @@ Engine::Engine(int argc, char** argv, const char* name)
 , input      (*this)
 , renderer   (*this, name)
 , text       (*this)
+, collision  ()
 , state      ()
 , cli        (*this)
 , max_fps    (cfg.addVar<CVarInt>("max_fps", 200, 1, 1000))
@@ -30,6 +31,7 @@ bool Engine::run(void){
 		delta = min_delta;
 	}
 	prev_ticks += delta;
+
 	delta = std::min(delta, 100);
 
 	state.processStateChanges(*this);
@@ -72,6 +74,7 @@ bool Engine::run(void){
 	}
 	
 	state.update(*this, delta);
+	collision.update(delta);
 	state.draw(renderer);
 		
 	renderer.drawFrame();

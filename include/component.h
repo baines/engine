@@ -36,4 +36,17 @@ struct Component<T, typename std::enable_if<has_base_component<T>::value>::type>
 	}
 };
 
+/* probably should be somewhere else */
+struct Position2D {
+	Position2D(glm::vec2 p);
+	void initComponent(Engine&, Entity&);
+
+	glm::vec2 get() const;
+	void      set(glm::vec2 pos);
+	void      add(glm::vec2 pos);
+private:
+	glm::vec2 pos;
+	Entity* entity;
+};
+
 #endif

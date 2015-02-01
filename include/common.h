@@ -21,6 +21,7 @@ using u32string_view = std::experimental::u32string_view;
 struct Engine;
 struct Renderable;
 struct Renderer;
+struct CollisionSystem;
 struct GameState;
 struct ResourceHandle;
 struct CLI;
@@ -28,6 +29,7 @@ struct GLObject;
 struct Sprite;
 struct SpriteBatch;
 struct Material;
+struct Entity;
 
 #endif
 

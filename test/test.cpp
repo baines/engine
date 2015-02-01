@@ -5,71 +5,13 @@
 #include "config.h"
 #include "shader_uniforms.h"
 #include "test_state.h"
-
-#if 0
+#include "test_collision_state.h"
 
 #include <iostream>
 
 using namespace std;
 
-void testConfig(void){
-	Config cfg;
-	
-	cfg.addVar("abcdef", CVarInt(123, 0, 999));
-	cfg.addVar("a_b_c", CVarInt(0, 0, 0));
-	cfg.addVar("abc_def", CVarInt(0, 0, 0));
-	
-	vector<CVar*> vec;
-	cfg.getVarsWithPrefix("ab", vec);
-	
-	for(auto& v : vec){
-		puts(v->name.c_str());
-	}
-	
-	CVarInt* v = cfg.getVar<CVarInt>("abcdef");
-	
-	printf("%d\n", v->val);
-}
-
-void testPrefixExtend(void){
-	Config cfg;
-	
-	cfg.addVar("test", CVarInt(0,0,0));
-	cfg.addVar("te_st", CVarInt(0,0,0));
-	cfg.addVar("testtastic", CVarInt(0,0,0));
-	cfg.addVar("testing", CVarInt(0,0,0));
-	
-	string str("t");
-	cfg.extendPrefix(str);
-	puts(str.c_str());
-}
-
-void testTabComplete(void){
-	Config cfg;
-	
-	cfg.addVar("test", CVarInt(0,0,0));
-	cfg.addVar("te_st", CVarInt(0,0,0));
-	cfg.addVar("testtastic", CVarInt(0,0,0));
-	cfg.addVar("testing", CVarInt(0,0,0));
-	
-	string input;
-	vector<CVar*> options;
-	
-	while(cout << "> " << flush, getline(cin, input)){
-		if(cfg.extendPrefix(input)){
-			cout << "completed to: " << input << endl;
-		} else {
-			options.clear();
-			cfg.getVarsWithPrefix(input.c_str(), options);
-			cout << "options:" << endl;
-			for(int i = 0; i < options.size(); ++i){
-				cout << " " << i << ".\t" << options[i]->name << endl;
-			}
-		}
-	}
-}
-
-void testShaderUniforms(void){
+void test_shader_uniforms(int, char**){
 	ShaderUniforms su;
 	
 	//glm::vec2 v1, v2;
@@ -108,9 +50,7 @@ void testShaderUniforms(void){
 	}
 }
 
-#endif
-
-void testEngine(int argc, char** argv){
+void test_engine_rendering(int argc, char** argv){
 	Engine e(argc, argv, "Test");
 	TestState ts(e);
 	
@@ -119,12 +59,48 @@ void testEngine(int argc, char** argv){
 	while(e.run());
 }
 
+void test_engine_collision(int argc, char** argv){
+	Engine e(argc, argv, "Test");
+	TestCollisionState ts(e);
+	
+	e.addState(&ts);
+	
+	while(e.run());
+}
+
+struct Test {
+	const char* name;
+	void (*func)(int, char**);
+} tests[] = {
+	{ "shader-uniforms", &test_shader_uniforms },
+	{ "rendering",       &test_engine_rendering },
+	{ "collision",       &test_engine_collision }
+};
+
 int main(int argc, char** argv){
 
-	testEngine(argc, argv);
-	//testShaderUniforms();
-	//testPrefixExtend();
-	//testTabComplete();
+	void (*chosen_test)(int, char**) = &test_engine_rendering;
+
+	if(argc > 1){
+
+		if(strcasecmp(argv[1], "list") == 0){
+			for(auto& t : tests){
+				fprintf(stderr, "%s\n", t.name);
+			}
+			return 1;
+		}
+
+		for(auto& t : tests){
+			if(strcasecmp(argv[1], t.name) == 0){
+				chosen_test = t.func;
+				++argv;
+				--argc;
+				break;
+			}
+		}
+	}
+
+	chosen_test(argc, argv);
 	
 	return 0;
 }

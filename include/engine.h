@@ -7,6 +7,7 @@
 #include "renderer.h"
 #include "resource_system.h"
 #include "text_system.h"
+#include "collision_system.h"
 #include "state_system.h"
 #include "game_state.h"
 #include "root_state.h"
@@ -19,13 +20,14 @@ struct Engine {
 	void quit(void);
 	~Engine();
 
-	ResourceSystem res;
-	Config         cfg;
-	Input          input;
-	Renderer       renderer;
-	TextSystem     text;
-	StateSystem    state;
-	CLI            cli;
+	ResourceSystem   res;
+	Config           cfg;
+	Input            input;
+	Renderer         renderer;
+	TextSystem       text;
+	CollisionSystem  collision;
+	StateSystem      state;
+	CLI              cli;
 	
 private:
 	std::vector<GameState*> states;

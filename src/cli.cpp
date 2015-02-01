@@ -116,7 +116,7 @@ void CLI::toggle(){
 }
 
 bool CLI::onInput(Engine& e, int action, bool pressed){
-	if(!pressed) return true;
+	if(!pressed) return false;
 
 	if(action == ACT_SUBMIT && input_str.size() > PROMPT_SZ){
 

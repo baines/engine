@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "entity.h"
+#include "canvas.h"
 
 enum {
 	ACT_LEFT,
@@ -44,11 +45,14 @@ struct TestCollisionState : public GameState {
 	, sprite_batch  (sprite_mat)
 	, entity        (e, sprite_batch, { 100, 100 })
 	, entity2       (e, sprite_batch, { 320, 240 })
-	, move          ({ 0.f, 0.f }) {
+	, move          ({ 0.f, 0.f })
+	, canvas        (e) {
 		e.input.watchAction(this, "left" , ACT_LEFT);
 		e.input.watchAction(this, "right", ACT_RIGHT);
 		e.input.watchAction(this, "up"   , ACT_UP);
 		e.input.watchAction(this, "down" , ACT_DOWN);
+
+		canvas.addLine({ 0, 0 }, { 100, 100 }, 0x00ff00ff);
 	}
 	
 	bool onInit(Engine& e){
@@ -75,6 +79,7 @@ struct TestCollisionState : public GameState {
 	
 	void draw(Renderer& renderer){
 		sprite_batch.draw(renderer);
+		//canvas.draw(renderer);
 	}
 private:
 
@@ -90,6 +95,7 @@ private:
 	TestEntity entity, entity2;
 
 	glm::vec2 move;
+	Canvas canvas;
 };
 
 #endif

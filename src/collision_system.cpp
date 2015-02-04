@@ -28,8 +28,8 @@ bool point_test_sweep(vec2 p, vec2 q, float& t){
 bool aabb_test(vec2 pos0, vec2 size0, vec2 pos1, vec2 size1){
 	return pos0.x + size0.x >= pos1.x           &&
 	       pos0.x           <= pos1.x + size1.x &&
-		   pos0.y + size0.y >= pos1.y           &&
-		   pos0.y           <= pos1.y + size1.y;
+	       pos0.y + size0.y >= pos1.y           &&
+	       pos0.y           <= pos1.y + size1.y;
 }
 
 template<class T>
@@ -82,17 +82,17 @@ void CollisionSystem::update(uint32_t delta){
 	for(size_t i = 0; i < boxes.size(); ++i){
 		for(size_t j = i + 1; j < boxes.size(); ++j){
 			vec2 i_x = { boxes[i]->prev_pos.x, boxes[i]->pos.x },
-				 i_y = { boxes[i]->prev_pos.y, boxes[i]->pos.y },
+			     i_y = { boxes[i]->prev_pos.y, boxes[i]->pos.y },
 			     j_x = { boxes[j]->prev_pos.x, boxes[j]->pos.x },
-				 j_y = { boxes[j]->prev_pos.y, boxes[j]->pos.y };
+			     j_y = { boxes[j]->prev_pos.y, boxes[j]->pos.y };
 
 			bool i_x_smaller = i_x[0] < j_x[0],
-				 i_y_smaller = i_y[0] < j_y[0];
+			     i_y_smaller = i_y[0] < j_y[0];
 
 			vec2 min_x = i_x_smaller ? i_x + boxes[i]->size.x : j_x + boxes[j]->size.x,
-				 min_y = i_y_smaller ? i_y + boxes[i]->size.y : j_y + boxes[j]->size.y,
+			     min_y = i_y_smaller ? i_y + boxes[i]->size.y : j_y + boxes[j]->size.y,
 			     max_x = i_x_smaller ? j_x : i_x,
-				 max_y = i_y_smaller ? j_y : i_y;
+			     max_y = i_y_smaller ? j_y : i_y;
 
 			vec2 i_collide, j_collide;
 

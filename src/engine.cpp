@@ -44,6 +44,8 @@ bool Engine::run(void){
 			case SDL_KEYUP:
 			case SDL_CONTROLLERBUTTONDOWN:
 			case SDL_CONTROLLERBUTTONUP:
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEWHEEL:
 				state.onInput(*this, e);
 				break;

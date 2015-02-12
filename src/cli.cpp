@@ -94,6 +94,7 @@ void CLI::onStateChange(Engine& e, bool activated){
 	if(active){
 		// this can probably be handled better somehow...
 		onResize(e, e.cfg.getVar<CVarInt>("vid_width")->val, 0);
+		ignore_next_text = false;
 	}
 }
 

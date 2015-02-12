@@ -20,7 +20,7 @@ struct GameState {
 		return false;
 	}
 	
-	virtual bool onMotion(Engine& e, int axis_id, int rel_x, int rel_y){
+	virtual bool onMotion(Engine& e, int axis_id, int value, bool relative){
 		return false;
 	}
 	

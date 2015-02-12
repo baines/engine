@@ -53,12 +53,15 @@ inline unsigned log2ll(uint64_t n){
 }
 
 /* fast string hashing functions */
-inline constexpr uint32_t str_hash(const char* str, uint32_t hash = 6159){
+
+typedef uint32_t strhash_t;
+
+inline constexpr strhash_t str_hash(const char* str, uint32_t hash = 6159){
 	return *str ? str_hash(str+1, 187 * hash + *str) : hash;
 }
 
-inline uint32_t str_hash_len(const char* str, size_t len){
-	uint32_t hash = 6159;
+inline strhash_t str_hash_len(const char* str, size_t len){
+	strhash_t hash = 6159;
 	
 	for(size_t i = 0; i < len; ++i){
 		hash = hash * 187 + str[i];
@@ -67,7 +70,7 @@ inline uint32_t str_hash_len(const char* str, size_t len){
 	return hash;
 }
 
-inline uint32_t str_hash(const string_view& str){
+inline strhash_t str_hash(const string_view& str){
 	return str_hash_len(str.data(), str.size());
 }
 
@@ -92,7 +95,7 @@ struct str_const {
 		
 	const char* const str;
 	const size_t size;
-	const uint32_t hash;
+	const strhash_t hash;
 };
 
 /* makes an array from variadic args */

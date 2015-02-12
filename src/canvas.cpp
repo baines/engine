@@ -18,6 +18,7 @@ Canvas::Canvas(Engine& e)
 , shader(*vs, *fs)
 , lines(&vstate, &shader, RType{ GL_LINES }){
 	shader.link();
+	vstate.setVertexBuffers({ &vertices });
 }
 
 void Canvas::addLine(vec2 from, vec2 to, uint32_t color){

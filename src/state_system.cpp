@@ -20,23 +20,27 @@ void StateSystem::pop(int amount){
 		
 void StateSystem::onInput(Engine& e, SDL_Event& ev){
 	int action_id = 0;
+	bool pressed = true;
+	Input::Key key;
 	
 	if(ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP){
-		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-			if(e.input.getKeyAction(*i, ev.key.keysym, action_id)
-			&& (*i)->onInput(e, action_id, ev.key.state)){
-				break;
-			}
-		}
+		key = Input::Key(ev.key.keysym);
+		pressed = ev.key.state;
 	} else if(ev.type == SDL_CONTROLLERBUTTONDOWN || ev.type == SDL_CONTROLLERBUTTONUP){
-		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-			if(e.input.getPadAction(*i, ev.cbutton.which, ev.cbutton.button, action_id)
-			&& (*i)->onInput(e, action_id, ev.cbutton.state)){
-				break;
-			}
-		}
+		key = Input::Key(pad_button_tag, ev.cbutton.button);
+		pressed = ev.cbutton.state;
+	} else if(ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_MOUSEBUTTONUP){
+		key = Input::Key(mouse_button_tag, ev.button.button);
+		pressed = ev.button.state;
 	} else if(ev.type == SDL_MOUSEWHEEL){
-		//TODO
+		key = Input::Key(mouse_wheel_tag, ev.wheel.y);
+		//XXX: no released event for mouse wheel.
+	}
+	
+	for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
+		if(e.input.getKeyAction(*i, key, action_id)	&& (*i)->onInput(e, action_id, pressed)){
+			break;
+		}
 	}
 }
 

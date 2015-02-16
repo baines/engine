@@ -6,11 +6,12 @@
 
 struct GlyphBitmapInfo {
 	FT_Bitmap* bmp;
-	long bearing_x, bearing_y, advance;
+	long bearing_x, bearing_y;
+	uint32_t advance;
 };
 
 struct GlyphTextureAtlas {
-	int w, h, pen_x, pen_y;
+	uint32_t w, h, pen_x, pen_y;
 	const size_t line_height;
 	const FT_Pos ascender, descender;
 	uint8_t* mem;
@@ -140,10 +141,10 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	}
 		
 	GlyphTextureAtlas glyph_tex = {
-		init_w,
+		(uint32_t)init_w,
 		0,
 		0,
-		static_cast<int>(height),
+		static_cast<uint32_t>(height),
 		height,
 		face->size->metrics.ascender >> 6,
 		-(face->size->metrics.descender >> 6),
@@ -187,18 +188,21 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			FT_BitmapGlyph ft_glyph_bmp   = (FT_BitmapGlyph)ft_glyph;
 			FT_BitmapGlyph ft_outline_bmp = (FT_BitmapGlyph)ft_outline;
 
-			long width = std::max<long>({
-				ft_glyph->advance.x >> 16,
-				ft_outline->advance.x >> 16,
-				ft_glyph_bmp->bitmap.width,
-				ft_outline_bmp->bitmap.width
+			uint32_t width = std::max<size_t>({
+				(height / 8) + (ft_glyph->advance.x >> 16),
+				(height / 8) + (ft_outline->advance.x >> 16),
+				(uint32_t) ft_glyph_bmp->bitmap.width,
+				(uint32_t) ft_outline_bmp->bitmap.width
+			});
+
+			int left_off = std::min({
+				0,
+				ft_outline_bmp->left,
+				ft_glyph_bmp->left
 			});
 			
-			int outline_left = ft_outline_bmp->left, glyph_left = ft_glyph_bmp->left;
-			if(outline_left < 0){
-				glyph_left -= outline_left;
-				outline_left = 0;
-			}
+			int outline_left = ft_outline_bmp->left - left_off,
+			    glyph_left = ft_glyph_bmp->left - left_off;
 
 			const GlyphBitmapInfo glyph_info = {
 				&ft_glyph_bmp->bitmap,
@@ -215,11 +219,8 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			render_glyph(outline_info, outline_tex);
 			render_glyph(glyph_info, glyph_tex);
 			
-			glyph.width = width - outline_left;
-			glyph.x = std::min(
-				outline_tex.pen_x + outline_info.bearing_x,
-				glyph_tex.pen_x + glyph_info.bearing_x
-			);
+			glyph.width = (ft_glyph->advance.x >> 16) + (height / 8);
+			glyph.x = std::min(outline_tex.pen_x, glyph_tex.pen_x);
 			glyph.y = outline_tex.pen_y - outline_tex.line_height;
 			
 			glyph_tex.pen_x   += 1 + width;

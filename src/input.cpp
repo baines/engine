@@ -123,7 +123,12 @@ bool Input::Key::operator==(const Key& rhs) const {
 	}
 }
 
+Input::Axis::Axis(mouse_tag_t, int axis)
+: type(AXIS_MOUSE)
+, device_index(0)
+, axis_index(axis) {
 
+}
 
 Input::Axis::Axis(const char* str)
 : type(AXIS_INVALID)
@@ -180,8 +185,7 @@ bool Input::Binding::operator<(const Binding& rhs) const {
 	if(type == BINDING_KEY){
 		return data.key < rhs.data.key;
 	} else {
-		return tie(data.axis.axis, data.axis.relative, data.axis.scale)
-		     < tie(rhs.data.axis.axis, rhs.data.axis.relative, rhs.data.axis.scale);
+		return data.axis.axis < rhs.data.axis.axis;
 	}
 }
 
@@ -247,6 +251,7 @@ static bool bind_axis_fn(Input* const input, const string_view& str){
 
 	input->bind(axis, str_hash(str_act), rel, scale);
 
+	puts("axis bound ok");
 	return true;
 }
 
@@ -363,20 +368,34 @@ void Input::enableText(GameState* gs, bool enable, const SDL_Rect& pos){
 	}
 }
 
-bool Input::getKeyAction(GameState* s, const Key& key, int& action_id){
+bool Input::getKeyAction(GameState* s, const Key& key, int& act_id){
 
 	auto it = active_binds.find(StateBind{s, key});
 	
 	if(it != active_binds.end()){
-		action_id = it->second;
+		act_id = it->second;
 		return true;
 	} else {
 		return false;
 	}
 }
 
-bool Input::getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id){
+bool Input::getAxisAction(GameState* s, const Axis& a, int& act_id, bool& rel, float& scale){
+
+	auto it = active_binds.find(StateBind{s, Binding{a, 0, 0}});
+	
+	if(it != active_binds.end()){
+		act_id = it->second;
+		rel = it->first.bind.data.axis.relative;
+		scale = it->first.bind.data.axis.scale;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/*bool Input::getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id){
 	// TODO
 	return false;
-}
+}*/
 

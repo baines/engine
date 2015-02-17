@@ -45,8 +45,26 @@ void StateSystem::onInput(Engine& e, SDL_Event& ev){
 }
 
 void StateSystem::onMotion(Engine& e, SDL_Event& ev){
-	//TODO
+	
+	auto send_motion_fn = [&](const Input::Axis& axis, int val){
+		int action_id = -1;
+		bool rel = false;
+		float scale = 1.0f;
+		
+		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
+			if(e.input.getAxisAction(*i, axis, action_id, rel, scale)
+			&& (*i)->onMotion(e, action_id, val * scale, rel)){
+				break;
+			}
+		}
+	};
 
+	if(ev.type == SDL_MOUSEMOTION){
+		send_motion_fn(Input::Axis(mouse_tag, 0), ev.motion.x);
+		send_motion_fn(Input::Axis(mouse_tag, 1), ev.motion.y);
+	} else {
+		//TODO
+	}
 }
 
 void StateSystem::onText(Engine& e, SDL_TextInputEvent& ev){

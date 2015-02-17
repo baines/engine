@@ -11,6 +11,7 @@
 static constexpr struct mouse_button_tag_t {} mouse_button_tag;
 static constexpr struct mouse_wheel_tag_t {} mouse_wheel_tag;
 static constexpr struct pad_button_tag_t {} pad_button_tag;
+static constexpr struct mouse_tag_t {} mouse_tag;
 
 struct Input {
 	
@@ -36,8 +37,13 @@ struct Input {
 
 	struct Axis {
 		Axis() = default;
+		
 		Axis(SDL_GameControllerAxis pad_axis);
+		
+		Axis(mouse_tag_t, int axis);
+		
 		Axis(const char* str);
+		
 		bool operator<(const Axis& a) const;
 		bool operator==(const Axis& a) const;
 
@@ -62,8 +68,9 @@ struct Input {
 	void onDeviceChange(SDL_ControllerDeviceEvent& event);
 	void onStateChange(GameState* new_state);
 
-	bool getKeyAction(GameState* s, const Key& key, int& action_id);
-	bool getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id);
+	bool getKeyAction(GameState* s, const Key& key, int& act_id);
+	//bool getPadAction(GameState* s, SDL_JoystickID id, int button, int& action_id);
+	bool getAxisAction(GameState* s, const Axis& a, int& act_id, bool& rel, float& scale);	
 
 private:
 	struct Binding {

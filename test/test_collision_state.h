@@ -20,7 +20,9 @@ enum {
 	ACT_LEFT,
 	ACT_RIGHT,
 	ACT_UP,
-	ACT_DOWN
+	ACT_DOWN,
+	ACT_CURSOR_X,
+	ACT_CURSOR_Y
 };
 
 struct TestEntity : public EntityWith<Position2D, Sprite, AABB> {
@@ -52,6 +54,9 @@ struct TestCollisionState : public GameState {
 		e.input.watchAction(this, "up"   , ACT_UP);
 		e.input.watchAction(this, "down" , ACT_DOWN);
 
+		e.input.watchAction(this, "cursor_x", ACT_CURSOR_X);
+		e.input.watchAction(this, "cursor_y", ACT_CURSOR_Y);
+
 		canvas.addLine({ 0, 0 }, { 100, 100 }, 0x00ff00ff);
 	}
 	
@@ -70,6 +75,11 @@ struct TestCollisionState : public GameState {
 			case ACT_DOWN:  move.y = pressed ?  4 : move.y ==  4 ? 0 : move.y; break;
 		}
 
+		return true;
+	}
+
+	bool onMotion(Engine& e, int action, int value, bool rel){
+		printf("ACT: %d -> %d. (%d)\n", action, value, rel);
 		return true;
 	}
 	

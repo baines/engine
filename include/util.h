@@ -52,6 +52,12 @@ inline unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
+/* lerp */
+template<class T>
+T lerp(T a, T b, float t){
+	return a + (b - a) * t;
+}
+
 /* fast string hashing functions */
 
 typedef uint32_t strhash_t;

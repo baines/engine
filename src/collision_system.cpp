@@ -25,17 +25,13 @@ bool point_test_sweep(vec2 p, vec2 q, float& t){
 	return t >= 0.0f && t <= 1.0f;
 }
 
-bool aabb_test(vec2 pos0, vec2 size0, vec2 pos1, vec2 size1){
+/*bool aabb_test(vec2 pos0, vec2 size0, vec2 pos1, vec2 size1){
 	return pos0.x + size0.x >= pos1.x           &&
 	       pos0.x           <= pos1.x + size1.x &&
 	       pos0.y + size0.y >= pos1.y           &&
 	       pos0.y           <= pos1.y + size1.y;
-}
+}*/
 
-template<class T>
-T lerp(T a, T b, float t){
-	return a + (b - a) * t;
-}
 
 }
 
@@ -43,10 +39,11 @@ AABB::AABB(){
 
 }
 
-AABB::AABB(vec2 size)
+AABB::AABB(vec2 size, uint32_t group)
 : pos()
 , prev_pos()
-, size(size) {
+, size(size)
+, collision_group(group) {
 
 }
 
@@ -72,15 +69,33 @@ void CollisionSystem::addEntity(Entity& e){
 		auto it = std::find(boxes.begin(), boxes.end(), aabb);
 
 		if(it == boxes.end()){
+			entities.push_back(&e);
 			boxes.push_back(aabb);
 		}
 	}
+}
+
+void CollisionSystem::onCollision(uint32_t a, uint32_t b, CollisionFunc&& f){
+
+	uint32_t lo = std::min(a, b), hi = std::max(a, b);
+
+	funcs[{ lo, hi }] = std::move(f);
 }
 
 void CollisionSystem::update(uint32_t delta){
 
 	for(size_t i = 0; i < boxes.size(); ++i){
 		for(size_t j = i + 1; j < boxes.size(); ++j){
+
+			const auto& it = funcs.find({
+				std::min(boxes[i]->collision_group, boxes[j]->collision_group),
+				std::max(boxes[i]->collision_group, boxes[j]->collision_group)
+			});
+
+			if(it == funcs.end()) continue;
+
+			auto& collision_fn = it->second;
+
 			vec2 i_x = { boxes[i]->prev_pos.x, boxes[i]->pos.x },
 			     i_y = { boxes[i]->prev_pos.y, boxes[i]->pos.y },
 			     j_x = { boxes[j]->prev_pos.x, boxes[j]->pos.x },
@@ -96,35 +111,15 @@ void CollisionSystem::update(uint32_t delta){
 
 			vec2 i_collide, j_collide;
 
-			float t = 0.0f;
+			float t1 = 0.0f, t2 = 0.0f;
 
-			if(!point_test_sweep(min_x, max_x, t)) continue;
+			if(!point_test_sweep(min_x, max_x, t1)) continue;
+			if(!point_test_sweep(min_y, max_y, t2)) continue;
 
-			i_collide = { lerp(i_x[0], i_x[1], t), lerp(i_y[0], i_y[1], t) };
-			j_collide = { lerp(j_x[0], j_x[1], t), lerp(j_y[0], j_y[1], t) };
-				
-			if(aabb_test(i_collide, boxes[i]->size, j_collide, boxes[j]->size)){
-				// notify collision at time t.
-				printf("[1] COLLISION [ %.1f, %.1f ] [ %.1f, %.1f ] t: %.2f\n",
-				        i_collide.x, i_collide.y, j_collide.x, j_collide.y, t);
-				continue;
-			}
-
-			if(!point_test_sweep(min_y, max_y, t)) continue;
-
-			i_collide = { lerp(i_x[0], i_x[1], t), lerp(i_y[0], i_y[1], t) };
-			j_collide = { lerp(j_x[0], j_x[1], t), lerp(j_y[0], j_y[1], t) };
-
-			if(aabb_test(i_collide, boxes[i]->size, j_collide, boxes[j]->size)){
-				// notify collision at time t.
-				printf("[2] COLLISION [ %.1f, %.1f ] [ %.1f, %.1f ] t: %.2f\n",
-				        i_collide.x, i_collide.y, j_collide.x, j_collide.y, t);
-				continue;
-			}
-
-			/*if(aabb_test(*boxes[i]->pos, boxes[i]->size, *boxes[j]->pos, boxes[j]->size)){
-				puts("COLLISION");
-			}*/
+			//TODO: sub t1 / t2 into each other's equations to find if there was
+			//      actually a collision, instead of sending both x and y separately.
+			collision_fn(entities[i], entities[j], t1);
+			collision_fn(entities[i], entities[j], t2);
 		}
 	}
 

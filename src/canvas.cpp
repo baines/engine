@@ -35,6 +35,31 @@ void Canvas::addLine(vec2 from, vec2 to, uint32_t color){
 	lines.count += 2;
 }
 
+void Canvas::addBox(vec2 pos, vec2 size, uint32_t color){
+	std::array<uint8_t, 4> c = {
+		uint8_t(color >> 24),
+		uint8_t(color >> 16),
+		uint8_t(color >> 8),
+		uint8_t(color)
+	};
+
+	size_t w = size.x / 2, h = size.y / 2;
+
+	vertices.push(LineVert(pos.x - w, pos.y - h, c));
+	vertices.push(LineVert(pos.x + w, pos.y - h, c));
+
+	vertices.push(LineVert(pos.x + w, pos.y - h, c));
+	vertices.push(LineVert(pos.x + w, pos.y + h, c));
+	
+	vertices.push(LineVert(pos.x + w, pos.y + h, c));
+	vertices.push(LineVert(pos.x - w, pos.y + h, c));
+
+	vertices.push(LineVert(pos.x - w, pos.y + h, c));
+	vertices.push(LineVert(pos.x - w, pos.y - h, c));
+
+	lines.count += 8;
+}
+	
 void Canvas::clear(){
 	vertices.clear();
 	lines.count = 0;

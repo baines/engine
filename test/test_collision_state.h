@@ -21,6 +21,8 @@ enum {
 	ACT_RIGHT,
 	ACT_UP,
 	ACT_DOWN,
+	ACT_SWITCH,
+	ACT_CLICK,
 	ACT_CURSOR_X,
 	ACT_CURSOR_Y
 };
@@ -45,19 +47,33 @@ struct TestCollisionState : public GameState {
 	, sprite_tex    (e, {"test_sprite.png"})
 	, sprite_mat    (sprite_shader, *(*sprite_tex), samp_nearest)
 	, sprite_batch  (sprite_mat)
-	, entity        (e, sprite_batch, { 100, 100 })
-	, entity2       (e, sprite_batch, { 320, 240 })
+	, entities      {{{ e, sprite_batch, { 100, 100 }}, {e, sprite_batch, { 200, 200 }}}}
+	, active_entity (0)
+	, prev_pos      {{{ 100, 100 }, { 100, 100 }}}
 	, move          ({ 0.f, 0.f })
+	, cursor        ({ 0.f, 0.f })
 	, canvas        (e) {
 		e.input.watchAction(this, "left" , ACT_LEFT);
 		e.input.watchAction(this, "right", ACT_RIGHT);
 		e.input.watchAction(this, "up"   , ACT_UP);
 		e.input.watchAction(this, "down" , ACT_DOWN);
 
+		e.input.watchAction(this, "switch", ACT_SWITCH);
+		e.input.watchAction(this, "click", ACT_CLICK);
+
 		e.input.watchAction(this, "cursor_x", ACT_CURSOR_X);
 		e.input.watchAction(this, "cursor_y", ACT_CURSOR_Y);
 
-		canvas.addLine({ 0, 0 }, { 100, 100 }, 0x00ff00ff);
+		e.collision.onCollision(0, 0, [&](Entity* a, Entity* b, float t){
+			static uint32_t color = 0xff0000ff;
+			for(auto* e : { a, b }){
+				if(auto* aabb = e->get<AABB>()){
+					glm::vec2 pos = lerp(aabb->prev_pos + 32.f, aabb->pos + 32.f, t);
+					canvas.addBox(pos,{ 64.f, 64.f }, color);
+				}
+			}
+			color ^= 0x00ff0000;
+		});
 	}
 	
 	bool onInit(Engine& e){
@@ -69,27 +85,39 @@ struct TestCollisionState : public GameState {
 	bool onInput(Engine& e, int action, bool pressed){
 
 		switch(action){
-			case ACT_LEFT:  move.x = pressed ? -4 : move.x == -4 ? 0 : move.x; break;
-			case ACT_RIGHT: move.x = pressed ?  4 : move.x ==  4 ? 0 : move.x; break;
-			case ACT_UP:    move.y = pressed ? -4 : move.y == -4 ? 0 : move.y; break;
-			case ACT_DOWN:  move.y = pressed ?  4 : move.y ==  4 ? 0 : move.y; break;
+			case ACT_LEFT:   move.x = pressed ? -4 : move.x == -4 ? 0 : move.x; break;
+			case ACT_RIGHT:  move.x = pressed ?  4 : move.x ==  4 ? 0 : move.x; break;
+			case ACT_UP:     move.y = pressed ? -4 : move.y == -4 ? 0 : move.y; break;
+			case ACT_DOWN:   move.y = pressed ?  4 : move.y ==  4 ? 0 : move.y; break;
+			case ACT_SWITCH: if(pressed) active_entity ^= 1; break;
+			case ACT_CLICK:  if(pressed) prev_pos[active_entity] = cursor; break;
 		}
 
 		return true;
 	}
 
 	bool onMotion(Engine& e, int action, int value, bool rel){
-		printf("ACT: %d -> %d. (%d)\n", action, value, rel);
+		switch(action){
+			case ACT_CURSOR_X: cursor.x = value; break;
+			case ACT_CURSOR_Y: cursor.y = value; break;
+		}
 		return true;
 	}
 	
 	void update(Engine& e, uint32_t delta){
-		entity.get<Position2D>().add(move);
+		entities[active_entity].get<Position2D>().add(move);
+
+		canvas.clear();
+
+		for(int i = 0; i < 2; ++i){
+			entities[i].get<AABB>().prev_pos = prev_pos[i] - 32.f;
+			canvas.addLine(entities[i].get<Position2D>().get(), prev_pos[i], 0x00ff00ff);
+		}
 	}
 	
 	void draw(Renderer& renderer){
 		sprite_batch.draw(renderer);
-		//canvas.draw(renderer);
+		canvas.draw(renderer);
 	}
 private:
 
@@ -102,9 +130,11 @@ private:
 	Material sprite_mat;
 	SpriteBatch sprite_batch;
 	
-	TestEntity entity, entity2;
+	std::array<TestEntity, 2> entities;
+	int active_entity;
+	std::array<glm::vec2, 2> prev_pos;
 
-	glm::vec2 move;
+	glm::vec2 move, cursor;
 	Canvas canvas;
 };
 

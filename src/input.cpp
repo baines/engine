@@ -251,7 +251,6 @@ static bool bind_axis_fn(Input* const input, const string_view& str){
 
 	input->bind(axis, str_hash(str_act), rel, scale);
 
-	puts("axis bound ok");
 	return true;
 }
 
@@ -263,6 +262,7 @@ Input::Input(Engine& e)
 
 	using namespace std::placeholders;
 
+	//TODO: can all these cvar functions be merged into one?
 	e.cfg.addVar<CVarFunc>(
 		"bind",
 		std::bind(&bind_key_fn, this, _1, false),

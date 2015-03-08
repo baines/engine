@@ -321,7 +321,7 @@ void CLI::update(Engine& e, uint32_t delta){
 	bool font_size_changed = (size_t) font_height->val != font->getLineHeight();
 
 	if(font_size_changed){
-		font = Resource<Font, uint16_t>(e, { "DejaVuSansMono.ttf" }, font_height->val);
+		font = Resource<Font, size_t>(e, { "DejaVuSansMono.ttf" }, font_height->val);
 		output_dirty = true;
 		input_dirty = true;
 	}

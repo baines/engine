@@ -44,7 +44,7 @@ private:
 
 	size_t prev_vis_lines;
 
-	Resource<Font, uint16_t> font;
+	Resource<Font, size_t> font;
 	Resource<VertShader> bg_vs;
 	Resource<FragShader> bg_fs;
 	ShaderProgram bg_shader;

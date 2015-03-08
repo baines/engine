@@ -37,7 +37,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	const int rows_avail = std::min<int>(img.line_height, 
 		img.line_height - (img.ascender - glyph.bearing_y)
 	);
-	const int rows = std::min(rows_avail, bmp->rows);
+	const int rows = std::min<int>(rows_avail, bmp->rows);
 	
 	for(int i = 0; i < rows; ++i){
 		
@@ -141,7 +141,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	}
 		
 	GlyphTextureAtlas glyph_tex = {
-		(uint32_t)init_w,
+		static_cast<uint32_t>(init_w),
 		0,
 		0,
 		static_cast<uint32_t>(height),

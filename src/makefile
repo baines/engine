@@ -4,8 +4,14 @@ builddir := ../build/$(OS)
 headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources)) $(builddir)/zip.o
-includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/ -I/usr/include/freetype2
-CXXFLAGS := $(includes) -std=c++1y -Wall -Werror -pipe -ffast-math -fno-rtti -fno-exceptions
+includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/ -I/usr/$(PREFIX)/include/freetype2
+CXXFLAGS := $(includes) -std=c++1y -Wall -Werror -pipe -ffast-math -fno-rtti -fno-exceptions $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)
+
+ifdef PREFIX
+	CXX := $(PREFIX)-g++
+	AR  := $(PREFIX)-ar
+	LD  := $(PREFIX)-ld
+endif
 
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer

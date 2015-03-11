@@ -105,7 +105,7 @@ Renderer::Renderer(Engine& e, const char* name)
 	}
 
 	e.cfg.addVar<CVarFunc>("vid_display_info", [&](const string_view&){
-		char buf[80];
+		char buf[80] = {};
 		SDL_Rect r;
 		e.cli.echo("Displays:");
 
@@ -216,11 +216,16 @@ void Renderer::reload(Engine& e){
 	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);	
 	SDL_ShowWindow(window);
 	
+#ifndef _WIN32
+	// This crashes on windows for some reason, probably calling conventions. TODO: debug.
 	if(gl.DebugMessageCallback){
 		gl.DebugMessageCallback(&gl_dbg_callback, nullptr);
 		gl.Enable(GL_DEBUG_OUTPUT);
 	}
-	
+#else
+	(void)gl_dbg_callback;
+#endif
+
 	gl.Enable(GL_BLEND);
 	SDL_GL_SetSwapInterval(vsync->val);
 	
@@ -316,6 +321,7 @@ void Renderer::drawFrame(){
 			}
 		}
 	}
+
 	
 	SDL_GL_SwapWindow(window);
 	renderables.clear();

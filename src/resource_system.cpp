@@ -3,16 +3,22 @@
 
 using namespace std;
 
-extern "C" char _binary_internal_zip_start[], _binary_internal_zip_end[];
+#ifdef _WIN32
+	#define INTERNAL_ZIP(x) binary_internal_zip_ ## x
+#else
+	#define INTERNAL_ZIP(x) _binary_internal_zip_ ## x
+#endif
+
+extern "C" char INTERNAL_ZIP(start)[], INTERNAL_ZIP(end)[];
 
 ResourceSystem::ResourceSystem(const char* argv0){
 	if(!PHYSFS_init(argv0)){
 		log(logging::error, "PhysFS init Error: %s", PHYSFS_getLastError());
 	}
 	
-	const size_t sz = _binary_internal_zip_end - _binary_internal_zip_start;
+	const size_t sz = INTERNAL_ZIP(end) - INTERNAL_ZIP(start);
 
-	if(!PHYSFS_mountMemory(_binary_internal_zip_start, sz, NULL, ".zip", NULL, 0)){
+	if(!PHYSFS_mountMemory(INTERNAL_ZIP(start), sz, NULL, ".zip", NULL, 0)){
 		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
 

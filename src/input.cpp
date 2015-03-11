@@ -202,7 +202,7 @@ bool Input::StateBind::operator<(const StateBind& rhs) const {
 }
 
 static bool bind_key_fn(Input* const input, const string_view& str, bool raw){
-	char buff[str.size()+1] = {}; //XXX: allow VLAs?
+	char buff[str.size()+1]; //XXX: allow VLAs?
 	str.copy(buff, str.size());
 	
 	char* state = nullptr;
@@ -218,7 +218,7 @@ static bool bind_key_fn(Input* const input, const string_view& str, bool raw){
 }
 
 static bool bind_axis_fn(Input* const input, const string_view& str){
-	char buff[str.size()+1] = {};
+	char buff[str.size()+1];
 	str.copy(buff, str.size());
 
 	char* state = nullptr;

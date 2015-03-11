@@ -4,7 +4,7 @@
 #include "util.h"
 
 #define GL_STRINGIFY(name) STRINGIFY(gl##name)
-
+#undef OPTIONAL
 GLContext gl;
 
 using namespace logging;

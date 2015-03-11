@@ -3,7 +3,11 @@
 #include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
-#include <experimental/string_view>
+#if defined(__GNUC__) && __GNUC_MINOR__ < 9
+	#include "compat.h"
+#else
+	#include <experimental/string_view>
+#endif
 
 using string_view = std::experimental::string_view;
 using u32string_view = std::experimental::u32string_view;

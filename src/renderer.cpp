@@ -5,6 +5,10 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
+
 namespace {
 
 static const char* gl_dbgsrc2str(GLenum src){
@@ -41,7 +45,7 @@ static const char* gl_dbgsev2str(GLenum sev){
 	}
 }
 
-static void gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
+static void APIENTRY gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
 GLsizei len, const char* msg, const void* p){
 	logging::level lvl = 
 		(sev == GL_DEBUG_SEVERITY_HIGH)   ? logging::error :

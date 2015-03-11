@@ -127,7 +127,7 @@ inline bool str_to_bool(const char* str){
 	return str[0] == '1' || SDL_strncasecmp(str, "true", 4) == 0; 
 }
 
-inline constexpr bool str_to_bool(const string_view& str){
+inline bool str_to_bool(const string_view& str){
 	return str[0] == '1' || str.compare(0, 4, "true", 4) == 0;
 }
 

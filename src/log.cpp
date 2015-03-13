@@ -3,9 +3,11 @@
 #include <tuple>
 #include <algorithm>
 #include <stdarg.h>
+#include <cstdio>
+#include <cstdlib>
 #include <cassert>
 #include <cstring>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 
 namespace {
 
@@ -72,6 +74,7 @@ namespace logging {
 			}
 		
 			fprintf(stderr, "%s%s\n", get_level_prefix(l), msg);
+			fflush(stderr);
 			//TODO: output to file also?
 			
 			if(l == fatal){

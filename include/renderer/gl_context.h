@@ -2,7 +2,7 @@
 #define GL_CONTEXT_H
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <map>
 #include <unordered_set>
 #include "gl_functions.h"

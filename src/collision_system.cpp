@@ -79,7 +79,7 @@ void CollisionSystem::onCollision(uint32_t a, uint32_t b, CollisionFunc&& f){
 
 	uint32_t lo = std::min(a, b), hi = std::max(a, b);
 
-	funcs[{ lo, hi }] = std::move(f);
+	funcs[{{ lo, hi }}] = std::move(f);
 }
 
 void CollisionSystem::update(uint32_t delta){
@@ -87,10 +87,10 @@ void CollisionSystem::update(uint32_t delta){
 	for(size_t i = 0; i < boxes.size(); ++i){
 		for(size_t j = i + 1; j < boxes.size(); ++j){
 
-			const auto& it = funcs.find({
+			const auto& it = funcs.find({{
 				std::min(boxes[i]->collision_group, boxes[j]->collision_group),
 				std::max(boxes[i]->collision_group, boxes[j]->collision_group)
-			});
+			}});
 
 			if(it == funcs.end()) continue;
 

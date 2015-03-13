@@ -2,6 +2,11 @@
 #include "engine.h"
 #include <tuple>
 
+mouse_button_tag_t mouse_button_tag;
+mouse_wheel_tag_t mouse_wheel_tag;
+pad_button_tag_t pad_button_tag;
+mouse_tag_t mouse_tag;
+
 using namespace std;
 
 Input::Key::Key(const SDL_Keysym& k)
@@ -84,19 +89,19 @@ Input::Key::Key(const char* str, bool raw_scancode)
 	if(raw_scancode){
 		code = strtol(str, nullptr, 0);
 	} else {
-		if(SDL_strncasecmp(str, "mb", 2) == 0){
+		if(strncasecmp(str, "mb", 2) == 0){
 			code = KEY_MOUSEBUTTON_BIT | strtoul(str + 2, nullptr, 10);
-		} else if(SDL_strncasecmp(str, "mwheel", 6) == 0) {
+		} else if(strncasecmp(str, "mwheel", 6) == 0) {
 			code = str[6] == 'u'
 			     ? KEY_MOUSEWHEEL_BIT
 			     : str[6] == 'd'
 			     ? KEY_MOUSEWHEEL_BIT | 1
 			     : 0
 			     ;
-		} else if(SDL_strncasecmp(str, "pad_", 4) == 0){
+		} else if(strncasecmp(str, "pad_", 4) == 0){
 				
 			for(size_t i = 0; i < SDL_arraysize(pad_buttons); ++i){
-				if(SDL_strcasecmp(str + 4, pad_buttons[i]) == 0){
+				if(strcasecmp(str + 4, pad_buttons[i]) == 0){
 					code = KEY_GAMEPAD_BIT | i;
 					break;
 				}
@@ -150,7 +155,7 @@ Input::Axis::Axis(const char* str)
 	};
 	
 	for(size_t i = 0; i < SDL_arraysize(axes); ++i){
-		if(SDL_strcasecmp(str, axes[i].name) == 0){
+		if(strcasecmp(str, axes[i].name) == 0){
 			type = axes[i].type;
 			device_index = 0;   //TODO: multiple pads / mice.
 			axis_index = i;
@@ -340,7 +345,6 @@ void Input::onStateChange(GameState* s){
 
 	if(it != text_states.end()){
 		SDL_StartTextInput();
-		SDL_SetTextInputRect(&it->second);
 	} else {
 		SDL_StopTextInput();
 	}

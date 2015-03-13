@@ -1,5 +1,6 @@
 #ifndef LOG_H_
 #define LOG_H_
+#include "common.h"
 #include <functional>
 
 namespace logging {

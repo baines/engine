@@ -59,7 +59,7 @@ struct Text {
 
 	~Text();
 private:
-	friend class TextSystem;
+	friend struct TextSystem;
 
 	void setRenderable(Renderable* r);
 

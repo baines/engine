@@ -2,8 +2,8 @@
 #include "render_state.h"
 
 BlendMode::BlendMode()
-: funcs { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }
-, equations { GL_FUNC_ADD, GL_FUNC_ADD } {
+: funcs {{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }}
+, equations {{ GL_FUNC_ADD, GL_FUNC_ADD }} {
 
 }
 

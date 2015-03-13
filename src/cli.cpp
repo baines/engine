@@ -1,6 +1,6 @@
 #include "cli.h"
 #include "engine.h"
-
+#include <numeric>
 /* TODO:
  * Scroll through history:
  *     pageup    -> scroll 1 line up in history

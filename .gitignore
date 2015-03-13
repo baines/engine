@@ -1,7 +1,8 @@
 *.o
 *.a
 *~
-test/test
+test/test*
+test/internal.zip
 test/*.log
 test/*.png
 test/*.sh
@@ -9,4 +10,5 @@ test/data/settings.cfg
 build/internal.zip
 *.trace
 engine.vim
+engine.bc
 

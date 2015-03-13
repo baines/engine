@@ -4,8 +4,9 @@ builddir := ../build/$(OS)
 headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources)) $(builddir)/zip.o
-includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I../build/ -I/usr/$(PREFIX)/include/freetype2
-CXXFLAGS := $(includes) -std=c++1y -Wall -Werror -pipe -ffast-math -fno-rtti -fno-exceptions $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)
+includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I/usr/$(PREFIX)/include/freetype2
+CXXFLAGS := $(includes) -std=c++1y -Wall -pipe -ffast-math -fno-rtti -fno-exceptions\
+ $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)
 
 ifdef PREFIX
 	CXX := $(PREFIX)-g++
@@ -16,7 +17,7 @@ endif
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer
 else
-    CXXFLAGS += -Og -g -DDEBUG
+    CXXFLAGS += -O2 -g -DDEBUG
 endif
 
 all: $(output) 

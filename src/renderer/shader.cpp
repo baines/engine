@@ -23,9 +23,25 @@ bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
 	id = gl.CreateShader(type);
 
 	const GLchar* str = reinterpret_cast<const GLchar*>(res.data());
-	const GLint str_sz = res.size();
+	GLint str_sz = res.size();
 
-	gl.ShaderSource(id, 1, &str, &str_sz);
+	const char** str_ptr = &str;
+	const GLint* str_sz_ptr = &str_sz;
+	GLint num_lines = 1;
+
+#ifdef __EMSCRIPTEN__
+	const char webgl_precision[] = "precision mediump float;\n";
+	const char* webgl_str = strchr(str, '\n') + 1;
+	const char* webgl_lines[2] = { webgl_precision, webgl_str };
+	const GLint webgl_sizes[2] = { sizeof(webgl_precision) - 1, str_sz - (webgl_str - str) };
+
+	str_ptr = webgl_lines;
+	str_sz_ptr = webgl_sizes;
+
+	num_lines = 2;
+#endif
+
+	gl.ShaderSource(id, num_lines, str_ptr, str_sz_ptr);
 	gl.CompileShader(id);
 
 	GLint compiled_ok = GL_FALSE;

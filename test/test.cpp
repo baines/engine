@@ -9,6 +9,10 @@
 
 #include <iostream>
 
+#ifdef __EMSCRIPTEN__
+#include "emscripten.h"
+#endif
+
 using namespace std;
 
 void test_shader_uniforms(int, char**){
@@ -55,8 +59,13 @@ void test_engine_rendering(int argc, char** argv){
 	TestState ts(e);
 	
 	e.addState(&ts);
-	
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg([](void* e){
+		reinterpret_cast<Engine*>(e)->run();
+	}, &e, 0, true);
+#else
 	while(e.run());
+#endif
 }
 
 void test_engine_collision(int argc, char** argv){
@@ -65,7 +74,13 @@ void test_engine_collision(int argc, char** argv){
 	
 	e.addState(&ts);
 	
+#ifdef __EMSCRIPTEN__
+	emscripten_set_main_loop_arg([](void* e){
+		reinterpret_cast<Engine*>(e)->run();
+	}, &e, 0, true);
+#else
 	while(e.run());
+#endif
 }
 
 struct Test {

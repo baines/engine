@@ -6,11 +6,12 @@
 #include "shader_attribs.h"
 
 struct VertexBuffer : public GLObject {
+	virtual void bind(RenderState& rs);
 	virtual const ShaderAttribs& getShaderAttribs() const = 0;
 	virtual GLint  getStride() const = 0;
 	virtual size_t getSize() const = 0;
 	virtual GLuint getID() const = 0;
-	virtual void update() = 0;
+	virtual void update(RenderState&) = 0;
 	virtual void onGLContextRecreate(){};
 	virtual ~VertexBuffer(){};
 };
@@ -22,7 +23,7 @@ struct StaticVertexBuffer : VertexBuffer {
 	virtual GLint  getStride() const;
 	virtual size_t getSize() const;
 	virtual GLuint getID() const;
-	virtual void update();
+	virtual void update(RenderState&);
 	virtual void onGLContextRecreate();
 	~StaticVertexBuffer();
 private:
@@ -49,7 +50,7 @@ struct DynamicVertexBuffer : VertexBuffer {
 		
 		stream_buf.mark();	
 	}
-	
+
 	void invalidate(BufferRange&& range);
 	
 	void clear();
@@ -59,7 +60,9 @@ struct DynamicVertexBuffer : VertexBuffer {
 	virtual GLint getStride() const;
 	virtual size_t getSize() const;
 	virtual GLuint getID() const;
-	virtual void update();
+	virtual void update(RenderState&);
+
+	~DynamicVertexBuffer(){};
 private:
 	std::vector<uint8_t> data;
 	ShaderAttribs attrs;

@@ -11,7 +11,7 @@ all: test
 win: test
 
 win: PREFIX=i686-w64-mingw32
-win: LDFLAGS := -mwindows -lmingw32 -lSDL2main $(LDFLAGS)
+win: LDFLAGS := -lmingw32 -lSDL2main $(LDFLAGS)
 win: SUFFIX=.exe
 
 test: test.cpp ../engine.a test_state.h test_collision_state.h

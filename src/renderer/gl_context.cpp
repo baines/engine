@@ -207,7 +207,6 @@ bool GLContext::loadAllFuncs(void){
 }
 
 void GLContext::loadExtensions(){
-
 	if(version >= 30){
 		GLint num_ext = 0;
 		GetIntegerv(GL_NUM_EXTENSIONS, &num_ext);

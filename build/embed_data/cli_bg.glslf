@@ -27,7 +27,7 @@ void main(){
 		0.4 + (intensity.x / 5.0) * line.x + (intensity.y / 5.0) * line.y
 	);
 
-	float border = clamp((pos.y + 4) - height, 0.0, 1.0);
+	float border = clamp((pos.y + 4.0) - height, 0.0, 1.0);
 
 	gl_FragColor = max(border * vec4(0.2, 0.2, 0.7, 1.0), (1.0 - border) * colour);
 

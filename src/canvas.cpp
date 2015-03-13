@@ -22,12 +22,12 @@ Canvas::Canvas(Engine& e)
 }
 
 void Canvas::addLine(vec2 from, vec2 to, uint32_t color){
-	std::array<uint8_t, 4> c = {
+	std::array<uint8_t, 4> c = {{
 		uint8_t(color >> 24),
 		uint8_t(color >> 16),
 		uint8_t(color >> 8),
 		uint8_t(color)
-	};
+	}};
 	
 	vertices.push(LineVert(from.x, from.y, c));
 	vertices.push(LineVert(to.x  , to.y  , c));
@@ -36,12 +36,12 @@ void Canvas::addLine(vec2 from, vec2 to, uint32_t color){
 }
 
 void Canvas::addBox(vec2 pos, vec2 size, uint32_t color){
-	std::array<uint8_t, 4> c = {
+	std::array<uint8_t, 4> c = {{
 		uint8_t(color >> 24),
 		uint8_t(color >> 16),
 		uint8_t(color >> 8),
 		uint8_t(color)
-	};
+	}};
 
 	size_t w = size.x / 2, h = size.y / 2;
 

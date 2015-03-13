@@ -3,12 +3,13 @@
 #include "gl_context.h"
 #include "buffer_common.h"
 #include "resource_system.h"
+#include "render_state.h"
 
 struct IndexBuffer : public GLObject {
-	virtual void   bind()              = 0;
+	virtual void   bind(RenderState&)  = 0;
 	virtual GLenum getType() const     = 0;
 	virtual GLuint getID()   const     = 0;
-	virtual void update()              = 0;
+	virtual void update(RenderState&)  = 0;
 	virtual void onGLContextRecreate() = 0;
 	virtual ~IndexBuffer(){}
 };
@@ -16,10 +17,10 @@ struct IndexBuffer : public GLObject {
 struct StaticIndexBuffer : public IndexBuffer {
 	StaticIndexBuffer();
 	StaticIndexBuffer(const ResourceHandle& data, GLenum type);
-	void bind();
+	void bind(RenderState&);
 	GLenum getType() const;
 	GLuint getID() const;
-	void update(){};
+	void update(RenderState&){};
 	void onGLContextRecreate();
 	~StaticIndexBuffer();
 private:
@@ -76,12 +77,16 @@ struct DynamicIndexBuffer : public IndexBuffer {
 		return indices.size() / sizeof(T);
 	}
 
-	void bind(){
-		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, stream_buf.getID());
+	void bind(RenderState& rs){
+		auto id = stream_buf.getID();
+		if(rs.ibo != id){
+			gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+			rs.ibo = id;
+		}
 	}
 
-	void update(){
-		stream_buf.update();
+	void update(RenderState& rs){
+		stream_buf.update(rs);
 	}
 
 	virtual void onGLContextRecreate(){

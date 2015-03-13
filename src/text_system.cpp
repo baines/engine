@@ -1,4 +1,4 @@
-#include "text_system.h"
+#include "engine.h"
 #include "font.h"
 #include "text.h"
 #include <algorithm>
@@ -54,7 +54,7 @@ TextSystem::TextSystem(Engine& e)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
 , text_shader(*text_vs, *text_fs)
-, blend_mode({ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }) {
+, blend_mode{{{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }}} {
 	assert(FT_Init_FreeType(&ft_lib) == 0);
 	text_shader.link();
 	v_state.setVertexBuffers({ &text_buffer });
@@ -174,12 +174,12 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			text_buffer.invalidate(BufferRange{ start + bytes, count - bytes, this });
 
 			t.renderable->count = verts;
-			t.str = std::move(newstr.to_string());
+			t.str = (std::u32string)newstr;
 			t.end_pos = t.getPos(newstr.size());
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);
-			t.str = std::move(newstr.to_string());
+			t.str = (std::u32string)newstr;
 			t.start_pos = newpos;
 			addText(t);
 		}

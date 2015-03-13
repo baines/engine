@@ -10,6 +10,8 @@ relwin:
 	@PREFIX=i686-w64-mingw32 OS=win32 RELEASE=1 $(MAKE) -C src
 cleanwin:
 	@OS=win32 $(MAKE) -C src clean
+emscripten:
+	$(MAKE) -C src -f makefile.emscripten
 	
 test: all
 	$(MAKE) -C test

@@ -1,4 +1,5 @@
 #include "vertex_buffer.h"
+#include "render_state.h"
 #include <numeric>
 #include <algorithm>
 #include "enums.h"
@@ -115,6 +116,14 @@ static void parse_attribs(const char* fmt, ShaderAttribs& attrs, GLint& stride) 
 
 }
 
+void VertexBuffer::bind(RenderState& rs){
+	auto id = getID();
+	if(id && rs.vbo != id){
+		gl.BindBuffer(GL_ARRAY_BUFFER, id);
+		rs.vbo = id;
+	}
+}
+
 StaticVertexBuffer::StaticVertexBuffer()
 : data()
 , attrs()
@@ -151,7 +160,7 @@ GLuint StaticVertexBuffer::getID(void) const {
 	return id;
 }
 
-void StaticVertexBuffer::update(){
+void StaticVertexBuffer::update(RenderState&){
 
 }
 
@@ -215,8 +224,8 @@ GLuint DynamicVertexBuffer::getID() const {
 	return stream_buf.getID();
 }
 
-void DynamicVertexBuffer::update(){
-	stream_buf.update();
+void DynamicVertexBuffer::update(RenderState& rs){
+	stream_buf.update(rs);
 }
 
 

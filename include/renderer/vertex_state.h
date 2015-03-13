@@ -17,10 +17,11 @@ struct VertexState : public GLObject {
 	~VertexState();
 private:
 	std::bitset<16> enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
-	ShaderAttribs active_attrs;
+	ShaderAttribs active_attribs;
 	std::vector<VertexBuffer*> vertex_buffers;
 	IndexBuffer* index_buffer;
 	GLuint id;
+	bool using_vao;
 };
 
 #endif

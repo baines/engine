@@ -10,7 +10,7 @@ struct ArgContext {
 	bool getNextArg(int& output);
 	bool getNextArg(const char*& output);
 private:
-	friend class ::Config;
+	friend struct ::Config;
 	ArgContext(int argc, char** argv);
 	void parse(Config& c);
 	int argc, idx;
@@ -156,7 +156,7 @@ Config::Config(Engine& e, int argc, char** argv){
 	} state = GET_NAME_START;
 	
 	
-	if(cfg_file = e.res.load("settings.cfg")){
+	if((cfg_file = e.res.load("settings.cfg"))){
 		const char* data = reinterpret_cast<const char*>(cfg_file.data());
 		size_t sz = cfg_file.size();
 		
@@ -204,6 +204,8 @@ Config::Config(Engine& e, int argc, char** argv){
 			}
 		}
 		add_line(data+sz);
+	} else {
+		puts("didn't get config file /cry.");
 	}
 	
 	// parse command line args after, so they'll override the cfg file.

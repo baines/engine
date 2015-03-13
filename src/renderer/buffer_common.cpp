@@ -1,5 +1,6 @@
 #include "buffer_common.h"
 #include "enums.h"
+#include "render_state.h"
 #include <algorithm>
 
 namespace {
@@ -49,7 +50,7 @@ StreamingBuffer::StreamingBuffer(GLenum type, std::vector<uint8_t>& buff, bool a
 , no_async(!append_only) {
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(type, id);
-	gl.BufferData(type, prev_capacity, nullptr, GL_STREAM_DRAW);
+	if(prev_capacity) gl.BufferData(type, prev_capacity, nullptr, GL_STREAM_DRAW);
 }
 
 void StreamingBuffer::mark(){
@@ -66,20 +67,85 @@ void StreamingBuffer::invalidateAll(){
 	dirty = true;
 }
 
-void StreamingBuffer::update(){
+void StreamingBuffer::update(RenderState& rs){
 /* TODO: more efficient buffer streaming
 	https://www.opengl.org/wiki/Buffer_Object_Streaming
 	http://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
 */
 	if(!dirty) return;
+	
+	GLuint* rs_buffer = nullptr;
 
-	gl.BindBuffer(type, id);
+	switch(type){
+		case GL_ELEMENT_ARRAY_BUFFER: rs_buffer = &rs.ibo; break;
+		case GL_ARRAY_BUFFER:         rs_buffer = &rs.vbo; break;
+	};
+
+	if(rs_buffer && *rs_buffer != id){
+		gl.BindBuffer(type, id);
+		*rs_buffer = id;
+	}
 
 	bool done = false;
 	
 	if(gl.streaming_mode->get() == DOUBLE_BUFFER){
 		log(logging::error, "gl_streaming_mode DOUBLE_BUFFER NYI");
 		gl.streaming_mode->set(BUFFER_INVALIDATE);
+	}
+	
+	if(gl.streaming_mode->get() == MAP_INVALIDATE && !no_async){
+		
+		if(!gl.MapBufferRange || !gl.UnmapBuffer){
+			log(logging::warn, "glInvalidateBufferData unavailable, using BUFFER_DATA_NULL.");
+			gl.streaming_mode->set(BUFFER_DATA_NULL);
+		} else {
+			GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
+
+			if(prev_capacity != data->capacity()){
+				gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
+			} else {
+				flags |= GL_MAP_INVALIDATE_BUFFER_BIT;
+			}
+
+			tidy_buffer(*data, unused_ranges, unused_bytes);
+			
+			void* gl_data = gl.MapBufferRange(
+				type, 
+				0, 
+				data->size(),
+				flags
+			);
+			
+			memcpy(gl_data, data->data(), data->size());
+			
+			gl.UnmapBuffer(type);
+		}
+	}
+	
+	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND && !no_async){
+
+		if(!gl.MapBufferRange || !gl.UnmapBuffer){
+			log(logging::warn, "glInvalidateBufferData unavailable, using BUFFER_DATA_NULL.");
+			gl.streaming_mode->set(BUFFER_DATA_NULL);
+		} else {
+			if(prev_capacity != data->capacity()
+			|| unused_bytes/3 >= data->capacity()/4){
+				tidy_buffer(*data, unused_ranges, unused_bytes);
+				gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
+				prev_size = 0;
+			}
+		
+			void* gl_data = gl.MapBufferRange(
+				type,
+				prev_size,
+				data->size() - prev_size,
+				GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT
+			);
+			
+			memcpy(gl_data, data->data() + prev_size, data->size() - prev_size);
+			
+			gl.UnmapBuffer(type);
+		}
 	}
 	
 	if(gl.streaming_mode->get() == BUFFER_INVALIDATE || (no_async && !done)){
@@ -107,50 +173,6 @@ void StreamingBuffer::update(){
 		gl.BufferSubData(type, 0, data->size(), data->data());
 		done = true;
 	}
-	
-	if(gl.streaming_mode->get() == MAP_INVALIDATE && !no_async){
-		GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
-		
-		if(prev_capacity != data->capacity()){
-			gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
-		} else {
-			flags |= GL_MAP_INVALIDATE_BUFFER_BIT;
-		}
-
-		tidy_buffer(*data, unused_ranges, unused_bytes);
-		
-		void* gl_data = gl.MapBufferRange(
-			type, 
-			0, 
-			data->size(),
-			flags
-		);
-		
-		memcpy(gl_data, data->data(), data->size());
-		
-		gl.UnmapBuffer(type);
-	}
-	
-	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND && !no_async){
-		if(prev_capacity != data->capacity()
-		|| unused_bytes/3 >= data->capacity()/4){
-			tidy_buffer(*data, unused_ranges, unused_bytes);
-			gl.BufferData(type, data->capacity(), nullptr, GL_STREAM_DRAW);
-			prev_size = 0;
-		}
-	
-		void* gl_data = gl.MapBufferRange(
-			type,
-			prev_size,
-			data->size() - prev_size,
-			GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_INVALIDATE_RANGE_BIT
-		);
-		
-		memcpy(gl_data, data->data() + prev_size, data->size() - prev_size);
-		
-		gl.UnmapBuffer(type);
-	}
-	
 	dirty = false;
 	prev_capacity = data->capacity();
 	prev_size = data->size();

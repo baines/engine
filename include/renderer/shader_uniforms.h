@@ -28,7 +28,7 @@ struct ShaderUniforms {
 	
 	// for setUniform({ glm::{i}vec{2,3,4}, ... });
 	template<template<class, glm::precision> class V, class T, glm::precision P>
-	typename std::enable_if<is_glm_vector<V, T>::value>::type
+	typename std::enable_if<glmstuff::is_glm_vector<V, T>::value>::type
 	setUniform(uint32_t hash, std::initializer_list<V<T, P>> vals){
 		_setUniform(
 			hash,
@@ -42,7 +42,7 @@ struct ShaderUniforms {
 	
 	// for setUniform({ glm::mat{2,3,4}{x{2,3,4}}, ... });
 	template<template<class, glm::precision> class M, class T, glm::precision P>
-	typename std::enable_if<is_glm_matrix<M, T>::value>::type
+	typename std::enable_if<glmstuff::is_glm_matrix<M, T>::value>::type
 	setUniform(uint32_t hash, std::initializer_list<M<T, P>> vals){
 		_setUniform(
 			hash,

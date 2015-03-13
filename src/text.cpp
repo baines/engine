@@ -8,7 +8,7 @@
 static const size_t COLORCODE_START = 0xfdd0;
 static const size_t COLORCODE_COUNT = 16;
 
-static const std::array<uint32_t, COLORCODE_COUNT> default_palette = {
+static const std::array<uint32_t, COLORCODE_COUNT> default_palette = {{
 	0x000000ff,
 	0xa90707ff,
 	0x05801fff,
@@ -25,7 +25,7 @@ static const std::array<uint32_t, COLORCODE_COUNT> default_palette = {
 	0xc450c8ff,
 	0x50c8c1ff,
 	0xffffffff
-};
+}};
 
 static bool is_color_code(char32_t c){
 	return c >= COLORCODE_START && c < COLORCODE_START + COLORCODE_COUNT;

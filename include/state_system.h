@@ -1,7 +1,7 @@
 #ifndef STATE_SYSTEM_H_
 #define STATE_SYSTEM_H_
 #include "common.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <vector>
 
 struct StateSystem {

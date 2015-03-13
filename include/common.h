@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
-#if defined(__GNUC__) && __GNUC_MINOR__ < 9
+#if 0 && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"
 #else
 	#include <experimental/string_view>
@@ -25,6 +25,7 @@ using u32string_view = std::experimental::u32string_view;
 struct Engine;
 struct Renderable;
 struct Renderer;
+struct RenderState;
 struct CollisionSystem;
 struct GameState;
 struct ResourceHandle;

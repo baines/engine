@@ -16,8 +16,11 @@ StaticIndexBuffer::StaticIndexBuffer(const ResourceHandle& data, GLenum type)
 	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
 }
 
-void StaticIndexBuffer::bind(void){
-	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+void StaticIndexBuffer::bind(RenderState& rs){
+	if(rs.ibo != id){
+		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
+		rs.ibo = id;
+	}
 }
 
 GLenum StaticIndexBuffer::getType() const {

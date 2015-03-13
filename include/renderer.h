@@ -1,7 +1,7 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
 #include "common.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include <vector>
 #include "renderer/shader.h"
 #include "renderer/vertex_state.h"

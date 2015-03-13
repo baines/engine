@@ -32,18 +32,28 @@ bool ShaderAttribs::containsAttrib(uint32_t hash, GLint index) const {
 	}
 }
 
-bool ShaderAttribs::bind(uint32_t hash, GLuint index) const {
+bool ShaderAttribs::bind(uint32_t hash, GLuint index, GLuint stride) const {
 	auto it = std::find(attribs.begin(), attribs.end(), hash);
 	
 	if(it == attribs.end()) return false;
-	
+
+	const void* off = reinterpret_cast<void*>(it->off);
+
 	if(it->flags & ATR_INT){
-		gl.VertexAttribIFormat(index, it->nelem, it->type, it->off);
+		if(gl.VertexAttribIFormat){
+			gl.VertexAttribIFormat(index, it->nelem, it->type, it->off);
+		} else {
+			gl.VertexAttribIPointer(index, it->nelem, it->type, stride, off);
+		}
 	} else {
 		bool norm = it->flags & ATR_NORM;
-		TRACEF("Set VertexAttribFormat: idx: %d, nelem: %d, type: %x, norm? %d, off: %d",
-			index, it->nelem, it->type, norm, it->off);
-		gl.VertexAttribFormat(index, it->nelem, it->type, norm, it->off);
+		if(gl.VertexAttribFormat){
+			TRACEF("Set VertexAttribFormat: idx: %d, nelem: %d, type: %x, norm? %d, off: %d",
+				index, it->nelem, it->type, norm, it->off);
+			gl.VertexAttribFormat(index, it->nelem, it->type, norm, it->off);
+		} else {
+			gl.VertexAttribPointer(index, it->nelem, it->type, norm, stride, off);
+		}
 	}
 	
 	return true;

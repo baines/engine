@@ -120,6 +120,23 @@ static GLenum get_base_fmt(GLenum sized_fmt){
 		}
 	}
 }
+
+void texture2d_init(GLuint& id, GLenum type, GLenum int_fmt, int w, int h, const void* data){
+
+	gl.GenTextures(1, &id);
+	gl.BindTexture(GL_TEXTURE_2D, id);
+	if(gl.TexStorage2D){
+		gl.TexStorage2D(GL_TEXTURE_2D, 1, int_fmt, w, h);
+		gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, get_base_fmt(int_fmt), type, data);
+	} else {
+		gl.TexImage2D(GL_TEXTURE_2D, 0, get_base_fmt(int_fmt), w, h, 0, get_base_fmt(int_fmt), type, data);
+		gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);	
+	}
+}
+
 }
 
 using namespace std;
@@ -131,15 +148,11 @@ Texture2D::Texture2D()
 
 }
 
-Texture2D::Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const void* data)
+Texture2D::Texture2D(GLenum type, GLenum int_fmt, int w, int h, const void* data)
 : id(0)
 , w(w)
 , h(h) {
-
-	gl.GenTextures(1, &id);
-	gl.BindTexture(GL_TEXTURE_2D, id);
-	gl.TexStorage2D(GL_TEXTURE_2D, 1, int_fmt, w, h);
-	gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, get_base_fmt(int_fmt), fmt, data);
+	texture2d_init(id, type, int_fmt, w, h, data);
 }
 
 Texture2D& Texture2D::operator=(Texture2D&& other){
@@ -152,10 +165,7 @@ Texture2D& Texture2D::operator=(Texture2D&& other){
 bool Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
 	uint8_t* pixels = stbi_load_from_memory(img.data(), img.size(), &w, &h, nullptr, 4);
 	
-	gl.GenTextures(1, &id);
-	gl.BindTexture(GL_TEXTURE_2D, id);
-	gl.TexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, w, h);
-	gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+	texture2d_init(id, GL_UNSIGNED_BYTE, GL_RGBA8, w, h, pixels);
 	
 	stbi_image_free(pixels);
 	return true;
@@ -189,6 +199,7 @@ bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
 	if(id && id != rs.tex[tex_unit]){
 		if(rs.active_tex != tex_unit){
 			gl.ActiveTexture(GL_TEXTURE0 + tex_unit);
+			rs.active_tex = tex_unit;
 		}
 		gl.BindTexture(GL_TEXTURE_2D, id);
 		rs.tex[tex_unit] = id;

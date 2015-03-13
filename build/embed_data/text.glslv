@@ -13,6 +13,6 @@ void main(void){
 	tex = a_tex;
 	col = a_col;
 
-	gl_Position = u_ortho * vec4(a_pos, 0, 1);
+	gl_Position = u_ortho * vec4(a_pos, 0.0, 1.0);
 }
 

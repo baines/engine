@@ -2,16 +2,16 @@
 #define INPUT_H_
 #include "common.h"
 #include "util.h"
-#include <SDL2/SDL.h>
+#include <SDL.h>
 #include "game_state.h"
 #include <map>
 #include <unordered_map>
 #include <string>
 
-static constexpr struct mouse_button_tag_t {} mouse_button_tag;
-static constexpr struct mouse_wheel_tag_t {} mouse_wheel_tag;
-static constexpr struct pad_button_tag_t {} pad_button_tag;
-static constexpr struct mouse_tag_t {} mouse_tag;
+extern struct mouse_button_tag_t {} mouse_button_tag;
+extern struct mouse_wheel_tag_t {} mouse_wheel_tag;
+extern struct pad_button_tag_t {} pad_button_tag;
+extern struct mouse_tag_t {} mouse_tag;
 
 struct Input {
 	

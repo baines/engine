@@ -3,27 +3,31 @@
 
 using namespace std;
 
-#ifdef _WIN32
-	#define INTERNAL_ZIP(x) binary_internal_zip_ ## x
-#else
-	#define INTERNAL_ZIP(x) _binary_internal_zip_ ## x
+#ifndef __EMSCRIPTEN__
+	#ifdef _WIN32
+		#define INTERNAL_ZIP(x) binary_internal_zip_ ## x
+	#else
+		#define INTERNAL_ZIP(x) _binary_internal_zip_ ## x
+	#endif
+	
+	extern "C" char INTERNAL_ZIP(start)[], INTERNAL_ZIP(end)[];
 #endif
-
-extern "C" char INTERNAL_ZIP(start)[], INTERNAL_ZIP(end)[];
 
 ResourceSystem::ResourceSystem(const char* argv0){
 	if(!PHYSFS_init(argv0)){
 		log(logging::error, "PhysFS init Error: %s", PHYSFS_getLastError());
 	}
-	
+#ifdef __EMSCRIPTEN__
+	if(!PHYSFS_mount("internal.zip", NULL, 0)){
+#else
 	const size_t sz = INTERNAL_ZIP(end) - INTERNAL_ZIP(start);
-
 	if(!PHYSFS_mountMemory(INTERNAL_ZIP(start), sz, NULL, ".zip", NULL, 0)){
+#endif
 		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}
 
 	char path[PATH_MAX] = {};
-	snprintf(path, sizeof(path), "%s%sdata", PHYSFS_getBaseDir(), PHYSFS_getDirSeparator());
+	snprintf(path, sizeof(path), "%s%sdata/", PHYSFS_getBaseDir(), PHYSFS_getDirSeparator());
 	if(!PHYSFS_mount(path, NULL, 0)){
 		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
 	}

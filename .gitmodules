@@ -1,0 +1,12 @@
+[submodule "build/emscripten-deps/boost"]
+	path = build/emscripten-deps/boost
+	url = https://github.com/boostorg/preprocessor.git
+[submodule "build/emscripten-deps/ft2"]
+	path = build/emscripten-deps/ft2
+	url = http://git.sv.nongnu.org/r/freetype/freetype2.git
+[submodule "build/emscripten-deps/glm"]
+	path = build/emscripten-deps/glm
+	url = https://github.com/g-truc/glm.git
+[submodule "build/emscripten-deps/SDL2"]
+	path = build/emscripten-deps/SDL2
+	url = https://github.com/spurious/SDL-mirror.git

@@ -19,16 +19,6 @@ namespace {
 		logging::fatal;
 #endif
 
-	static SDL_MessageBoxColorScheme colors = {{
-		{ 27 , 24 , 37  }, // bg
-		{ 200, 200, 200 }, // text
-		{ 200, 200, 200 }, // button border
-		{ 27 , 24 , 37  }, // button bg
-		{ 255, 255, 255 }  // button selected
-	}};
-	
-	static SDL_MessageBoxButtonData button = { 3, 0, "Ok :(" };
-
 	static const char* get_level_prefix(logging::level l){
 		switch(l){
 			case logging::fatal : return "[FATAL] ";
@@ -41,6 +31,16 @@ namespace {
 		}
 	}
 
+#ifndef __EMSCRIPTEN__
+	static SDL_MessageBoxColorScheme colors = {{
+		{ 27 , 24 , 37  }, // bg
+		{ 200, 200, 200 }, // text
+		{ 200, 200, 200 }, // button border
+		{ 27 , 24 , 37  }, // button bg
+		{ 255, 255, 255 }  // button selected
+	}};
+
+	static SDL_MessageBoxButtonData button = { 3, 0, "Ok :(" };
 	void msgbox(const char* text){
 	
 		SDL_MessageBoxData msg = {
@@ -55,6 +55,19 @@ namespace {
 	
 		SDL_ShowMessageBox(&msg, nullptr);
 	}
+#else
+	void msgbox(const char* text){
+		char buf[1024];
+		int text_len = std::min<int>(1000, strlen(text));
+
+		snprintf(buf, sizeof(buf), "alert('Error: %.*s');", text_len, text);
+		for(int i = 14; i < 14 + text_len; ++i){
+			if(buf[i] == '\'') buf[i] = ' ';
+		}
+
+		emscripten_run_script(buf);
+	}
+#endif
 }
 
 namespace logging {
@@ -74,7 +87,6 @@ namespace logging {
 			}
 		
 			fprintf(stderr, "%s%s\n", get_level_prefix(l), msg);
-			fflush(stderr);
 			//TODO: output to file also?
 			
 			if(l == fatal){

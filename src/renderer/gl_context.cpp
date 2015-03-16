@@ -33,7 +33,7 @@ namespace {
 
 	bool load_func(const char* name, void*& ptr){
 		log(info, "Loading Func: %-32s [%p]", name, (ptr = SDL_GL_GetProcAddress(name)));
-		return ptr != nullptr;
+		return check_result(name, 0, ptr != nullptr);
 	}
 	
 	bool load_func(const char* name, void*& ptr, uint32_t flags){

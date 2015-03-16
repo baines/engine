@@ -3,7 +3,7 @@
 #include <array>
 #include <cstdint>
 #include <glm/glm.hpp>
-#if 0 && defined(__GNUC__) && __GNUC_MINOR__ < 9
+#if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"
 #else
 	#include <experimental/string_view>
@@ -13,6 +13,10 @@ using string_view = std::experimental::string_view;
 using u32string_view = std::experimental::u32string_view;
 
 #include "log.h"
+
+#ifdef __EMSCRIPTEN__
+#include "emscripten.h"
+#endif
 
 #ifdef DEBUG
 	#define DEBUGF(fmt, ...) do { log(logging::debug, fmt, ##__VA_ARGS__); } while (0)

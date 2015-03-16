@@ -1,5 +1,10 @@
 #include "engine.h"
 #include "game_state.h"
+#ifdef __EMSCRIPTEN__
+static int get_ticks(){ return std::round(emscripten_get_now()); }
+#else
+static int get_ticks(){ return SDL_GetTicks(); }
+#endif
 
 Engine::Engine(int argc, char** argv, const char* name)
 : res        (argv[0])
@@ -24,8 +29,8 @@ void Engine::addState(GameState* s){
 bool Engine::run(void){
 
 	const int min_delta = 1000 / std::max(1, max_fps->val);
-	int delta = SDL_GetTicks() - prev_ticks; //XXX: high res timer?
-	
+	int delta = std::max<int>(0, get_ticks() - prev_ticks);
+
 	if(delta < min_delta){
 		SDL_Delay(min_delta - delta);
 		delta = min_delta;

@@ -31,22 +31,26 @@ namespace {
 		return loaded;
 	}
 
-	bool load_func(const char* name, void*& ptr){
-		log(info, "Loading Func: %-32s [%p]", name, (ptr = SDL_GL_GetProcAddress(name)));
-		return check_result(name, 0, ptr != nullptr);
+	bool do_load(const char* name, void** ptr){
+		log(info, "Loading Func: %-32s [%p]", name, (*ptr = SDL_GL_GetProcAddress(name)));
+		return *ptr != nullptr;
+	}
+
+	bool load_func(const char* name, void** ptr){
+		return check_result(name, 0, do_load(name, ptr));
 	}
 	
-	bool load_func(const char* name, void*& ptr, uint32_t flags){
+	bool load_func(const char* name, void** ptr, uint32_t flags){
 		uint32_t req_vers = flags & 0xFFFF;
-		bool result = gl.version >= req_vers && load_func(name, ptr);
+		bool result = gl.version >= req_vers && do_load(name, ptr);
 		return check_result(name, flags, result);
 	}
 
-	bool load_func(const char* name, size_t nsz, void*& ptr, uint32_t flags, const char* ext, size_t esz){
+	bool load_func(const char* name, size_t nsz, void** ptr, uint32_t flags, const char* ext, size_t esz){
 		uint32_t req_vers = flags & 0xFFFF;
 		
 		if(req_vers && gl.version >= req_vers){
-			return load_func(name, ptr);
+			return do_load(name, ptr);
 		} else {
 			for(size_t i = 0; i < SDL_arraysize(prefix_names) && !ptr; ++i){
 				if(!(flags & (1 << (16+i)))) continue;
@@ -58,7 +62,7 @@ namespace {
 			
 				if(gl.hasExtension(ebuf)){
 					if(i == 0){ // ARBCORE doesn't append to func names
-						load_func(name, ptr);
+						do_load(name, ptr);
 					} else {
 						char* nbuf = SDL_stack_alloc(char, nsz + sz - 1);
 				
@@ -66,7 +70,7 @@ namespace {
 						memcpy(nbuf + nsz - 1, prefix_names[i].str, sz - 1);
 						nbuf[nsz+sz-2] = 0;
 				
-						load_func(nbuf, ptr);
+						do_load(nbuf, ptr);
 				
 						SDL_stack_free(nbuf);
 					}
@@ -75,12 +79,12 @@ namespace {
 				SDL_stack_free(ebuf);
 			}
 
-			return check_result(name, flags, ptr != nullptr);
+			return check_result(name, flags, *ptr != nullptr);
 		}
 	}
 		
 	template<size_t A, size_t B>
-	bool load_func(const char (&name)[A], void*& ptr, uint32_t v, const char (&ext)[B]){
+	bool load_func(const char (&name)[A], void** ptr, uint32_t v, const char (&ext)[B]){
 		return load_func(name, A, ptr, v, ext, B);
 	}
 }
@@ -194,7 +198,7 @@ bool GLContext::loadAllFuncs(void){
 	size_t total = 0, loaded = 0;
 	#define GLFUNC(type, name, args, ...) \
 		total++; \
-		if(load_func(GL_STRINGIFY(name), (void*&)name, ##__VA_ARGS__ )){ \
+		if(load_func(GL_STRINGIFY(name), reinterpret_cast<void**>(&name), ##__VA_ARGS__ )){ \
 			loaded++; \
 		} else { \
 			log(info, "Func %s is not available.", GL_STRINGIFY(name)); \

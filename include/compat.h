@@ -75,6 +75,10 @@ struct string_view_template {
 		return std::basic_string<CT>(ptr, sz);
 	}
 
+	operator std::basic_string<CT>() const {
+		return to_string();
+	}
+
 private:
 	const CT* ptr;
 	size_t sz;

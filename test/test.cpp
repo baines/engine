@@ -108,8 +108,6 @@ int main(int argc, char** argv){
 		for(auto& t : tests){
 			if(strcasecmp(argv[1], t.name) == 0){
 				chosen_test = t.func;
-				++argv;
-				--argc;
 				break;
 			}
 		}

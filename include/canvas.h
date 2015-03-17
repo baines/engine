@@ -6,6 +6,7 @@
 #include "shader.h"
 #include "renderable.h"
 #include "resource.h"
+#include "engine.h"
 
 struct Canvas {
 	Canvas(Engine& e);

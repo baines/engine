@@ -11,11 +11,12 @@ LDFLAGS = -s USE_SDL=0\
  ../build/emscripten-deps/bytecode/libfreetype.a\
  ../build/emscripten-deps/bytecode/libphysfs.a\
  ../build/emscripten-deps/bytecode/libSDL2.a\
- --preload-file data --preload-file internal.zip
+ --preload-file data --preload-file internal.zip\
+ --pre-js args.js
 
 all: test.html
 
-test.html: test.cpp ../engine.bc internal.zip test_state.h test_collision_state.h
+test.html: test.cpp ../engine.bc args.js data internal.zip test_state.h test_collision_state.h
 	$(CXX) $(CXXFLAGS) $(includes) $< ../engine.bc -o $@$(SUFFIX) $(LDFLAGS)
 	
 internal.zip: ../build/internal.zip

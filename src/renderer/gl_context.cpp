@@ -52,7 +52,7 @@ namespace {
 		if(req_vers && gl.version >= req_vers){
 			return do_load(name, ptr);
 		} else {
-			for(size_t i = 0; i < SDL_arraysize(prefix_names) && !ptr; ++i){
+			for(size_t i = 0; i < SDL_arraysize(prefix_names) && !*ptr; ++i){
 				if(!(flags & (1 << (16+i)))) continue;
 				
 				size_t sz = prefix_names[i].size;

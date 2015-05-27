@@ -115,10 +115,10 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
 	DEBUGF("Font info:\n\tmax_advance: %d\n\tnum_glyphs: %d, asc: %d, desc: %d",
-	       face->size->metrics.max_advance >> 6,
-	       face->num_glyphs,
-	       face->size->metrics.ascender >> 6,
-	       -(face->size->metrics.descender >> 6));
+	       (int)face->size->metrics.max_advance >> 6,
+	       (int)face->num_glyphs,
+	       (int)face->size->metrics.ascender >> 6,
+	       (int)-(face->size->metrics.descender >> 6));
 	
 	int init_w = 0, max_w = 0;
 

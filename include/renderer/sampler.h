@@ -21,6 +21,8 @@ struct Sampler : public GLObject {
 	void bind(size_t tex_unit, RenderState& rs) const;
 
 	void onGLContextRecreate() override;
+
+	~Sampler();
 private:
 	std::map<GLenum, GLint> params;
 	GLuint id;

@@ -49,9 +49,10 @@ GLFUNC(void, TexSubImage2D, (GLenum, GLint, GLint, GLint, GLsizei, GLsizei, GLen
 GLFUNC(void, TexParameteri, (GLenum, GLenum, GLint))
 GLFUNC(void, TexParameteriv, (GLenum, GLenum, const GLint*))
 GLFUNC(void, DeleteTextures, (GLsizei, const GLuint*))
-GLFUNC(void, GenerateMipmap, (GLenum), OPTIONAL)
+//GLFUNC(void, GenerateMipmap, (GLenum), OPTIONAL)
 
 GLFUNC(void, GenSamplers, (GLsizei, GLuint*), OPTIONAL | ARBCORE | 33, "sampler_objects")
+GLFUNC(void, DeleteSamplers, (GLsizei, const GLuint*))
 GLFUNC(void, BindSampler, (GLuint, GLuint), OPTIONAL | ARBCORE | 33, "sampler_objects")
 GLFUNC(void, SamplerParameteri, (GLuint, GLenum, GLint), OPTIONAL | ARBCORE | 33, "sampler_objects")
 
@@ -113,7 +114,7 @@ GLFUNC(void, UniformMatrix4x3fv, (GLint, GLsizei, GLboolean, const GLfloat*), OP
 GLFUNC(void, BlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum))
 GLFUNC(void, BlendEquationSeparate, (GLenum, GLenum))
 
-//GLFUNC(void, DebugMessageCallback, (GLDEBUGPROC, const void*), OPTIONAL | ARB | 43, "debug_output")
+GLFUNC(void, DebugMessageCallback, (GLDEBUGPROC, const void*), OPTIONAL | ARB | 43, "debug_output")
 
 #ifdef UNDEF_GLFUNC
 	#undef GLFUNC

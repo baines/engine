@@ -78,10 +78,14 @@ Input::Key::Key(const char* str, bool raw_scancode)
 
 	if(str[0] != '-' && (mod_separator = strchr(str, '-'))){
 		for(const char* p = str; p < mod_separator; ++p){
+			if(*p == '*'){
+				ignore_mods = true;
+				shift = ctrl = alt = false;
+				break;
+			}
 			if(*p == 's' || *p == 'S') shift = true;
 			if(*p == 'c' || *p == 'C') ctrl  = true;
 			if(*p == 'a' || *p == 'A') alt   = true;
-			if(*p == '*') ignore_mods = true;
 		}
 		str = mod_separator+1;
 	}
@@ -112,6 +116,37 @@ Input::Key::Key(const char* str, bool raw_scancode)
 	}
 }
 
+size_t Input::Key::toString(char* buf, size_t len){
+	if(!buf || len < 8) return 0;
+	const char* orig_buf = buf;
+
+	if(ignore_mods) *buf++ = '*';
+	if(shift)       *buf++ = 'S';
+	if(ctrl)        *buf++ = 'C';
+	if(alt)         *buf++ = 'A';
+	if(buf != orig_buf) *buf++ = '-';
+
+	len -= (buf - orig_buf);
+
+	if(code & KEY_MOUSEBUTTON_BIT){
+		buf += max<int>(0, snprintf(buf, len, "mb%d", code - KEY_MOUSEBUTTON_BIT));
+	} else if(code & KEY_MOUSEWHEEL_BIT){
+		buf += max<int>(0, snprintf(buf, len, "mwheel%s", code & 1 ? "down" : "up"));
+	} else if(code & KEY_GAMEPAD_BIT){
+		size_t i = code - KEY_GAMEPAD_BIT;
+
+		if(i < SDL_arraysize(pad_buttons)){
+			buf += max<int>(0, snprintf(buf, len, "pad_%s", pad_buttons[i]));
+		} else {
+			buf += SDL_strlcpy(buf, "[unknown pad btn]", len);	
+		}
+	} else {
+		buf += SDL_strlcpy(buf, SDL_GetScancodeName(static_cast<SDL_Scancode>(code)), len);
+	}
+
+	return buf - orig_buf;
+}
+
 bool Input::Key::operator<(const Key& rhs) const {
 	if(ignore_mods || rhs.ignore_mods){
 		return code < rhs.code;
@@ -135,25 +170,24 @@ Input::Axis::Axis(mouse_tag_t, int axis)
 
 }
 
+constexpr struct axis_map {
+	Input::Axis::AxisType type;
+	const char* name;
+} axes[] = {
+	{ Input::Axis::AXIS_MOUSE, "mouse_x" },
+	{ Input::Axis::AXIS_MOUSE, "mouse_y" },
+	{ Input::Axis::AXIS_PAD,   "pad_ls_x" },
+	{ Input::Axis::AXIS_PAD,   "pad_ls_y" },
+	{ Input::Axis::AXIS_PAD,   "pad_rs_x" },
+	{ Input::Axis::AXIS_PAD,   "pad_rs_y" },
+	{ Input::Axis::AXIS_PAD,   "pad_lt" },
+	{ Input::Axis::AXIS_PAD,   "pad_rt" }
+};
+
 Input::Axis::Axis(const char* str)
 : type(AXIS_INVALID)
 , device_index()
 , axis_index() {
-
-	constexpr struct axis_map {
-		AxisType type;
-		const char* name;
-	} axes[] = {
-		{ AXIS_MOUSE, "mouse_x" },
-		{ AXIS_MOUSE, "mouse_y" },
-		{ AXIS_PAD,   "pad_ls_x" },
-		{ AXIS_PAD,   "pad_ls_y" },
-		{ AXIS_PAD,   "pad_rs_x" },
-		{ AXIS_PAD,   "pad_rs_y" },
-		{ AXIS_PAD,   "pad_lt" },
-		{ AXIS_PAD,   "pad_rt" }
-	};
-	
 	for(size_t i = 0; i < SDL_arraysize(axes); ++i){
 		if(strcasecmp(str, axes[i].name) == 0){
 			type = axes[i].type;
@@ -162,6 +196,15 @@ Input::Axis::Axis(const char* str)
 			break;
 		}
 	}
+}
+
+size_t Input::Axis::toString(char* buf, size_t len){
+	for(size_t i = 0; i < SDL_arraysize(axes); ++i){
+		if(type == axes[i].type){
+			return SDL_strlcpy(buf, axes[i].name, len);
+		}
+	}
+	return SDL_strlcpy(buf, "[unknown axis]", len);
 }
 
 bool Input::Axis::operator<(const Axis& rhs) const {
@@ -202,6 +245,14 @@ bool Input::Binding::operator==(const Axis& a) const {
 	return type == BINDING_AXIS && data.axis.axis == a;
 }
 
+size_t Input::Binding::toString(char* buf, size_t len){
+	if(type == BINDING_KEY){
+		return data.key.toString(buf, len);
+	} else {
+		return data.axis.axis.toString(buf, len);
+	}
+}
+
 bool Input::StateBind::operator<(const StateBind& rhs) const {
 	return tie(state, bind) < tie(rhs.state, rhs.bind);
 }
@@ -216,7 +267,7 @@ static bool bind_key_fn(Input* const input, const string_view& str, bool raw){
 	char* act = strtok_r(nullptr, " \t", &state);
 	
 	if(key && act){
-		input->bind(Input::Key(key, raw), str_hash(act));
+		input->bind(Input::Key(key, raw), act);
 		return true;
 	} else {
 		return false;
@@ -256,7 +307,7 @@ static bool bind_axis_fn(Input* const input, const string_view& str){
 		}
 	}
 
-	input->bind(axis, str_hash(str_act), rel, scale);
+	input->bind(axis, str_act, rel, scale);
 
 	return true;
 }
@@ -288,14 +339,41 @@ Input::Input(Engine& e)
 		"Usage: bind_axis <axis_name> <action> [relative?] [scale]"
 	);
 
+	e.cfg.addVar<CVarFunc>("bindlist", [&](const string_view&){
+		char bind_buf[32] = {};
+		size_t bind_len = sizeof(bind_buf);
+
+		for(auto& bp : binds){
+			bp.second.toString(bind_buf, bind_len);
+
+			const char* action = "[unknown action]";
+			auto it = action_names.find(bp.first);
+			if(it != action_names.end()){
+				action = it->second.c_str();
+			}
+
+			e.cli.printf("%10s: %s\n", bind_buf, action);
+		}
+
+		return true;
+	}, "Lists the current set of keybindings.");
+
+
 	SDL_StopTextInput();
 }
 
-void Input::bind(Key key, strhash_t action){
+void Input::bind(Key key, const string_view& action){
+	strhash_t act_hash = str_hash_len(action.data(), action.size());
+	action_names.emplace(
+		piecewise_construct,
+		forward_as_tuple(act_hash),
+		forward_as_tuple(action.data(), action.size())
+	);
+
 	if(key.code != SDL_SCANCODE_UNKNOWN){
-		binds.emplace(action, key);
+		binds.emplace(act_hash, key);
 		
-		auto pair = bound_actions.equal_range(action);
+		auto pair = bound_actions.equal_range(act_hash);
 		for(auto i = pair.first, j = pair.second; i != j; ++i){
 			StateAction& sa = i->second;
 			active_binds.emplace(StateBind{sa.state, key}, sa.id);
@@ -304,11 +382,18 @@ void Input::bind(Key key, strhash_t action){
 }
 
 //TODO: merge this function with the other bind?
-void Input::bind(Axis axis, strhash_t action, bool rel, float scale){
-	if(axis.type != Axis::AXIS_INVALID){
-		binds.emplace(action, Binding{ axis, rel, scale });
+void Input::bind(Axis axis, const string_view& action, bool rel, float scale){
+	strhash_t act_hash = str_hash_len(action.data(), action.size());
+	action_names.emplace(
+		piecewise_construct,
+		forward_as_tuple(act_hash),
+		forward_as_tuple(action.data(), action.size())
+	);
 
-		auto pair = bound_actions.equal_range(action);
+	if(axis.type != Axis::AXIS_INVALID){
+		binds.emplace(act_hash, Binding{ axis, rel, scale });
+
+		auto pair = bound_actions.equal_range(act_hash);
 		for(auto i = pair.first, j = pair.second; i != j; ++i){
 			StateAction& sa = i->second;
 			active_binds.emplace(StateBind{sa.state, Binding{ axis, rel, scale}}, sa.id);

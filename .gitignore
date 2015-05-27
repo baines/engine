@@ -1,7 +1,10 @@
 *.o
 *.a
 *~
-test/test*
+test/test
+test/test.html*
+test/test.data
+test/test.js
 test/internal.zip
 test/*.log
 test/*.png

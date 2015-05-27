@@ -230,8 +230,9 @@ void GLContext::loadExtensions(){
 			const char* c = nullptr, *prev_c = exts+3;
 
 			while((c = strchr(prev_c, ' '))){
-				if(!extensions.insert(str_hash_len(prev_c, c - prev_c)).second){
-					log(logging::warn, "GL Extension hash collision :/ (%.*s).", c - prev_c, prev_c);
+				int len = c - prev_c;
+				if(!extensions.insert(str_hash_len(prev_c, len)).second){
+					log(logging::warn, "GL Extension hash collision :/ (%.*s).", len, prev_c);
 				}
 				if(!c[1] || !c[2] || !c[3]) break;
 				prev_c = c+4;

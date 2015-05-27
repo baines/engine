@@ -119,7 +119,7 @@ bool ShaderUniforms::operator==(const ShaderUniforms& other) const {
 bool ShaderUniforms::bind(GLuint program_id, ShaderUniforms& active) const {
 	const ustorage* p = uniforms.data();
 	
-	TRACEF("ucount: %d, active ucount: %d.", uniform_info.size(), active.uniform_info.size());
+	TRACEF("ucount: %zd, active ucount: %zd.", uniform_info.size(), active.uniform_info.size());
 	
 	for(auto& i : uniform_info){
 		

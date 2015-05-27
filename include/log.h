@@ -16,7 +16,7 @@ namespace logging {
 		trace = 5
 	};
 
-	void log(level l, const char* fmt, ...);
+	void log(level l, const char* fmt, ...) __attribute__ ((format (printf, 2, 3)));
 	
 	void setVerbosity(level l);
 	

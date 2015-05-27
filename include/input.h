@@ -27,6 +27,8 @@ struct Input {
 		Key(pad_button_tag_t, uint8_t button);
 		
 		Key(const char* str, bool raw_scancode = false);
+
+		size_t toString(char* buf, size_t len);
 		
 		bool operator<(const Key& k) const;
 		bool operator==(const Key& k) const;
@@ -44,6 +46,8 @@ struct Input {
 		
 		Axis(const char* str);
 		
+		size_t toString(char* buf, size_t len);
+		
 		bool operator<(const Axis& a) const;
 		bool operator==(const Axis& a) const;
 
@@ -58,8 +62,8 @@ struct Input {
 
 	Input(Engine& e);
 
-	void bind(Key key, strhash_t action);
-	void bind(Axis axis, strhash_t action, bool rel, float scale = 1.0f);
+	void bind(Key key, const string_view& action);
+	void bind(Axis axis, const string_view& action, bool rel, float scale = 1.0f);
 	void unbind(Key key);
 
 	void watchAction(GameState* s, const str_const& action, int action_id);
@@ -92,6 +96,7 @@ private:
 		bool operator<(const Binding& rhs) const;
 		bool operator==(const Key& k) const;
 		bool operator==(const Axis& a) const;
+		size_t toString(char* buf, size_t len);
 	};
 	struct StateAction {
 		GameState* state;
@@ -107,8 +112,9 @@ private:
 	std::map<StateBind, int> active_binds;
 	std::multimap<strhash_t, StateAction> bound_actions;
 
+	std::map<strhash_t, std::string> action_names;
+	
 	std::unordered_map<GameState*, SDL_Rect> text_states;
-		
 	GameState* current_state;
 };
 

@@ -179,11 +179,10 @@ void Renderer::reload(Engine& e){
 
 	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);	
 	
-	/*if(gl.DebugMessageCallback){
+	if(gl.DebugMessageCallback){
 		gl.DebugMessageCallback(&gl_dbg_callback, nullptr);
 		gl.Enable(GL_DEBUG_OUTPUT);
-	}*/
-	(void)&gl_dbg_callback;
+	}
 
 	gl.Enable(GL_BLEND);
 	SDL_GL_SetSwapInterval(vsync->val);

@@ -42,3 +42,9 @@ void Sampler::onGLContextRecreate(){
 		setParam(p.first, p.second);
 	}
 }
+
+Sampler::~Sampler(){
+	if(gl.DeleteSamplers && id){
+		gl.DeleteSamplers(1, &id);
+	}
+}

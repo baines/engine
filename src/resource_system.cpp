@@ -23,13 +23,13 @@ ResourceSystem::ResourceSystem(const char* argv0){
 	const size_t sz = INTERNAL_ZIP(end) - INTERNAL_ZIP(start);
 	if(!PHYSFS_mountMemory(INTERNAL_ZIP(start), sz, NULL, ".zip", NULL, 0)){
 #endif
-		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
+		log(logging::error, "Error mounting internal zip: %s", PHYSFS_getLastError());
 	}
 
 	char path[PATH_MAX] = {};
 	snprintf(path, sizeof(path), "%s%sdata/", PHYSFS_getBaseDir(), PHYSFS_getDirSeparator());
 	if(!PHYSFS_mount(path, NULL, 0)){
-		log(logging::error, "PhysFS mount Error: %s", PHYSFS_getLastError());
+		log(logging::info, "Couldn't mount ./data/: %s", PHYSFS_getLastError());
 	}
 }
 

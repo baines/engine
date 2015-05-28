@@ -60,7 +60,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		
 		GLint vbo_bind_point = 0;
 		for(auto* vb : vertex_buffers){
-			DEBUGF("Checking buffer %p for attrib %ld...", vb, a.name_hash);
+			DEBUGF("Checking buffer %p for attrib %u...", vb, a.name_hash);
 			const ShaderAttribs& vb_attribs = vb->getShaderAttribs();
 			
 			DEBUGF("Num attribs in buffer: %ld.", 

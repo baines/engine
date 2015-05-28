@@ -2,6 +2,7 @@
 #define COMMON_H_
 #include <array>
 #include <cstdint>
+#include <cmath>
 #include <glm/glm.hpp>
 #if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"
@@ -13,6 +14,10 @@ using string_view = std::experimental::string_view;
 using u32string_view = std::experimental::u32string_view;
 
 #include "log.h"
+
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846
+#endif
 
 #ifdef __EMSCRIPTEN__
 #include "emscripten.h"

@@ -5,66 +5,6 @@
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
-#ifndef M_PI
-	#define M_PI 3.14159265358979323846
-#endif
-
-namespace {
-
-static const char* gl_dbgsrc2str(GLenum src){
-	switch(src){
-		case GL_DEBUG_SOURCE_API:             return "API";
-		case GL_DEBUG_SOURCE_WINDOW_SYSTEM:   return "WM";
-		case GL_DEBUG_SOURCE_SHADER_COMPILER: return "SHDR";
-		case GL_DEBUG_SOURCE_THIRD_PARTY:     return "3RD";
-		case GL_DEBUG_SOURCE_APPLICATION:     return "APP";
-		default:
-		case GL_DEBUG_SOURCE_OTHER_ARB:       return "OTHER";
-	}
-}
-
-static const char* gl_dbgtype2str(GLenum type){
-	switch(type){
-		case GL_DEBUG_TYPE_ERROR:               return "ERR";
-		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: return "DEPREC";
-		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  return "UNDEF";
-		case GL_DEBUG_TYPE_PORTABILITY:         return "PORT";
-		case GL_DEBUG_TYPE_PERFORMANCE:         return "PERF";
-		default:
-		case GL_DEBUG_TYPE_OTHER:               return "OTHER";
-	}
-}
-
-static const char* gl_dbgsev2str(GLenum sev){
-	switch(sev){
-		case GL_DEBUG_SEVERITY_HIGH:         return "HIGH";
-		case GL_DEBUG_SEVERITY_MEDIUM:       return "MED";
-		case GL_DEBUG_SEVERITY_LOW:          return "LOW";
-		default:
-		case GL_DEBUG_SEVERITY_NOTIFICATION: return "INFO";
-	}
-}
-
-void gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
-GLsizei len, const char* msg, const void* p){
-	logging::level lvl = 
-		(sev == GL_DEBUG_SEVERITY_HIGH)   ? logging::error :
-		(sev == GL_DEBUG_SEVERITY_MEDIUM) ? logging::warn  :
-		(sev == GL_DEBUG_SEVERITY_LOW)    ? logging::debug :
-		logging::trace;
-
-	log(lvl,
-	    "[GL-%s-%s-%s] [%u] %s",
-	    gl_dbgsrc2str(src),
-	    gl_dbgtype2str(type),
-	    gl_dbgsev2str(sev),
-	    id,
-	    msg
-	);
-}
-
-}
-
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
 , render_state     ()
@@ -86,9 +26,12 @@ Renderer::Renderer(Engine& e, const char* name)
 , window_w         (window_width->val)
 , window_h         (window_height->val) {
 
-	SDL_InitSubSystem(SDL_INIT_VIDEO);
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
+	if(SDL_InitSubSystem(SDL_INIT_VIDEO) != 0){
+		log(logging::fatal, "Couldn't initialize SDL video subsystem (%s).", SDL_GetError());
+	}
+	
 	e.cfg.addVar<CVarFunc>("vid_reload", [&](const string_view&){
 		reload(e);
 		return true;
@@ -177,12 +120,7 @@ void Renderer::reload(Engine& e){
 		log(logging::fatal, "Couldn't get an OpenGL context of any version!");
 	}
 
-	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);	
-	
-	if(gl.DebugMessageCallback){
-		gl.DebugMessageCallback(&gl_dbg_callback, nullptr);
-		gl.Enable(GL_DEBUG_OUTPUT);
-	}
+	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);
 
 	gl.Enable(GL_BLEND);
 	SDL_GL_SetSwapInterval(vsync->val);

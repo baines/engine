@@ -62,11 +62,11 @@ struct Input {
 
 	Input(Engine& e);
 
-	void bind(Key key, const string_view& action);
-	void bind(Axis axis, const string_view& action, bool rel, float scale = 1.0f);
-	void unbind(Key key);
+	void bind(const Key& key, const string_view& action);
+	void bind(const Axis& axis, const string_view& action, bool rel, float scale = 1.0f);
 
-	void watchAction(GameState* s, const str_const& action, int action_id);
+	void subscribe(GameState* s, const str_const& action, int action_id);
+	void subscribe(GameState* s, const str_const& action, int action_id, const Key& dflt);
 	void enableText(GameState* s, bool enable, const SDL_Rect& pos = {0, 0, 0, 0});
 
 	void onDeviceChange(SDL_ControllerDeviceEvent& event);
@@ -94,6 +94,7 @@ private:
 			} axis;
 		} data;
 		bool operator<(const Binding& rhs) const;
+		bool operator==(const Binding& b) const;
 		bool operator==(const Key& k) const;
 		bool operator==(const Axis& a) const;
 		size_t toString(char* buf, size_t len);
@@ -107,8 +108,10 @@ private:
 		Binding bind;
 		bool operator<(const StateBind& rhs) const;
 	};
+
+	void unbind(const Binding& b);
 	
-	std::map<strhash_t, Binding> binds;
+	std::multimap<strhash_t, Binding> binds;
 	std::map<StateBind, int> active_binds;
 	std::multimap<strhash_t, StateAction> bound_actions;
 

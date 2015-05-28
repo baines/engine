@@ -55,7 +55,6 @@ Input::Key::Key(mouse_wheel_tag_t, int dir)
 , ctrl(false)
 , alt(false)
 , ignore_mods(true) {
-	
 }
 
 Input::Key::Key(pad_button_tag_t, uint8_t button)
@@ -96,12 +95,18 @@ Input::Key::Key(const char* str, bool raw_scancode)
 		if(strncasecmp(str, "mb", 2) == 0){
 			code = KEY_MOUSEBUTTON_BIT | strtoul(str + 2, nullptr, 10);
 		} else if(strncasecmp(str, "mwheel", 6) == 0) {
-			code = str[6] == 'u'
-			     ? KEY_MOUSEWHEEL_BIT
-			     : str[6] == 'd'
-			     ? KEY_MOUSEWHEEL_BIT | 1
-			     : 0
-			     ;
+			switch(str[6]){
+				case 'u':
+				case 'U':
+					code = KEY_MOUSEWHEEL_BIT;
+					break;
+				case 'd':
+				case 'D':
+					code = KEY_MOUSEWHEEL_BIT | 1;
+					break;
+				default:
+					code = 0;
+			}
 		} else if(strncasecmp(str, "pad_", 4) == 0){
 				
 			for(size_t i = 0; i < SDL_arraysize(pad_buttons); ++i){
@@ -237,6 +242,15 @@ bool Input::Binding::operator<(const Binding& rhs) const {
 	}
 }
 
+bool Input::Binding::operator==(const Binding& b) const {
+	if(type != b.type) return false;
+	if(type == BINDING_KEY){
+		return data.key == b.data.key;
+	} else {
+		return data.axis.axis == b.data.axis.axis;
+	}
+}
+
 bool Input::Binding::operator==(const Key& k) const {
 	return type == BINDING_KEY && data.key == k;
 }
@@ -352,17 +366,30 @@ Input::Input(Engine& e)
 				action = it->second.c_str();
 			}
 
-			e.cli.printf("%10s: %s\n", bind_buf, action);
+			e.cli.printf("%12s: %s\n", bind_buf, action);
 		}
 
 		return true;
 	}, "Lists the current set of keybindings.");
 
+	e.cfg.addVar<CVarFunc>("unbind", [&](const string_view& arg){
+		for(auto& bp : binds){
+			char bind_buf[32] = {};
+			bp.second.toString(bind_buf, sizeof(bind_buf));
+
+			if(strncasecmp(arg.data(), bind_buf, arg.size()) == 0){
+				unbind(bp.second);
+				return true;
+			}
+		}
+		e.cli.printf("\"%.*s\" isn't bound.\n", (int)arg.size(), arg.data());
+		return true;
+	}, "Usage: unbind <key/axis>.");
 
 	SDL_StopTextInput();
 }
 
-void Input::bind(Key key, const string_view& action){
+void Input::bind(const Key& key, const string_view& action){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,
@@ -382,7 +409,7 @@ void Input::bind(Key key, const string_view& action){
 }
 
 //TODO: merge this function with the other bind?
-void Input::bind(Axis axis, const string_view& action, bool rel, float scale){
+void Input::bind(const Axis& axis, const string_view& action, bool rel, float scale){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,
@@ -401,21 +428,19 @@ void Input::bind(Axis axis, const string_view& action, bool rel, float scale){
 	}
 }
 
-void Input::unbind(Key key){
-	if(key.code != SDL_SCANCODE_UNKNOWN){
-		for(auto it = binds.begin(); it != binds.end(); /**/){
-			if(it->second == key){
-				binds.erase(it++);
-			} else {
-				++it;
-			}
+void Input::unbind(const Binding& b){
+	for(auto it = binds.begin(); it != binds.end(); /**/){
+		if(it->second == b){
+			binds.erase(it++);
+		} else {
+			++it;
 		}
-		for(auto it = active_binds.begin(); it != active_binds.end(); /**/){
-			if(it->first.bind == key){
-				active_binds.erase(it++);
-			} else {
-				++it;
-			}
+	}
+	for(auto it = active_binds.begin(); it != active_binds.end(); /**/){
+		if(it->first.bind == b){
+			active_binds.erase(it++);
+		} else {
+			++it;
 		}
 	}
 }
@@ -437,13 +462,13 @@ void Input::onStateChange(GameState* s){
 	current_state = s;
 }
 
-void Input::watchAction(GameState* s, const str_const& action, int action_id){
+void Input::subscribe(GameState* s, const str_const& action, int action_id){
 
 	bound_actions.emplace(action.hash, StateAction{s, action_id});
 
-	auto it = binds.find(action.hash);
-	if(it != binds.end()){
-		active_binds.emplace(StateBind{s, it->second}, action_id);
+	auto it_pair = binds.equal_range(action.hash);
+	for(; it_pair.first != it_pair.second; ++it_pair.first){
+		active_binds.emplace(StateBind{s, it_pair.first->second}, action_id);
 	}
 }
 

@@ -53,16 +53,16 @@ struct TestCollisionState : public GameState {
 	, move          ({ 0.f, 0.f })
 	, cursor        ({ 0.f, 0.f })
 	, canvas        (e) {
-		e.input.watchAction(this, "left" , ACT_LEFT);
-		e.input.watchAction(this, "right", ACT_RIGHT);
-		e.input.watchAction(this, "up"   , ACT_UP);
-		e.input.watchAction(this, "down" , ACT_DOWN);
+		e.input.subscribe(this, "left" , ACT_LEFT);
+		e.input.subscribe(this, "right", ACT_RIGHT);
+		e.input.subscribe(this, "up"   , ACT_UP);
+		e.input.subscribe(this, "down" , ACT_DOWN);
 
-		e.input.watchAction(this, "switch", ACT_SWITCH);
-		e.input.watchAction(this, "click", ACT_CLICK);
+		e.input.subscribe(this, "switch", ACT_SWITCH);
+		e.input.subscribe(this, "click", ACT_CLICK);
 
-		e.input.watchAction(this, "cursor_x", ACT_CURSOR_X);
-		e.input.watchAction(this, "cursor_y", ACT_CURSOR_Y);
+		e.input.subscribe(this, "cursor_x", ACT_CURSOR_X);
+		e.input.subscribe(this, "cursor_y", ACT_CURSOR_Y);
 
 		e.collision.onCollision(0, 0, [&](Entity* a, Entity* b, float t){
 			static uint32_t color = 0xff0000ff;

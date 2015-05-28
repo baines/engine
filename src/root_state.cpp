@@ -6,8 +6,8 @@ enum {
 };
 
 RootState::RootState(Engine& e) {
-	e.input.watchAction(this, "menu", ACTION_QUIT);
-	e.input.watchAction(this, "console", ACTION_TOGGLE_CONSOLE);
+	e.input.subscribe(this, "menu", ACTION_QUIT);
+	e.input.subscribe(this, "console", ACTION_TOGGLE_CONSOLE);
 }
 
 void RootState::update(Engine& e, uint32_t delta){

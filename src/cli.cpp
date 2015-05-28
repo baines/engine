@@ -1,20 +1,14 @@
 #include "cli.h"
 #include "engine.h"
 #include <numeric>
-/* TODO:
- * Scroll through history:
- *     pageup    -> scroll 1 line up in history
- *     pagedown  -> scroll 1 line down in history
- *     Add some indication that it's not at the bottom.
- *         maybe replace bottom line with "v v v v v v v" or something.
- *         if/when Text supports colours, make it red.
- */
 
 enum {
 	ACT_SUBMIT,
 	ACT_BACKSPACE,
 	ACT_DELETE,
 	ACT_DEL_WORD,
+	ACT_SCROLL_UP,
+	ACT_SCROLL_DOWN,
 	ACT_CURSOR_LEFT,
 	ACT_CURSOR_RIGHT,
 	ACT_CURSOR_UP,
@@ -42,7 +36,7 @@ CLI::CLI(Engine& e)
 , blink_timer      (0)
 , bg_scroll_timer  (0)
 , scrollback_lines (e.cfg.addVar<CVarInt>("cli_scrollback_lines", 64, 1, 8192))
-, visible_lines    (e.cfg.addVar<CVarInt>("cli_visible_lines",    5, 1, 64))
+, visible_lines    (e.cfg.addVar<CVarInt>("cli_visible_lines",    8, 1, 64))
 , font_height      (e.cfg.addVar<CVarInt>("cli_font_height",      16, 8, 32))
 , cursor_blink_ms  (e.cfg.addVar<CVarInt>("cli_cursor_blink_ms",  500, 100, 10000))
 , prev_vis_lines   (visible_lines->val)
@@ -56,6 +50,7 @@ CLI::CLI(Engine& e)
 , output_text      (e, *font, { 0, 0 }, "")
 , output_lines     (scrollback_lines->val)
 , output_line_idx  (0)
+, scroll_offset    (0)
 , input_text       (e, *font, { 0, font_height->val * visible_lines->val}, PROMPT)
 , input_history    ()
 , history_idx      (0)
@@ -63,18 +58,20 @@ CLI::CLI(Engine& e)
 , cursor_text      (e, *font, input_text.getEndPos() + glm::ivec2(0, 2), CURSOR)
 , cursor_idx       (PROMPT_SZ)
 , autocompletions  () {
-	e.input.watchAction(this, "cli_submit",       ACT_SUBMIT);
-	e.input.watchAction(this, "cli_backspace",    ACT_BACKSPACE);
-	e.input.watchAction(this, "cli_delete",       ACT_DELETE);
-	e.input.watchAction(this, "cli_del_word",     ACT_DEL_WORD);
-	e.input.watchAction(this, "cli_cursor_up",    ACT_CURSOR_UP);
-	e.input.watchAction(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
-	e.input.watchAction(this, "cli_cursor_left",  ACT_CURSOR_LEFT);
-	e.input.watchAction(this, "cli_cursor_right", ACT_CURSOR_RIGHT);
-	e.input.watchAction(this, "cli_home",         ACT_HOME);
-	e.input.watchAction(this, "cli_end",          ACT_END);
-	e.input.watchAction(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
-	e.input.watchAction(this, "console",          ACT_IGNORE_TEXT);
+	e.input.subscribe(this, "cli_submit",       ACT_SUBMIT);
+	e.input.subscribe(this, "cli_backspace",    ACT_BACKSPACE);
+	e.input.subscribe(this, "cli_delete",       ACT_DELETE);
+	e.input.subscribe(this, "cli_del_word",     ACT_DEL_WORD);
+	e.input.subscribe(this, "cli_scroll_up",    ACT_SCROLL_UP);
+	e.input.subscribe(this, "cli_scroll_down",  ACT_SCROLL_DOWN);
+	e.input.subscribe(this, "cli_cursor_up",    ACT_CURSOR_UP);
+	e.input.subscribe(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
+	e.input.subscribe(this, "cli_cursor_left",  ACT_CURSOR_LEFT);
+	e.input.subscribe(this, "cli_cursor_right", ACT_CURSOR_RIGHT);
+	e.input.subscribe(this, "cli_home",         ACT_HOME);
+	e.input.subscribe(this, "cli_end",          ACT_END);
+	e.input.subscribe(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
+	e.input.subscribe(this, "console",          ACT_IGNORE_TEXT);
 
 	int w = e.cfg.getVar<CVarInt>("vid_width")->val,
 	   	h = font_height->val * (visible_lines->val + 1);
@@ -182,8 +179,9 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 	} else if(action == ACT_DEL_WORD && input_str.size() > PROMPT_SZ){
 
 		size_t end_idx = utf8_char_index(input_str, cursor_idx);
-		size_t mid_idx = std::max(PROMPT_SZ, input_str.find_last_not_of(' ', end_idx));
-		size_t beg_idx = std::max(PROMPT_SZ, input_str.find_last_of(' ', mid_idx));
+		//XXX: this assumes the prompt contains both a space and non-space to always work.
+		size_t mid_idx = std::max(PROMPT_SZ-1, input_str.find_last_not_of(' ', end_idx));
+		size_t beg_idx = std::max(PROMPT_SZ-1, input_str.find_last_of(' ', mid_idx)) + 1;
 
 		input_str.erase(input_str.begin() + beg_idx, input_str.begin() + end_idx);
 		input_dirty = true;
@@ -257,6 +255,19 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 				echo(l);
 			}
 		}
+
+	} else if(action == ACT_SCROLL_UP){
+		
+		scroll_offset = std::min<int>(
+			scroll_offset + 1,
+			output_lines.size() - visible_lines->val
+		);
+		output_dirty = true;
+
+	} else if(action == ACT_SCROLL_DOWN){
+		
+		scroll_offset = std::max<int>(0, scroll_offset - 1);
+		output_dirty = true;
 
 	} else if(action == ACT_CURSOR_UP){
 	
@@ -348,18 +359,8 @@ void CLI::draw(Renderer& r){
 	if(!active) return;
 	
 	bg_batch.draw(r);
-
-	if(output_dirty){
-		std::string output_concat;
-		for(int i = visible_lines->val; i > 0; --i){
-			int idx = (output_line_idx + (output_lines.size() - i)) % output_lines.size();
-			output_concat.append(output_lines[idx]).append(1, '\n');
-		}
-		output_text.update(std::move(output_concat));
-		output_dirty = false;
-	}
-	output_text.draw(r);
-
+	
+	// draw the input line + cursor if not scrolled up.
 	if(input_dirty){
 		int char_diff = input_text.update(
 			input_str, 
@@ -367,13 +368,39 @@ void CLI::draw(Renderer& r){
 		);
 		cursor_idx = clamp<int>(cursor_idx + char_diff, PROMPT_SZ, input_text.size());
 		input_dirty = false;
+
+		// if the input changed and we're scrolled up, force scroll to bottom.
+		if(scroll_offset != 0){
+			scroll_offset = 0;
+			output_dirty = true;
+		}
 	}
-	input_text.draw(r);
+	if(scroll_offset == 0) input_text.draw(r);
 
 	updateCursor();
-	if(show_cursor){
+	if(show_cursor && scroll_offset == 0){
 		cursor_text.draw(r);
 	}
+	if(output_dirty){
+		std::string output_concat;
+		for(int i = visible_lines->val; i > 0; --i){
+			int idx = (output_line_idx + (output_lines.size() - scroll_offset - i)) % output_lines.size();
+			output_concat.append(output_lines[idx]).append(1, '\n');
+		}
+
+		// replace the input line with arrows if we're scrolled up.
+		if(scroll_offset){
+			output_concat.append(TXT_RED);
+			for(int i = 0; i < 80; ++i){
+				output_concat.append("v ");
+			}
+			output_concat.append(TXT_WHITE);
+		}
+
+		output_text.update(std::move(output_concat));
+		output_dirty = false;
+	}
+	output_text.draw(r);
 }
 
 void CLI::echo(const string_view& str){
@@ -381,12 +408,11 @@ void CLI::echo(const string_view& str){
 }
 
 void CLI::echo(std::initializer_list<string_view> strs){
-	output_lines[output_line_idx].clear();
-	
 	for(auto& str : strs){
 		output_lines[output_line_idx].append(str.data(), str.size());
 	}
 	output_line_idx = (output_line_idx + 1) % output_lines.size();
+	output_lines[output_line_idx].clear();
 	output_dirty = true;
 }
 
@@ -395,7 +421,7 @@ void CLI::printf(const char* fmt, ...){
 	va_start(v, fmt);
 	char buf[MAX_COLS] = {};
 	vsnprintf(buf, sizeof(buf), fmt, v);
-	const char *start = buf, *end = "";
+	const char *start = buf, *end;
 
 	do {
 		end = strchrnul(start, '\n');

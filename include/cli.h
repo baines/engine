@@ -55,7 +55,8 @@ private:
 	Text output_text;
 	std::vector<std::string> output_lines;
 	size_t output_line_idx;
-	
+	size_t scroll_offset;
+
 	Text input_text;
 	std::vector<std::string> input_history; //XXX unbounded history is probably a bad idea..
 	size_t history_idx;

@@ -96,7 +96,7 @@ void StreamingBuffer::update(RenderState& rs){
 	if(gl.streaming_mode->get() == MAP_INVALIDATE && !no_async){
 		
 		if(!gl.MapBufferRange || !gl.UnmapBuffer){
-			log(logging::warn, "glInvalidateBufferData unavailable, using BUFFER_DATA_NULL.");
+			log(logging::warn, "glMapBufferRange unavailable, using BUFFER_DATA_NULL.");
 			gl.streaming_mode->set(BUFFER_DATA_NULL);
 		} else {
 			GLbitfield flags = GL_MAP_WRITE_BIT | GL_MAP_UNSYNCHRONIZED_BIT;
@@ -125,7 +125,7 @@ void StreamingBuffer::update(RenderState& rs){
 	if(gl.streaming_mode->get() == MAP_UNSYNC_APPEND && !no_async){
 
 		if(!gl.MapBufferRange || !gl.UnmapBuffer){
-			log(logging::warn, "glInvalidateBufferData unavailable, using BUFFER_DATA_NULL.");
+			log(logging::warn, "glMapBufferRange unavailable, using BUFFER_DATA_NULL.");
 			gl.streaming_mode->set(BUFFER_DATA_NULL);
 		} else {
 			if(prev_capacity != data->capacity()

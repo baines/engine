@@ -46,7 +46,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 	
 	std::bitset<16> new_enabled_arrays;
 	
-	TRACEF("Need to set %ld attribs.", std::distance(new_attribs.begin(), new_attribs.end()));
+	TRACEF("Need to set %td attribs.", std::distance(new_attribs.begin(), new_attribs.end()));
 
 	auto& search_attribs = using_vao ? this->active_attribs : rs.active_attribs;
 	auto& attrib_arrays =  using_vao ? this->enabled_arrays : rs.enabled_attrib_arrays;
@@ -63,7 +63,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 			DEBUGF("Checking buffer %p for attrib %u...", vb, a.name_hash);
 			const ShaderAttribs& vb_attribs = vb->getShaderAttribs();
 			
-			DEBUGF("Num attribs in buffer: %ld.", 
+			DEBUGF("Num attribs in buffer: %td.", 
 				std::distance(vb_attribs.begin(), vb_attribs.end()));
 			
 			if(vb_attribs.containsAttrib(a.name_hash, -1)){

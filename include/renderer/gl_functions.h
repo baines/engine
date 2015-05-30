@@ -52,7 +52,7 @@ GLFUNC(void, DeleteTextures, (GLsizei, const GLuint*))
 //GLFUNC(void, GenerateMipmap, (GLenum), OPTIONAL)
 
 GLFUNC(void, GenSamplers, (GLsizei, GLuint*), OPTIONAL | ARBCORE | 33, "sampler_objects")
-GLFUNC(void, DeleteSamplers, (GLsizei, const GLuint*))
+GLFUNC(void, DeleteSamplers, (GLsizei, const GLuint*), OPTIONAL | ARBCORE | 33, "sampler_objects")
 GLFUNC(void, BindSampler, (GLuint, GLuint), OPTIONAL | ARBCORE | 33, "sampler_objects")
 GLFUNC(void, SamplerParameteri, (GLuint, GLenum, GLint), OPTIONAL | ARBCORE | 33, "sampler_objects")
 

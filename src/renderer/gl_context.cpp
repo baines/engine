@@ -262,7 +262,7 @@ bool GLContext::loadAllFuncs(void){
 		}
 	#include "gl_functions.h"
 	#undef GLFUNC
-	log(info, "Loaded %lu/%lu OpenGL functions.", loaded, total);
+	log(info, "Loaded %zu/%zu OpenGL functions.", loaded, total);
 
 	return loaded == total;
 }

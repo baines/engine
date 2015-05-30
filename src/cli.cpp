@@ -158,7 +158,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		size_t end_idx = utf8_char_index(input_str, cursor_idx);
 		size_t start_idx = end_idx - 1;
 		for(; start_idx >= PROMPT_SZ; --start_idx){
-			if(!((input_str[start_idx] & 0xC0) == 0x80)) break;
+			if(!is_utf8_continuation(input_str[start_idx])) break;
 		}
 
 		input_str.erase(input_str.begin() + start_idx, input_str.begin() + end_idx);
@@ -170,7 +170,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		if(i < input_str.size()){
 			do {
 				input_str.erase(i, 1);
-			} while((input_str[i] & 0xC0) == 0x80);
+			} while(is_utf8_continuation(input_str[i]));
 
 			input_dirty = true;
 			++cursor_idx;
@@ -391,7 +391,7 @@ void CLI::draw(Renderer& r){
 		// replace the input line with arrows if we're scrolled up.
 		if(scroll_offset){
 			output_concat.append(TXT_RED);
-			for(int i = 0; i < 80; ++i){
+			for(size_t i = 0; i < MAX_COLS; ++i){
 				output_concat.append("v ");
 			}
 			output_concat.append(TXT_WHITE);

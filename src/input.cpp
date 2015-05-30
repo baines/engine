@@ -104,8 +104,6 @@ Input::Key::Key(const char* str, bool raw_scancode)
 				case 'D':
 					code = KEY_MOUSEWHEEL_BIT | 1;
 					break;
-				default:
-					code = 0;
 			}
 		} else if(strncasecmp(str, "pad_", 4) == 0){
 				

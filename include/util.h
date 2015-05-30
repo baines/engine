@@ -53,6 +53,11 @@ inline unsigned log2ll(uint64_t n){
 	return 64 - __builtin_clzll(n) - 1;
 }
 
+/* 64-bit popcount */
+inline unsigned popcount64(uint64_t n){
+	return __builtin_popcountll(n);
+}
+
 /* lerp */
 template<class T>
 T lerp(T a, T b, float t){
@@ -132,6 +137,7 @@ inline bool str_to_bool(const string_view& str){
 	return str[0] == '1' || str.compare(0, 4, "true", 4) == 0;
 }
 
+/* unicode related things */
 inline std::u32string to_utf32(const string_view& s){
 /* XXX: GCC doesn't have <codecvt> yet, despite it being part of the C++11 standard...
 
@@ -156,12 +162,14 @@ inline std::u32string to_utf32(const string_view& s){
 	return ret;
 }
 
+inline bool is_utf8_continuation(char c){
+	return (c & 0xC0) == 0x80;
+}
+
 inline size_t utf8_char_index(const string_view& str, size_t utf32_index){
 	for(size_t i = 0; i < str.size(); ++i){
-		if(!((str[i] & 0xC0) == 0x80)){
-			if(utf32_index-- == 0){
-				return i;
-			}
+		if(!is_utf8_continuation(str[i])){
+			if(utf32_index-- == 0) return i;
 		}
 	}
 

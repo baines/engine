@@ -162,7 +162,7 @@ glm::ivec2 Text::getPos(size_t index) const {
 			result.x = start_pos.x;
 			result.y += (*font)->getLineHeight();
 		} else {
-			result.x += (*font)->getGlyphInfo(c).width;
+			result.x += (*font)->getGlyphInfo(c).advance;
 		}
 	}
 

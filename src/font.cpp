@@ -13,7 +13,7 @@ struct GlyphBitmapInfo {
 struct GlyphTextureAtlas {
 	uint32_t w, h, pen_x, pen_y;
 	const size_t line_height;
-	const FT_Pos ascender, descender;
+	const int descender;
 	uint8_t* mem;
 };
 
@@ -34,15 +34,13 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 		memset(img.mem + (prev_w * prev_h), 0, (img.w * img.h) - (prev_w * prev_h));
 	}
 
-	const int rows_avail = std::min<int>(img.line_height, 
-		img.line_height - (img.ascender - glyph.bearing_y)
-	);
-	const int rows = std::min<int>(rows_avail, bmp->rows);
+	const int y_off = std::min<int>(img.line_height, img.descender + glyph.bearing_y);
+	const int rows = std::min<int>(y_off, bmp->rows);
 	
 	for(int i = 0; i < rows; ++i){
 		
 		const int x = std::max<int>(0, img.pen_x + glyph.bearing_x);
-		const int y = img.pen_y - rows_avail + i;
+		const int y = (img.pen_y - y_off) + i;
 		
 		memcpy(img.mem + x + (img.w * y), bmp->buffer + bmp->pitch * i, bmp->width);
 	}
@@ -89,6 +87,18 @@ const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
 	return glyph_info[idx];
 }
 
+std::tuple<int, int> Font::getKerning(char32_t a, char32_t b) const {
+	FT_Vector vec = {};
+	FT_Get_Kerning(
+		face,
+		FT_Get_Char_Index(face, a),
+		FT_Get_Char_Index(face, b),
+		FT_KERNING_DEFAULT,
+		&vec
+	);
+	return std::make_tuple(vec.x >> 6, vec.y >> 6);
+}
+
 bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	glyph_info.clear();
 	face = nullptr;
@@ -105,16 +115,17 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	FT_Stroker_New(ft_lib, &ft_stroker);
 	FT_Stroker_Set(
 		ft_stroker,
-		4 * height,
+		2 * height,
 		FT_STROKER_LINECAP_SQUARE,
 		FT_STROKER_LINEJOIN_MITER_FIXED,
 		4 << 16
 	);
-		
-	double scale = (double)face->units_per_EM / (double)face->height;
+	
+	double scale = (double)face->units_per_EM / (double)(face->height + 4 * height);
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
-	DEBUGF("Font info:\n\tmax_advance: %d\n\tnum_glyphs: %d, asc: %d, desc: %d",
+	DEBUGF("Font info:\n\th: %d\n\tmax_advance: %d\n\tnum_glyphs: %d, asc: %d, desc: %d",
+	       (int)face->size->metrics.height >> 6,
 	       (int)face->size->metrics.max_advance >> 6,
 	       (int)face->num_glyphs,
 	       (int)face->size->metrics.ascender >> 6,
@@ -139,15 +150,21 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	if(!got_size){
 		log(logging::warn, "Font texture might be too big for OpenGL.");
 	}
-		
+
+	int desc = std::round((
+		static_cast<double>(abs(face->descender)) /
+		static_cast<double>(
+			face->ascender + abs(face->descender)
+		)) * static_cast<double>(height)
+	);
+
 	GlyphTextureAtlas glyph_tex = {
 		static_cast<uint32_t>(init_w),
 		0,
 		0,
 		static_cast<uint32_t>(height),
 		height,
-		face->size->metrics.ascender >> 6,
-		-(face->size->metrics.descender >> 6),
+		desc,
 		nullptr
 	}, outline_tex = glyph_tex;
 	
@@ -172,9 +189,8 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			--i;
 		}
 
-		FT_Int32 flags = 0;
-		if(height >= 16) flags |= FT_LOAD_FORCE_AUTOHINT;
-		
+		FT_UInt flags = height >= 16 ? FT_LOAD_FORCE_AUTOHINT : 0;
+
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
 			FT_Glyph ft_glyph = nullptr, ft_outline = nullptr;
 			assert(FT_Get_Glyph(face->glyph, &ft_glyph) == 0);
@@ -219,7 +235,8 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			render_glyph(outline_info, outline_tex);
 			render_glyph(glyph_info, glyph_tex);
 			
-			glyph.width = (ft_glyph->advance.x >> 16) + (height / 8);
+			glyph.width = width;
+			glyph.advance = (ft_glyph->advance.x >> 16) + (height / 32);
 			glyph.x = std::min(outline_tex.pen_x, glyph_tex.pen_x);
 			glyph.y = outline_tex.pen_y - outline_tex.line_height;
 			

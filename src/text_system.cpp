@@ -3,6 +3,8 @@
 #include "text.h"
 #include <algorithm>
 
+namespace {
+
 struct TextVert {
 	TextVert(int16_t x, int16_t y, uint16_t tx, uint16_t ty, uint32_t c = 0xffffffff)
 	: x(x), y(y), tex_x(tx), tex_y(ty) {
@@ -35,16 +37,16 @@ size_t count_verts(const u32string_view& str){
 	size_t result = 0;
 
 	for(size_t i = 0; i < str.size(); ++i){
-		if(is_color_code(str[i])){
+		if(is_color_code(str[i]) || str[i] == '\n'){
 			continue;
-		} else if(str[i] == '\n'){
-			result += 2;
 		} else {
-			result += 4;
+			result += 6;
 		}
 	}
 
 	return result;
+}
+
 }
 
 TextSystem::TextSystem(Engine& e)
@@ -81,6 +83,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 
 	uint32_t current_color = t.palette[COLORCODE_COUNT - 1]; // white in default palette
 	size_t num_verts = 0;
+	char32_t prev_char = 0;
 	
 	for(size_t i = 0; i < str_len; ++i){
 
@@ -89,13 +92,8 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 		}
 		
 		if(str[i] == '\n'){
-			text_buffer.push(TextVert(x + w, y + h, 0, 0));
 			w = 0;
 			y += h;
-			text_buffer.push(TextVert(x + w, y + 0, 0, 0));
-
-			num_verts += 2;
-
 			continue;
 		}
 
@@ -103,20 +101,31 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 
 		TRACEF("TEXT: %c -> [x: %d, y: %d, w: %d]", str[i], ginfo.x, ginfo.y, ginfo.width);	
 
+		if(prev_char){
+			int kern_x = 0, kern_y = 0;
+			std::tie(kern_x, kern_y) = f.getKerning(prev_char, str[i]);
+			if(kern_x != 0){
+				w += kern_x;
+				TRACEF("KERN! %c + %c = %d", prev_char, str[i], kern_x);
+			}
+		}
+
 		uint16_t tx0 = ginfo.x * x_scale,
 		         ty0 = ginfo.y * y_scale,
 		         tx1 = (ginfo.x + ginfo.width) * x_scale,
-		         ty1 = (ginfo.y + h) * y_scale;
+		         ty1 = (ginfo.y + h) * y_scale,
+				 w2  = w + ginfo.width;
 		
-		text_buffer.push(TextVert(x + w, y + 0, tx0, ty0, current_color));
-		text_buffer.push(TextVert(x + w, y + h, tx0, ty1, current_color));
-		
-		w += ginfo.width;
-		
-		text_buffer.push(TextVert(x + w, y + 0, tx1, ty0, current_color));
-		text_buffer.push(TextVert(x + w, y + h, tx1, ty1, current_color));
+		text_buffer.push(TextVert(x + w , y + 0, tx0, ty0, current_color));
+		text_buffer.push(TextVert(x + w , y + h, tx0, ty1, current_color));
+		text_buffer.push(TextVert(x + w2, y + 0, tx1, ty0, current_color));
+		text_buffer.push(TextVert(x + w2, y + 0, tx1, ty0, current_color));
+		text_buffer.push(TextVert(x + w , y + h, tx0, ty1, current_color));
+		text_buffer.push(TextVert(x + w2, y + h, tx1, ty1, current_color));
 
-		num_verts += 4;
+		num_verts += 6;
+		w += ginfo.advance;
+		prev_char = str[i];
 	}
 
 	t.end_pos = glm::ivec2(x + w, y);
@@ -133,7 +142,7 @@ void TextSystem::addText(Text& t){
 			&v_state,
 			&text_shader, 
 			blend_mode, 
-			RType{GL_TRIANGLE_STRIP}, 
+			RType{GL_TRIANGLES}, 
 			RCount{count}, 
 			ROff{off}
 		)

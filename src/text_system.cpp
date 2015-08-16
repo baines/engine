@@ -99,16 +99,24 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 
 		const Font::GlyphInfo& ginfo = f.getGlyphInfo(str[i]);
 
-		TRACEF("TEXT: %c -> [x: %d, y: %d, w: %d]", str[i], ginfo.x, ginfo.y, ginfo.width);	
+		TRACEF(
+			"TEXT: %c -> [%3d:%3d, w: %3d, b: %3d a: %3d]",
+			str[i],
+			ginfo.x,
+			ginfo.y,
+			ginfo.width,
+			ginfo.bearing_x,
+			ginfo.advance
+		);
 
 		if(prev_char){
-			int kern_x = 0, kern_y = 0;
-			std::tie(kern_x, kern_y) = f.getKerning(prev_char, str[i]);
-			if(kern_x != 0){
-				w += kern_x;
-				TRACEF("KERN! %c + %c = %d", prev_char, str[i], kern_x);
-			}
+			auto kern = f.getKerning(prev_char, str[i]);
+			w += kern.x;
+
+			if(kern.x != 0) TRACEF("KERN: %c + %c = %d", prev_char, str[i], kern.x);
 		}
+
+		w += ginfo.bearing_x;
 
 		uint16_t tx0 = ginfo.x * x_scale,
 		         ty0 = ginfo.y * y_scale,
@@ -124,7 +132,7 @@ GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& s
 		text_buffer.push(TextVert(x + w2, y + h, tx1, ty1, current_color));
 
 		num_verts += 6;
-		w += ginfo.advance;
+		w += ginfo.advance - ginfo.bearing_x;
 		prev_char = str[i];
 	}
 

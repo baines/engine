@@ -154,8 +154,8 @@ glm::ivec2 Text::getPos(size_t index) const {
 	glm::ivec2 result = start_pos;
 	index = std::min(index, str.size());
 
-	for(size_t i = 0; i < index; ++ i){
-		char32_t c = str[i];
+	for(size_t i = 0; i < index; ++i){
+		char32_t c = str[i], prev = 0;
 		if(is_color_code(c)) continue;
 
 		if(c == '\n'){
@@ -163,6 +163,8 @@ glm::ivec2 Text::getPos(size_t index) const {
 			result.y += (*font)->getLineHeight();
 		} else {
 			result.x += (*font)->getGlyphInfo(c).advance;
+			if(prev) result.x += (*font)->getKerning(prev, c).x;
+			prev = c;
 		}
 	}
 

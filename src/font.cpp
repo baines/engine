@@ -46,16 +46,6 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	}
 }
 
-inline uint32_t next_pow_of_2(uint32_t v){
-	--v;
-	v |= v >> 1;
-	v |= v >> 2;
-	v |= v >> 4;
-	v |= v >> 8;
-	v |= v >> 16;
-	return ++v;
-}
-
 }
 
 Font::Font(size_t h, uint16_t utf_lo, uint16_t utf_hi)
@@ -87,7 +77,7 @@ const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
 	return glyph_info[idx];
 }
 
-std::tuple<int, int> Font::getKerning(char32_t a, char32_t b) const {
+glm::ivec2 Font::getKerning(char32_t a, char32_t b) const {
 	FT_Vector vec = {};
 	FT_Get_Kerning(
 		face,
@@ -96,7 +86,7 @@ std::tuple<int, int> Font::getKerning(char32_t a, char32_t b) const {
 		FT_KERNING_DEFAULT,
 		&vec
 	);
-	return std::make_tuple(vec.x >> 6, vec.y >> 6);
+	return glm::ivec2(vec.x >> 6, vec.y >> 6);
 }
 
 bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
@@ -104,23 +94,22 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	face = nullptr;
 
 	FT_Library& ft_lib = e.text.getLib();
-	
 	assert(FT_New_Memory_Face(ft_lib, res.data(), res.size(), 0, &face) == 0);
-	
 	FT_Select_Charmap(face, ft_encoding_unicode);
-	
 	assert(FT_IS_SCALABLE(face));
 
+	// stroker to create the font outline.
 	FT_Stroker ft_stroker = nullptr;
 	FT_Stroker_New(ft_lib, &ft_stroker);
 	FT_Stroker_Set(
 		ft_stroker,
-		2 * height,
+	 	2 * height, //TODO: custom outline width / none at all?
 		FT_STROKER_LINECAP_SQUARE,
 		FT_STROKER_LINEJOIN_MITER_FIXED,
 		4 << 16
 	);
 	
+	// choose a font size that the requested height fits the line height of the outlined glyphs.
 	double scale = (double)face->units_per_EM / (double)(face->height + 4 * height);
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
@@ -137,6 +126,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	gl.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_w);
 	bool got_size = false;
 
+	// estimate the lowest POT texture width that will fit the glyphs.
 	for(init_w = 256; init_w <= max_w; init_w <<= 1){
 		size_t glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
 		size_t lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
@@ -146,11 +136,9 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			break;
 		}
 	}
-	
-	if(!got_size){
-		log(logging::warn, "Font texture might be too big for OpenGL.");
-	}
+	if(!got_size)log(logging::warn, "Font texture might be too big for OpenGL.");
 
+	// calculate a more accurate descender for our line height.
 	int desc = std::round((
 		static_cast<double>(abs(face->descender)) /
 		static_cast<double>(
@@ -158,6 +146,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		)) * static_cast<double>(height)
 	);
 
+	// initialise two 8bit texture atlases for the glyphs and outlines. They get merged later.
 	GlyphTextureAtlas glyph_tex = {
 		static_cast<uint32_t>(init_w),
 		0,
@@ -168,6 +157,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		nullptr
 	}, outline_tex = glyph_tex;
 	
+	// always render the "unknown" glyph at index 0 to the atlas first for missing characters.
 	bool render_unknown = true;
 	
 	for(uint16_t i = utf_lo; i < utf_hi; ++i){
@@ -177,6 +167,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		if(!render_unknown){
 			glyph.index = FT_Get_Char_Index(face, i);
 		
+			// don't render duplicate glyphs.
 			for(auto& i : glyph_info){
 				if(i.index == glyph.index){
 					render = false;
@@ -189,8 +180,10 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			--i;
 		}
 
+		// The FT autohinter looks better at large font sizes imo.
 		FT_UInt flags = height >= 16 ? FT_LOAD_FORCE_AUTOHINT : 0;
 
+		// load and render the glyphs and outlines to their respective atlases.
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
 			FT_Glyph ft_glyph = nullptr, ft_outline = nullptr;
 			assert(FT_Get_Glyph(face->glyph, &ft_glyph) == 0);
@@ -204,42 +197,33 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			FT_BitmapGlyph ft_glyph_bmp   = (FT_BitmapGlyph)ft_glyph;
 			FT_BitmapGlyph ft_outline_bmp = (FT_BitmapGlyph)ft_outline;
 
-			uint32_t width = std::max<size_t>({
-				(height / 8) + (ft_glyph->advance.x >> 16),
-				(height / 8) + (ft_outline->advance.x >> 16),
-				(uint32_t) ft_glyph_bmp->bitmap.width,
-				(uint32_t) ft_outline_bmp->bitmap.width
-			});
-
-			int left_off = std::min({
-				0,
-				ft_outline_bmp->left,
-				ft_glyph_bmp->left
-			});
-			
-			int outline_left = ft_outline_bmp->left - left_off,
-			    glyph_left = ft_glyph_bmp->left - left_off;
+			uint32_t width = ft_outline_bmp->bitmap.width;
 
 			const GlyphBitmapInfo glyph_info = {
 				&ft_glyph_bmp->bitmap,
-				glyph_left,
+				// offset the left bearing, so that the outline's is always 0.
+				ft_glyph_bmp->left - ft_outline_bmp->left,
 				ft_glyph_bmp->top,
 				width
 			}, outline_info = {
 				&ft_outline_bmp->bitmap,
-				outline_left,
+				0,
 				ft_outline_bmp->top,
 				width
 			};
 
+			// render to the texture atlases.
 			render_glyph(outline_info, outline_tex);
 			render_glyph(glyph_info, glyph_tex);
 			
+			// store info required for rendering text using this font.
+			glyph.bearing_x = ft_glyph_bmp->left; 
+			glyph.advance = (ft_glyph->advance.x >> 16);
 			glyph.width = width;
-			glyph.advance = (ft_glyph->advance.x >> 16) + (height / 32);
 			glyph.x = std::min(outline_tex.pen_x, glyph_tex.pen_x);
 			glyph.y = outline_tex.pen_y - outline_tex.line_height;
-			
+
+			// move the pen position on the texture atlases, 1px extra to prevent bleeding.
 			glyph_tex.pen_x   += 1 + width;
 			outline_tex.pen_x += 1 + width;
 
@@ -254,6 +238,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 
 	FT_Stroker_Done(ft_stroker);
 
+	// combine the 8bit glyph + outline textures into a single 16bit one.
 	size_t sz = glyph_tex.w * glyph_tex.h,
 		   combined_w = glyph_tex.w,
 		   combined_h = next_pow_of_2(glyph_tex.h);
@@ -264,6 +249,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		combined[i] = (i % 2) ? outline_tex.mem[i/2] : glyph_tex.mem[i/2];
 	}
 	
+	// figure out the apropriate opengl texture format for a two channel texture.
 	GLenum int_fmt = GL_LUMINANCE8_ALPHA8;
 	
 	//TODO: use glInternalFormatQuery instead of extensions (if available)?

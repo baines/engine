@@ -205,7 +205,7 @@ Config::Config(Engine& e, int argc, char** argv){
 		}
 		add_line(data+sz);
 	} else {
-		puts("didn't get config file /cry.");
+		log(logging::error, "Unable to load config file.");
 	}
 	
 	// parse command line args after, so they'll override the cfg file.

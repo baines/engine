@@ -42,10 +42,10 @@ struct TestCollisionState : public GameState {
 	TestCollisionState(Engine& e)
 	: sprite_vs     (e, {"sprite.glslv"})
 	, sprite_fs     (e, {"sprite.glslf"})
-	, sprite_shader (*sprite_vs, *sprite_fs)
+	, sprite_shader (sprite_vs, sprite_fs)
 	, samp_nearest  ({{ GL_TEXTURE_MAG_FILTER, GL_NEAREST }})
 	, sprite_tex    (e, {"test_sprite.png"})
-	, sprite_mat    (sprite_shader, *(*sprite_tex), samp_nearest)
+	, sprite_mat    (sprite_shader, *sprite_tex, samp_nearest)
 	, sprite_batch  (sprite_mat)
 	, entities      {{{ e, sprite_batch, { 100, 100 }}, {e, sprite_batch, { 200, 200 }}}}
 	, active_entity (0)

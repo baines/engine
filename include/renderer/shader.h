@@ -5,6 +5,7 @@
 #include "shader_uniforms.h"
 #include "shader_attribs.h"
 #include "render_state.h"
+#include "proxy.h"
 #include <vector>
 
 struct VertexState;
@@ -28,7 +29,7 @@ struct FragShader : ShaderBase {
 };
 
 struct ShaderProgram : public GLObject {
-	ShaderProgram(const std::shared_ptr<VertShader>& v, const std::shared_ptr<FragShader>& f);
+	ShaderProgram(Proxy<VertShader> v, Proxy<FragShader> f);
 	bool link(void);
 	bool bind(RenderState& rs);
 	void setUniforms(const ShaderUniforms& uniforms);
@@ -37,8 +38,8 @@ struct ShaderProgram : public GLObject {
 
 	~ShaderProgram();
 private:
-	std::shared_ptr<VertShader> vs;
-	std::shared_ptr<FragShader> fs;
+	Proxy<VertShader> vs;
+	Proxy<FragShader> fs;
 	GLuint program_id;
 
 	ShaderUniforms uniforms;

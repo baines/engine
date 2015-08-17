@@ -60,13 +60,19 @@ struct ResourceSystem {
 	template<class T, class... Args>
 	struct Cache {
 	
-		bool get(const char* name, std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
+		struct Entry {
+			T* ptr;
+			int ref_count;
+		};
+
+		bool get(const char* name, T*& ptr, const std::tuple<Args...>& args){
 			DEBUGF("Checking resource cache for %s... ", name);
 			auto it = entries.find(std::tuple_cat(std::make_tuple(str_hash(name)), args));
 		
-			if(it != entries.end() && !it->second.expired()){
+			if(it != entries.end()){
 				DEBUGF("%s", "[Found!]");
-				ptr = it->second.lock();
+				ptr = it->second.ptr;
+				it->second.ref_count++;
 				return true;
 			} else {
 				DEBUGF("%s", "[Not Found]");
@@ -74,18 +80,29 @@ struct ResourceSystem {
 			}
 		}
 		
-		void put(const char* name, const std::shared_ptr<T>& ptr, const std::tuple<Args...>& args){
+		void put(const char* name, T* ptr, const std::tuple<Args...>& args){
+			auto tup = std::tuple_cat(std::make_tuple(str_hash(name)), args);
+			assert(entries.find(tup) == entries.end());
+			
+			TRACEF("Adding %s to resource cache.", name);
+			entries[tup] = Entry{ ptr, 1 };
+		}
+
+		void del(const char* name, const std::tuple<Args...>& args){
 			auto tup = std::tuple_cat(std::make_tuple(str_hash(name)), args);
 			auto it = entries.find(tup);
+			assert(it != entries.end());
 			
-			if(it == entries.end() || it->second.expired()){
-				DEBUGF("Adding %s to resource cache.", name);
-				entries[tup] = ptr;
+			TRACEF("Decreasing %s reference count.", name);
+			if(--it->second.ref_count == 0){
+				TRACEF("reference count == 0, removing from cache.");
+				delete it->second.ptr;
+				entries.erase(it);
 			}
 		}
 		
 		typedef std::tuple<uint32_t, Args...> CacheTuple;
-		std::map<CacheTuple, std::weak_ptr<T>> entries;
+		std::map<CacheTuple, Entry> entries;
 	};
 	
 	template<class T, class... Args>

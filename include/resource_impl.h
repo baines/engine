@@ -5,21 +5,30 @@
 template<class T, class... Args>
 Resource<T, Args...>::Resource(Engine& e, std::initializer_list<const char*> names, Args&&... args)
 : res_names(names)
+, chosen_name()
 , res_handle()
-, data()
+, resource()
 , args(args...)
 , e(e) {
 
 }
 
+inline void res_error(const std::vector<const char*>& res_names){
+	std::string names = "[ ";
+	for(auto& i : res_names) names.append(i).append(1, ' ');
+	names.append(1, ']');
+	log(logging::fatal, "Resource not found: %s", names.c_str());
+}
+
 template<class T, class... Args>
 Resource<T, Args...>& Resource<T, Args...>::operator=(Resource<T, Args...>&& other){
 	std::swap(res_names, other.res_names);
+	std::swap(chosen_name, other.chosen_name);
 	std::swap(res_handle, other.res_handle);
-	std::swap(data, other.data);
+	std::swap(resource, other.resource);
 	std::swap(args, other.args);
 
-	if(!data) load();
+	if(!resource && !load()) res_error(res_names);
 
 	return *this;
 }
@@ -27,58 +36,66 @@ Resource<T, Args...>& Resource<T, Args...>::operator=(Resource<T, Args...>&& oth
 template<class T, class... Args>
 bool Resource<T, Args...>::load(){
 	if(isLoaded()) return true;
-
-	bool loaded = false;
 	
 	for(auto* n : res_names){
-		if(e.res.cache<T, Args...>().get(n, data, args)){
-			loaded = true;
-			break;
+		if(e.res.cache<T, Args...>().get(n, resource, args)){
+			return true;
 		}
 	}
 
-	if(!data){
-		for(auto* n : res_names){
-			if(ResourceHandle rh = e.res.load(n)){
-				create_data(std::make_index_sequence<sizeof...(Args)>());
-				loaded = data->loadFromResource(e, rh);
-				
-				e.res.cache<T, Args...>().put(n, data, args);
+	for(auto* n : res_names){
+		if(ResourceHandle rh = e.res.load(n)){
+			create_res(std::make_index_sequence<sizeof...(Args)>());
+			if(resource->loadFromResource(e, rh)){
+				e.res.cache<T, Args...>().put(n, resource, args);
 				res_handle = std::move(rh);
-				break;
+				chosen_name = n;
+				return true;
+			} else {
+				delete resource;
+				return false;
 			}
 		}
 	}
 
-	return loaded;
+	return false;
 }
 
 template<class T, class... Args>
 bool Resource<T, Args...>::isLoaded() const {
-	return data.get() != nullptr;
+	return resource != nullptr;
 }
 
 template<class T, class... Args>
 bool Resource<T, Args...>::forceReload() {
-	if(!data){
+	if(!resource){
 		return load();
 	} else {
-		return data->loadFromResource(e, res_handle);
+		return resource->loadFromResource(e, res_handle);
 	}
 }
 
 template<class T, class... Args>
 const T* Resource<T, Args...>::operator->() {
-	if(!data) load();
-	assert(data);
-	return data.get();
+	if(!resource && !load()) res_error(res_names);
+	return resource;
 }
 	
 template<class T, class... Args>
-const std::shared_ptr<T>& Resource<T, Args...>::operator*() {
-	if(!data) load();
-	assert(data);
-	return data;
+const T& Resource<T, Args...>::operator*() {
+	if(!resource && !load()) res_error(res_names);
+	return *resource;
+}
+
+template<class T, class... Args>
+T** Resource<T, Args...>::getPtr(){
+	if(!resource && !load()) res_error(res_names);
+	return &resource;
+}
+
+template<class T, class... Args>
+Resource<T, Args...>::~Resource(){
+	if(resource && chosen_name) e.res.cache<T, Args...>().del(chosen_name, args);
 }
 
 #endif

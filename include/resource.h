@@ -16,12 +16,14 @@ struct Resource {
 	bool forceReload();
 
 	const T* operator->();
-	const std::shared_ptr<T>& operator*();
-	
+	const T& operator*();
+
+	T** getPtr();
+
+	~Resource();	
 private:
-	friend struct GLRes;
-	struct GLRes : public T {
-		GLRes(Resource* res, Args... args) : T(std::forward<Args>(args)...), res(res){}
+	struct Wrapper : public T {
+		Wrapper(Resource* res, Args... args) : T(std::forward<Args>(args)...), res(res){}
 		virtual void onGLContextRecreate() {
 			res->forceReload();
 		}
@@ -29,13 +31,14 @@ private:
 	};
 
 	template<size_t... I>
-	void create_data(std::index_sequence<I...>){
-		data = std::make_shared<GLRes>(this, std::get<I>(args)...);
+	void create_res(std::index_sequence<I...>){
+		resource = NullOnMovePtr<T>(new Wrapper(this, std::get<I>(args)...));
 	}
 
 	std::vector<const char*> res_names;
+	const char* chosen_name;
 	ResourceHandle res_handle;
-	std::shared_ptr<T> data;
+	T* resource;
 	std::tuple<Args...> args;
 	Engine& e;
 };

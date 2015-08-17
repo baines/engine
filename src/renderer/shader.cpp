@@ -73,7 +73,7 @@ ShaderBase::~ShaderBase(){
 	}
 }
 
-ShaderProgram::ShaderProgram(const std::shared_ptr<VertShader>& v, const std::shared_ptr<FragShader>& f)
+ShaderProgram::ShaderProgram(Proxy<VertShader> v, Proxy<FragShader> f)
 : vs(v)
 , fs(f)
 , program_id(0)

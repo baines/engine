@@ -15,7 +15,7 @@ Canvas::Canvas(Engine& e)
 , vstate()
 , vs(e, { "color.glslv" })
 , fs(e, { "color.glslf" })
-, shader(*vs, *fs)
+, shader(vs, fs)
 , lines(&vstate, &shader, RType{ GL_LINES }){
 	shader.link();
 	vstate.setVertexBuffers({ &vertices });

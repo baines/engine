@@ -8,20 +8,20 @@ struct Material {
 	Material(ShaderProgram& s)
 	: shader(&s), texture(), sampler(){}
 	
-	Material(ShaderProgram& s, Texture& tex)
+	Material(ShaderProgram& s, const Texture& tex)
 	: shader(&s), texture(&tex), sampler(){
 		uniforms.setUniform("u_samp", { 0 });
 	}
 	
-	Material(ShaderProgram& s, Texture& tex, Sampler& samp)
+	Material(ShaderProgram& s, const Texture& tex, const Sampler& samp)
 	: shader(&s), texture(&tex), sampler(&samp){
 		uniforms.setUniform("u_samp", { 0 });
 	}
 
 	ShaderUniforms uniforms;
 	ShaderProgram* shader;
-	Texture* texture;
-	Sampler* sampler;
+	const Texture* texture;
+	const Sampler* sampler;
 };
 
 #endif

@@ -186,6 +186,30 @@ inline size_t utf8_char_index(const string_view& str, size_t utf32_index){
 	return str.size();	
 }
 
+/* Pointer that nulls itself on move, so the default move assign/constructors work */
+
+template<class T>
+struct NullOnMovePtr {
+	NullOnMovePtr() : ptr(nullptr){}
+	NullOnMovePtr(nullptr_t) : NullOnMovePtr(){}
+	NullOnMovePtr(T* ptr) : ptr(ptr){}
+
+	T& operator* (){ return *ptr; }
+	T* operator->(){ return ptr; }
+
+	void operator=(NullOnMovePtr&& p){
+		ptr = p.ptr;
+		p.ptr = nullptr;
+	}
+
+	T*& get() { return ptr; }
+	T* const& get() const { return ptr; }
+
+	operator T*() { return ptr; }
+private:
+	T* ptr;
+};
+
 /* GLM stuff to determine if a type is a vector or matrix */
 
 namespace glmstuff {

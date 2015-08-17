@@ -32,22 +32,22 @@ static bool is_color_code(char32_t c){
 }
 
 Text::Text()
-: engine(nullptr)
-, font(nullptr)
+: engine()
+, font()
 , palette(default_palette)
 , start_pos()
 , end_pos()
 , str()
 , uniforms()
-, renderable(nullptr) {
+, renderable() {
 
 	uniforms.setUniform("u_samp", { 0 });
 	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 }
 
-Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s)
+Text::Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const string_view& s)
 : engine(&e)
-, font(&f)
+, font(f)
 , palette(default_palette)
 , start_pos(pos)
 , end_pos()
@@ -59,39 +59,6 @@ Text::Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const stri
 
 	uniforms.setUniform("u_samp", { 0 });
 	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
-}
-
-Text::Text(Text&& other)
-: engine(other.engine)
-, font(other.font)
-, palette(other.palette)
-, start_pos(other.start_pos)
-, end_pos(other.end_pos)
-, str(std::move(other.str))
-, uniforms(std::move(other.uniforms))
-, renderable(other.renderable) {
-	if(renderable) renderable->uniforms = &uniforms;
-	other.engine = nullptr;
-	other.font = nullptr;
-	other.renderable = nullptr;
-}
-
-Text& Text::operator=(Text&& other){
-	engine = other.engine;
-	font = other.font;
-	palette = other.palette;
-	start_pos = other.start_pos;
-	end_pos = other.end_pos;
-	str = std::move(other.str);
-	uniforms = std::move(other.uniforms);
-	renderable = other.renderable;
-	if(renderable) renderable->uniforms = &uniforms;
-	
-	other.engine = nullptr;
-	other.font = nullptr;
-	other.renderable = nullptr;
-
-	return *this;
 }
 
 void Text::setPalette(const std::array<uint32_t, 16>& colors){
@@ -126,6 +93,7 @@ int Text::update(const string_view& newstr, glm::ivec2 newpos){
 
 void Text::draw(Renderer& r){
 	if(renderable){
+		renderable->uniforms = &uniforms;
 		r.addRenderable(*renderable);
 	}
 }
@@ -147,7 +115,7 @@ Text::~Text(){
 void Text::setRenderable(Renderable* r){
 	renderable = r;
 	renderable->uniforms = &uniforms;
-	renderable->textures[0] = (*font)->getTexture();
+	renderable->textures[0] = font->getTexture();
 }
 
 glm::ivec2 Text::getPos(size_t index) const {
@@ -160,10 +128,10 @@ glm::ivec2 Text::getPos(size_t index) const {
 
 		if(c == '\n'){
 			result.x = start_pos.x;
-			result.y += (*font)->getLineHeight();
+			result.y += font->getLineHeight();
 		} else {
-			result.x += (*font)->getGlyphInfo(c).advance;
-			if(prev) result.x += (*font)->getKerning(prev, c).x;
+			result.x += font->getGlyphInfo(c).advance;
+			if(prev) result.x += font->getKerning(prev, c).x;
 			prev = c;
 		}
 	}

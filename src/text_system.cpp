@@ -55,7 +55,7 @@ TextSystem::TextSystem(Engine& e)
 , text_buffer("a_pos:2s|a_tex:2SN|a_col:4BN", 512)
 , text_vs(e, { "text.glslv" })
 , text_fs(e, { "text.glslf" })
-, text_shader(*text_vs, *text_fs)
+, text_shader(text_vs, text_fs)
 , blend_mode{{{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }}} {
 	assert(FT_Init_FreeType(&ft_lib) == 0);
 	text_shader.link();
@@ -67,7 +67,7 @@ FT_Library& TextSystem::getLib(){
 }
 
 GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
-	const Font& f = *(*t.font);
+	const Font& f = *t.font;
 
 	size_t str_len = str.size(),
 		   x = pos.x,
@@ -204,7 +204,7 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 }
 
 void TextSystem::delText(Text& t){
-	auto* r = t.renderable;
+	Renderable* r = t.renderable;
 
 	if(!r) return;
 

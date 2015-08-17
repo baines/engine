@@ -4,6 +4,7 @@
 #include "text.h"
 #include "shader_uniforms.h"
 #include "renderable.h"
+#include "proxy.h"
 #include <string>
 
 struct Font;
@@ -29,9 +30,9 @@ struct Font;
 
 struct Text {
 	Text();
-	Text(Engine& e, const std::shared_ptr<Font>& f, glm::ivec2 pos, const string_view& s);
-	Text(Text&&);
-	Text& operator=(Text&&);
+	Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const string_view& s);
+	Text(Text&&) = default;
+	Text& operator=(Text&&) = default;
 	
 	int update(const string_view& newstr);
 	int update(const string_view& newstr, glm::ivec2 newpos);
@@ -63,13 +64,13 @@ private:
 
 	void setRenderable(Renderable* r);
 
-	Engine* engine;
-	const std::shared_ptr<Font>* font;
+	NullOnMovePtr<Engine> engine;
+	Proxy<Font> font;
 	std::array<uint32_t, 16> palette;
 	glm::ivec2 start_pos, end_pos;
 	std::u32string str;
 	ShaderUniforms uniforms;
-	Renderable* renderable;
+	NullOnMovePtr<Renderable> renderable;
 };
 
 #endif

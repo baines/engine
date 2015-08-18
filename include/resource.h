@@ -6,8 +6,13 @@
 #include <vector>
 #include <tuple>
 
+struct ResourceBase {
+	virtual void* getRawPtr() = 0;
+	virtual ~ResourceBase(){}
+};
+
 template<class T, class... Args>
-struct Resource {
+struct Resource : ResourceBase {
 	Resource(Engine& e, std::initializer_list<const char*> names, Args&&... args);
 	Resource& operator=(Resource&& other);
 
@@ -18,7 +23,7 @@ struct Resource {
 	const T* operator->();
 	const T& operator*();
 
-	T** getPtr();
+	void* getRawPtr() override;
 
 	~Resource();	
 private:

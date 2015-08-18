@@ -22,26 +22,27 @@ namespace {
 static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 	const FT_Bitmap* bmp = glyph.bmp;
 	int prev_w = img.w, prev_h = img.h;
-	
+
+	// start a new line if there's no space left on the current one.	
 	if(img.pen_x + glyph.advance > img.w){
 		img.pen_x = 0;
 		img.pen_y += img.line_height;
 	}
 	
+	// if the pen is vertically past the texture, expand it down a line.
 	if(img.pen_y > img.h){
 		img.h = img.pen_y;
 		img.mem = (uint8_t*)realloc(img.mem, img.w * img.h);
 		memset(img.mem + (prev_w * prev_h), 0, (img.w * img.h) - (prev_w * prev_h));
 	}
 
+	// figure out where on the texture to start drawing, and how many rows to draw.
 	const int y_off = std::min<int>(img.line_height, img.descender + glyph.bearing_y);
-	const int rows = std::min<int>(y_off, bmp->rows);
+	const int rows  = std::min<int>(y_off, bmp->rows);
+	const int x     = std::max<int>(0, img.pen_x + glyph.bearing_x);
 	
 	for(int i = 0; i < rows; ++i){
-		
-		const int x = std::max<int>(0, img.pen_x + glyph.bearing_x);
 		const int y = (img.pen_y - y_off) + i;
-		
 		memcpy(img.mem + x + (img.w * y), bmp->buffer + bmp->pitch * i, bmp->width);
 	}
 }
@@ -109,7 +110,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 		4 << 16
 	);
 	
-	// choose a font size that the requested height fits the line height of the outlined glyphs.
+	// scale the font so the requested height fits the outlined glyphs' total line height.
 	double scale = (double)face->units_per_EM / (double)(face->height + 4 * height);
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
@@ -127,7 +128,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	bool got_size = false;
 
 	// estimate the lowest POT texture width that will fit the glyphs.
-	for(init_w = 256; init_w <= max_w; init_w <<= 1){
+	for(init_w = 128; init_w <= max_w; init_w <<= 1){
 		size_t glyphs_per_line = init_w / (face->size->metrics.max_advance >> 6);
 		size_t lines = std::min<int>(utf_hi - utf_lo, face->num_glyphs) / glyphs_per_line;
 		

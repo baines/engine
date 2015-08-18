@@ -8,39 +8,33 @@ struct Proxy {
 	Proxy() : ptr(nullptr), type(RAW){}
 	Proxy(T*& ptr) : ptr(&ptr), type(RAW){}
 	template<class... Args>
-	Proxy(Resource<T, Args...>& res) : ptr(res.getPtr()), type(RAW){}
+	Proxy(Resource<T, Args...>& res) : ptr(&res), type(RES){}
 	Proxy(std::shared_ptr<T>& sptr) : ptr(&sptr), type(SHARED){}
 
 	const T& operator* () const{
-		return type == RAW ?
-			**reinterpret_cast<T**>(ptr) :
-			**reinterpret_cast<std::shared_ptr<T>*>(ptr);
-
+		return type == RAW 
+			? **reinterpret_cast<T**>(ptr)
+			: type == RES 
+			? *reinterpret_cast<const T*>(reinterpret_cast<ResourceBase*>(ptr)->getRawPtr()) 
+			: **reinterpret_cast<std::shared_ptr<T>*>(ptr);
 	}
-	const T* operator->() const {
-		return type == RAW ? 
-			*reinterpret_cast<T**>(ptr) :
-			reinterpret_cast<std::shared_ptr<T>*>(ptr)->get();
+	const T* operator->() const { return &(*(*this)); }
+	
+	T& operator* () {
+		return type == RAW 
+			? **reinterpret_cast<T**>(ptr)
+			: type == RES 
+			? *reinterpret_cast<T*>(reinterpret_cast<ResourceBase*>(ptr)->getRawPtr()) 
+			: **reinterpret_cast<std::shared_ptr<T>*>(ptr);
 	}
-
-	T& operator* (){
-		return type == RAW ?
-			**reinterpret_cast<T**>(ptr) :
-			**reinterpret_cast<std::shared_ptr<T>*>(ptr);
-
-	}
-	T* operator->(){
-		return type == RAW ? 
-			*reinterpret_cast<T**>(ptr) :
-			reinterpret_cast<std::shared_ptr<T>*>(ptr)->get();
-	}
+	T* operator->() { return &(*(*this)); }
 
 	operator bool() const {
 		return ptr != nullptr;
 	}
 private:
 	void* ptr;
-	enum { RAW, SHARED } type;
+	enum { RAW, SHARED, RES } type;
 };
 
 #endif

@@ -88,9 +88,12 @@ const T& Resource<T, Args...>::operator*() {
 }
 
 template<class T, class... Args>
-T** Resource<T, Args...>::getPtr(){
-	if(!resource && !load()) res_error(res_names);
-	return &resource;
+void* Resource<T, Args...>::getRawPtr() {
+	if(!resource){
+		DEBUGF("Resource '%s' being lazy loaded now...", res_names[0]);
+		if(!load()) res_error(res_names);
+	}
+	return reinterpret_cast<void*>(resource);
 }
 
 template<class T, class... Args>

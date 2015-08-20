@@ -82,6 +82,11 @@ int Text::update(const string_view& newstr, glm::ivec2 newpos){
 
 	std::u32string u32str = to_utf32(newstr);
 
+	//XXX: tab hack
+	for(size_t i = 0; i < u32str.size(); ++i){
+		if(u32str[i] == '\t') u32str.replace(i, 1, U"    ");
+	}
+
 	if(u32str == str && newpos == start_pos){
 		return 0;
 	} else {

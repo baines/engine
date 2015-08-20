@@ -114,14 +114,14 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	double scale = (double)face->units_per_EM / (double)(face->height + 4 * height);
 	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
 	
-	DEBUGF("Font info:\n\th: %d\n\tmax_advance: %d\n\tnum_glyphs: %d, asc: %d, desc: %d",
-	       (int)face->size->metrics.height >> 6,
-	       (int)face->size->metrics.max_advance >> 6,
-	       (int)face->num_glyphs,
-	       (int)face->size->metrics.ascender >> 6,
-	       (int)-(face->size->metrics.descender >> 6));
+	DEBUGF(
+		"Font info: [glyphs: %li, max_adv: %ld, scale: %.2f]",
+		face->num_glyphs, face->size->metrics.max_advance >> 6, scale
+	);
 	
 	int init_w = 0, max_w = 0;
+
+	glyph_info.reserve(std::min<size_t>(utf_hi - utf_lo, face->num_glyphs));
 
 	//XXX: cache common constants like this in GLContext
 	gl.GetIntegerv(GL_MAX_TEXTURE_SIZE, &max_w);
@@ -234,7 +234,7 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 			FT_Stroker_Rewind(ft_stroker);
 		}
 		
-		glyph_info.push_back(glyph);
+		glyph_info.push_back(std::move(glyph));
 	}
 
 	FT_Stroker_Done(ft_stroker);

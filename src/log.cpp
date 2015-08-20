@@ -19,17 +19,6 @@ namespace {
 		logging::fatal;
 #endif
 
-	static const char* get_level_prefix(logging::level l){
-		switch(l){
-			case logging::fatal : return "[FATAL] ";
-			case logging::error : return "[ERROR] ";
-			case logging::warn  : return "[WARN]  ";
-			case logging::info  : return "[INFO]  ";
-			case logging::debug : return "[DEBUG] ";
-			case logging::trace : return "[TRACE] ";
-			default             : return "";
-		}
-	}
 
 #ifndef __EMSCRIPTEN__
 	static SDL_MessageBoxColorScheme colors = {{
@@ -72,6 +61,18 @@ namespace {
 
 namespace logging {
 
+	const char* lvl_str(logging::level l){
+		switch(l){
+			case logging::fatal : return "[FATAL] ";
+			case logging::error : return "[ERROR] ";
+			case logging::warn  : return "[WARN]  ";
+			case logging::info  : return "[INFO]  ";
+			case logging::debug : return "[DEBUG] ";
+			case logging::trace : return "[TRACE] ";
+			default             : return "";
+		}
+	}
+
 	void log(level l, const char* fmt, ...){
 		va_list args;
 		va_start(args, fmt);
@@ -86,7 +87,7 @@ namespace logging {
 				s(l, msg, msg_len);
 			}
 		
-			fprintf(stderr, "%s%s\n", get_level_prefix(l), msg);
+			fprintf(stderr, "%s%s\n", lvl_str(l), msg);
 			//TODO: output to file also?
 			
 			if(l == fatal){

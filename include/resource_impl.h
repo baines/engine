@@ -8,7 +8,7 @@ Resource<T, Args...>::Resource(Engine& e, std::initializer_list<const char*> nam
 , chosen_name()
 , res_handle()
 , resource()
-, args(args...)
+, args(std::forward<Args>(args)...)
 , e(e) {
 
 }

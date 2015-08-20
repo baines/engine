@@ -73,6 +73,12 @@ CLI::CLI(Engine& e)
 	e.input.subscribe(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
 	e.input.subscribe(this, "console",          ACT_IGNORE_TEXT);
 
+	logging::addSink([&](logging::level l, const char* msg, size_t len){
+		if(l == logging::warn || l == logging::error){
+			echo({ TXT_YELLOW, lvl_str(l), string_view(msg, len), TXT_WHITE });
+		}
+	});
+
 	int w = e.cfg.getVar<CVarInt>("vid_width")->val,
 	   	h = font_height->val * (visible_lines->val + 1);
 
@@ -409,7 +415,16 @@ void CLI::echo(const string_view& str){
 
 void CLI::echo(std::initializer_list<string_view> strs){
 	for(auto& str : strs){
-		output_lines[output_line_idx].append(str.data(), str.size());
+		string_view::const_iterator begin = str.begin(), end;
+		do {
+			end = std::find(begin, str.end(), '\n');
+			output_lines[output_line_idx].append(begin, end);
+			begin = end + 1;
+			if(end != str.end()){
+				output_line_idx = (output_line_idx + 1) % output_lines.size();
+				output_lines[output_line_idx].clear();
+			}
+		} while(end != str.end());
 	}
 	output_line_idx = (output_line_idx + 1) % output_lines.size();
 	output_lines[output_line_idx].clear();

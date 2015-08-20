@@ -16,6 +16,8 @@ namespace logging {
 		trace = 5
 	};
 
+	const char* lvl_str(level l);
+
 	void log(level l, const char* fmt, ...) __attribute__ ((format (printf, 2, 3)));
 	
 	void setVerbosity(level l);
@@ -23,7 +25,6 @@ namespace logging {
 	typedef std::function<void(level, const char* msg, size_t msg_sz)> log_fn;
 	
 	logsink* addSink(log_fn&& fn);
-	
 	void delSink(logsink* handle);
 }
 

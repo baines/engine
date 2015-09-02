@@ -11,6 +11,12 @@
 
 #define STRINGIFY(x) #x
 
+/* Simple wrapper for a block of memory */
+struct MemBlock {
+	const uint8_t* ptr;
+	size_t size;
+};
+
 /* Get the arity (number of args) from a member function */
 template<class T>
 struct mf_arity;

@@ -38,7 +38,8 @@ private:
 	bool loadAllFuncs(void);
 	void loadExtensions(void);
 	std::unordered_set<uint32_t> extensions;
-	std::map<GLObject*, bool> objects;
+	enum GLObjStatus { VALID, INVALID, DELETED };
+	std::map<GLObject*, GLObjStatus> objects;
 	SDL_GLContext sdl_context;
 };
 

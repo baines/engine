@@ -148,6 +148,17 @@ Texture2D::Texture2D()
 
 }
 
+Texture2D::Texture2D(MemBlock img)
+: id(0)
+, w(0)
+, h(0) {
+	uint8_t* pixels = stbi_load_from_memory(img.ptr, img.size, &w, &h, nullptr, 4);
+	
+	texture2d_init(id, GL_UNSIGNED_BYTE, GL_RGBA8, w, h, pixels);
+	
+	stbi_image_free(pixels);
+}
+
 Texture2D::Texture2D(GLenum type, GLenum int_fmt, int w, int h, const void* data)
 : id(0)
 , w(w)
@@ -160,15 +171,6 @@ Texture2D& Texture2D::operator=(Texture2D&& other){
 	std::swap(w, other.w);
 	std::swap(h, other.h);
 	return *this;
-}
-
-bool Texture2D::loadFromResource(Engine& e, const ResourceHandle& img){
-	uint8_t* pixels = stbi_load_from_memory(img.data(), img.size(), &w, &h, nullptr, 4);
-	
-	texture2d_init(id, GL_UNSIGNED_BYTE, GL_RGBA8, w, h, pixels);
-	
-	stbi_image_free(pixels);
-	return true;
 }
 
 bool Texture2D::setSwizzle(const std::array<GLint, 4>& swizzle){

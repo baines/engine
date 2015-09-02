@@ -13,17 +13,12 @@ static const char* shader_name(GLenum type){
 	}
 }
 
-ShaderBase::ShaderBase(GLenum type)
+ShaderBase::ShaderBase(GLenum type, MemBlock mem)
 : type(type)
-, id(0){
+, id(gl.CreateShader(type)){
 
-}
-
-bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
-	id = gl.CreateShader(type);
-
-	const GLchar* str = reinterpret_cast<const GLchar*>(res.data());
-	GLint str_sz = res.size();
+	const GLchar* str = reinterpret_cast<const GLchar*>(mem.ptr);
+	GLint str_sz = mem.size;
 
 	const char** str_ptr = &str;
 	const GLint* str_sz_ptr = &str_sz;
@@ -56,9 +51,6 @@ bool ShaderBase::loadFromResource(Engine& e, const ResourceHandle& res){
 
 		gl.DeleteShader(id);
 		id = 0;
-		return false;
-	} else {
-		return true;
 	}
 }
 

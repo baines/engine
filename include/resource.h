@@ -27,18 +27,6 @@ struct Resource : ResourceBase {
 
 	~Resource();	
 private:
-	struct Wrapper : public T {
-		Wrapper(Resource* res, Args... args) : T(std::forward<Args>(args)...), res(res){}
-		virtual void onGLContextRecreate() {
-			res->forceReload();
-		}
-		Resource* res;
-	};
-
-	template<size_t... I>
-	void create_res(std::index_sequence<I...>){
-		resource = NullOnMovePtr<T>(new Wrapper(this, std::get<I>(args)...));
-	}
 
 	std::vector<const char*> res_names;
 	const char* chosen_name;
@@ -46,6 +34,53 @@ private:
 	T* resource;
 	std::tuple<Args...> args;
 	Engine& e;
+
+	template<class U>
+	struct needs_engine_param {
+		template<class V> static std::true_type
+			check(decltype(V(e, MemBlock{}, std::declval<Args>()...))*);
+		template<class V> static std::false_type check(...);
+		static const bool value = decltype(check<U>(nullptr))::value;
+	};
+
+	template<class U, class = void>
+	struct Wrapper;
+
+	template<class U> 
+	struct Wrapper<U, typename std::enable_if<needs_engine_param<U>::value>::type> : public U{
+		Wrapper(Engine& e, Resource* res, const ResourceHandle& rh, Args... args)
+		: T(e, MemBlock{ rh.data(), rh.size() }, std::forward<Args>(args)...)
+		, res(res){}
+
+		virtual void onGLContextRecreate() {
+			res->forceReload();
+		}
+		Resource* res;
+	};
+
+	template<class U>
+	struct Wrapper<U, typename std::enable_if<!needs_engine_param<U>::value>::type> : public U{
+		Wrapper(Engine& e, Resource* res, const ResourceHandle& rh, Args... args)
+		: T(MemBlock { rh.data(), rh.size() }, std::forward<Args>(args)...)
+		, res(res){}
+
+		virtual void onGLContextRecreate() {
+			res->forceReload();
+		}
+		Resource* res;
+	};
+	
+	template<size_t... I>
+	void create_res(std::index_sequence<I...>, const ResourceHandle& rh){
+		resource = new Wrapper<T>(e, this, rh, std::get<I>(args)...);
+	}
+	
+	template<size_t... I>
+	void recreate_res(std::index_sequence<I...>, const ResourceHandle& rh){
+		resource->~T();
+		new (resource) Wrapper<T>(e, this, rh, std::get<I>(args)...);
+	}
+
 };
 
 #endif

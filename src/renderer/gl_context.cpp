@@ -164,14 +164,23 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
 	SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 	
-	if((sdl_context = SDL_GL_CreateContext(w))){
+	SDL_GLContext ctx = nullptr;
+	if((ctx = SDL_GL_CreateContext(w))){
 		log(logging::info, "Got OpenGL %d.%d context.", maj, min);
 		loadAllFuncs();
 
+		for(auto i = objects.begin(); i != objects.end(); /**/){
+			if(i->second == DELETED){
+				objects.erase(i++);
+			} else {
+				++i;
+			}
+		}
+
 		for(auto& pair : objects){
-			if(!pair.second){
+			if(pair.second == INVALID){
+				pair.second = VALID;
 				pair.first->onGLContextRecreate();
-				pair.second = true;
 			}
 		}
 
@@ -179,6 +188,8 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 			DebugMessageCallback(&gl_dbg_callback, nullptr);
 			Enable(GL_DEBUG_OUTPUT);
 		}
+
+		sdl_context = ctx;
 
 		return true;
 	} else {
@@ -195,7 +206,9 @@ void GLContext::deleteContext(void){
 
 	// invalidate objects
 	for(auto& pair : objects){
-		pair.second = false;
+		if(pair.second == VALID){
+			pair.second = INVALID;
+		}
 	}
 
 	extensions.clear();
@@ -218,19 +231,22 @@ bool GLContext::initialized(){
 }
 
 void GLContext::registerObject(GLObject& obj){
-	objects.emplace(&obj, true);
+	objects[&obj] = VALID;
 }
 
 void GLContext::validateObject(GLObject& obj){
 	auto it = objects.find(&obj);
-	if(it != objects.end() && !it->second){
+	if(it != objects.end() && it->second == INVALID){
+		it->second = VALID;
 		it->first->onGLContextRecreate();
-		it->second = true;
 	}
 }
 
 void GLContext::unregisterObject(GLObject& obj){
-	objects.erase(&obj);
+	auto it = objects.find(&obj);
+	if(it != objects.end()){
+		it->second = DELETED;
+	}
 }
 
 bool GLContext::loadAllFuncs(void){

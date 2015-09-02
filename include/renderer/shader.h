@@ -11,8 +11,7 @@
 struct VertexState;
 
 struct ShaderBase : public GLObject {
-	ShaderBase(GLenum type);
-	bool loadFromResource(Engine& e, const ResourceHandle& data);
+	ShaderBase(GLenum type, MemBlock mem);
 	GLuint getID() const;
 	virtual ~ShaderBase();
 private:
@@ -21,11 +20,11 @@ private:
 };
 
 struct VertShader : ShaderBase {
-	VertShader() : ShaderBase(GL_VERTEX_SHADER){}
+	VertShader(MemBlock mem) : ShaderBase(GL_VERTEX_SHADER, mem){}
 };
 
 struct FragShader : ShaderBase {
-	FragShader() : ShaderBase(GL_FRAGMENT_SHADER){}
+	FragShader(MemBlock mem) : ShaderBase(GL_FRAGMENT_SHADER, mem){}
 };
 
 struct ShaderProgram : public GLObject {

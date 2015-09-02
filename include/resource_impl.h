@@ -45,16 +45,11 @@ bool Resource<T, Args...>::load(){
 
 	for(auto* n : res_names){
 		if(ResourceHandle rh = e.res.load(n)){
-			create_res(std::make_index_sequence<sizeof...(Args)>());
-			if(resource->loadFromResource(e, rh)){
-				e.res.cache<T, Args...>().put(n, resource, args);
-				res_handle = std::move(rh);
-				chosen_name = n;
-				return true;
-			} else {
-				delete resource;
-				return false;
-			}
+			create_res(std::make_index_sequence<sizeof...(Args)>(), rh);
+			e.res.cache<T, Args...>().put(n, resource, args);
+			res_handle = std::move(rh);
+			chosen_name = n;
+			return true;
 		}
 	}
 
@@ -71,7 +66,8 @@ bool Resource<T, Args...>::forceReload() {
 	if(!resource){
 		return load();
 	} else {
-		return resource->loadFromResource(e, res_handle);
+		recreate_res(std::make_index_sequence<sizeof...(Args)>(), res_handle);
+		return true;
 	}
 }
 

@@ -76,26 +76,26 @@ namespace logging {
 	void log(level l, const char* fmt, ...){
 		va_list args;
 		va_start(args, fmt);
-		
+
 		if(l <= verbosity){
-		
+
 			char msg[4096] = {};
-		
+
 			int msg_len = vsnprintf(msg, sizeof(msg), fmt, args);
-		
+
 			for(auto& s : sinks){
 				s(l, msg, msg_len);
 			}
-		
+
 			fprintf(stderr, "%s%s\n", lvl_str(l), msg);
 			//TODO: output to file also?
-			
+
 			if(l == fatal){
 				msgbox(msg);
 				exit(1);
 			}
 		}
-		
+
 	}
 
 	void setVerbosity(level l){
@@ -109,7 +109,7 @@ namespace logging {
 
 	void delSink(logsink* handle){
 		log_fn* fn = reinterpret_cast<log_fn*>(handle);
-		
+
 		for(auto i = sinks.begin(), j = sinks.end(); i != j; ++i){
 			if(&(*i) == fn){
 				sinks.erase(i);

@@ -49,7 +49,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 
 }
 
-Font::Font(size_t h, uint16_t utf_lo, uint16_t utf_hi)
+Font::Font(Engine& e, MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 : glyph_info()
 , height(h)
 , utf_lo(utf_lo)
@@ -57,45 +57,8 @@ Font::Font(size_t h, uint16_t utf_lo, uint16_t utf_hi)
 , face(nullptr)
 , atlas() {
 
-}
-
-std::tuple<uint16_t, uint16_t> Font::getUTFRange() const {
-	return std::make_tuple(utf_lo, utf_hi);
-}
-
-size_t Font::getLineHeight() const {
-	return height;
-}
-
-const Texture2D* Font::getTexture() const {
-	return &atlas;
-}
-
-const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
-	size_t idx = std::max<int>(0, (c + 1) - (int)utf_lo);
-	if(idx >= glyph_info.size()) idx = 0;
-
-	return glyph_info[idx];
-}
-
-glm::ivec2 Font::getKerning(char32_t a, char32_t b) const {
-	FT_Vector vec = {};
-	FT_Get_Kerning(
-		face,
-		FT_Get_Char_Index(face, a),
-		FT_Get_Char_Index(face, b),
-		FT_KERNING_DEFAULT,
-		&vec
-	);
-	return glm::ivec2(vec.x >> 6, vec.y >> 6);
-}
-
-bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
-	glyph_info.clear();
-	face = nullptr;
-
 	FT_Library& ft_lib = e.text.getLib();
-	assert(FT_New_Memory_Face(ft_lib, res.data(), res.size(), 0, &face) == 0);
+	assert(FT_New_Memory_Face(ft_lib, mem.ptr, mem.size, 0, &face) == 0);
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	assert(FT_IS_SCALABLE(face));
 
@@ -270,7 +233,35 @@ bool Font::loadFromResource(Engine& e, const ResourceHandle& res){
 	free(glyph_tex.mem);
 	free(outline_tex.mem);
 	delete [] combined;
-	
-	return true;
 }
 
+std::tuple<uint16_t, uint16_t> Font::getUTFRange() const {
+	return std::make_tuple(utf_lo, utf_hi);
+}
+
+size_t Font::getLineHeight() const {
+	return height;
+}
+
+const Texture2D* Font::getTexture() const {
+	return &atlas;
+}
+
+const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
+	size_t idx = std::max<int>(0, (c + 1) - (int)utf_lo);
+	if(idx >= glyph_info.size()) idx = 0;
+
+	return glyph_info[idx];
+}
+
+glm::ivec2 Font::getKerning(char32_t a, char32_t b) const {
+	FT_Vector vec = {};
+	FT_Get_Kerning(
+		face,
+		FT_Get_Char_Index(face, a),
+		FT_Get_Char_Index(face, b),
+		FT_KERNING_DEFAULT,
+		&vec
+	);
+	return glm::ivec2(vec.x >> 6, vec.y >> 6);
+}

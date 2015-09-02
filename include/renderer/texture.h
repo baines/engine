@@ -17,11 +17,10 @@ struct Texture {
 
 struct Texture2D : public Texture, public GLObject {
 	Texture2D();
+	Texture2D(MemBlock mem);
 	Texture2D(GLenum fmt, GLenum int_fmt, int w, int h, const void* data);
 	Texture2D& operator=(const Texture2D&) = delete;
 	Texture2D& operator=(Texture2D&&);
-	
-	bool loadFromResource(Engine& e, const ResourceHandle& img);
 	
 	GLenum getType(void) const;
 	bool isValid(void) const;

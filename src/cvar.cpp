@@ -46,7 +46,7 @@ bool CVarString::set(const string_view& view){
 		s.remove_prefix(1);
 		s.remove_suffix(1);
 	}
-	str = std::move(s.to_string());
+	str = std::string(s.begin(), s.end());
 	return true;
 }
 

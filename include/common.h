@@ -4,14 +4,16 @@
 #include <cstdint>
 #include <cmath>
 #include <glm/glm.hpp>
-#if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
-	#include "compat.h"
-#else
-	#include <experimental/string_view>
-#endif
+#include "altlib/alt.h"
 
-using string_view = std::experimental::string_view;
-using u32string_view = std::experimental::u32string_view;
+struct string_view : alt::StrRef {
+	using alt::StrRef::StrRef;
+	string_view(const std::string& s) : alt::StrRef(s.data(), s.size()) {}
+};
+struct u32string_view : alt::StrRef32 {
+	using alt::StrRef32::StrRef32;
+	u32string_view(const std::u32string& s) : alt::StrRef32(s.data(), s.size()){}
+};
 
 #include "log.h"
 

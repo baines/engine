@@ -150,7 +150,7 @@ inline bool str_to_bool(const char* str){
 }
 
 inline bool str_to_bool(const string_view& str){
-	return str[0] == '1' || str.compare(0, 4, "true", 4) == 0;
+	return str[0] == '1' || str.cmp("true");
 }
 
 /* unicode related things */

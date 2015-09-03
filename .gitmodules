@@ -10,3 +10,6 @@
 [submodule "build/emscripten-deps/SDL2"]
 	path = build/emscripten-deps/SDL2
 	url = https://github.com/spurious/SDL-mirror.git
+[submodule "include/altlib"]
+	path = include/altlib
+	url = ../altlib.git

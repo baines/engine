@@ -168,7 +168,7 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 	if(!pos_changed
 	&& newstr.size() >= t.str.size()
 	&& size_t(t.renderable->offset + t.renderable->count) == text_buffer.getSize()
-	&& newstr.find(t.str) == 0){
+	&& newstr.find(u32string_view(t.str)) == newstr.begin()){
 
 		auto suffix = u32string_view(newstr.data() + t.str.size(), newstr.size() - t.str.size());
 		t.renderable->count += writeString(
@@ -191,12 +191,12 @@ void TextSystem::updateText(Text& t, const u32string_view& newstr, glm::ivec2 ne
 			text_buffer.invalidate(BufferRange{ start + bytes, count - bytes, this });
 
 			t.renderable->count = verts;
-			t.str = (std::u32string)newstr;
+			t.str = std::u32string(newstr.begin(), newstr.end());
 			t.end_pos = t.getPos(newstr.size());
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);
-			t.str = (std::u32string)newstr;
+			t.str = std::u32string(newstr.begin(), newstr.end());
 			t.start_pos = newpos;
 			addText(t);
 		}

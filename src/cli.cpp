@@ -403,7 +403,7 @@ void CLI::draw(Renderer& r){
 			output_concat.append(TXT_WHITE);
 		}
 
-		output_text.update(std::move(output_concat));
+		output_text.update(output_concat);
 		output_dirty = false;
 	}
 	output_text.draw(r);

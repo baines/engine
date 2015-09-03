@@ -270,58 +270,55 @@ bool Input::StateBind::operator<(const StateBind& rhs) const {
 }
 
 static bool bind_key_fn(Input* const input, const string_view& str, bool raw){
-	char buff[str.size()+1]; //XXX: allow VLAs?
-	memset(buff, 0, str.size()+1);
-	str.copy(buff, str.size());
-	
-	char* state = nullptr;
-	char* key = strtok_r(buff   , " \t", &state);
-	char* act = strtok_r(nullptr, " \t", &state);
-	
-	if(key && act){
-		input->bind(Input::Key(key, raw), act);
-		return true;
-	} else {
-		return false;
-	}
+	return str.pass_c_str([&](char* buff){
+		
+		char* state = nullptr;
+		char* key = strtok_r(buff   , " \t", &state);
+		char* act = strtok_r(nullptr, " \t", &state);
+		
+		if(key && act){
+			input->bind(Input::Key(key, raw), act);
+			return true;
+		} else {
+			return false;
+		}
+	});
 }
 
 static bool bind_axis_fn(Input* const input, const string_view& str){
-	char buff[str.size()+1];
-	memset(buff, 0, str.size()+1);
-	str.copy(buff, str.size());
+	return str.pass_c_str([&](char* buff){
+		char* state = nullptr;
+		char* str_axis  = strtok_r(buff   , " \t", &state);
+		char* str_act   = strtok_r(nullptr, " \t", &state);
+		char* str_rel   = strtok_r(nullptr, " \t", &state);
+		char* str_scale = strtok_r(nullptr, " \t", &state);
 
-	char* state = nullptr;
-	char* str_axis  = strtok_r(buff   , " \t", &state);
-	char* str_act   = strtok_r(nullptr, " \t", &state);
-	char* str_rel   = strtok_r(nullptr, " \t", &state);
-	char* str_scale = strtok_r(nullptr, " \t", &state);
-
-	if(!str_axis || !str_act){
-		return false;
-	}
-
-	Input::Axis axis(str_axis);
-	if(axis.type == Input::Axis::AXIS_INVALID){
-		return false;
-	}
-
-	bool rel = true;
-	if(str_rel){
-		rel = str_to_bool(str_rel);
-	}
-
-	float scale = 1.0f;
-	if(str_scale){
-		scale = strtof(str_scale, nullptr);
-		if(abs(scale) < FLT_EPSILON || errno == ERANGE){
-			scale = 1.0f;
+		if(!str_axis || !str_act){
+			return false;
 		}
-	}
 
-	input->bind(axis, str_act, rel, scale);
+		Input::Axis axis(str_axis);
+		if(axis.type == Input::Axis::AXIS_INVALID){
+			return false;
+		}
 
-	return true;
+		bool rel = true;
+		if(str_rel){
+			rel = str_to_bool(str_rel);
+		}
+
+		float scale = 1.0f;
+		if(str_scale){
+			scale = strtof(str_scale, nullptr);
+			if(abs(scale) < FLT_EPSILON || errno == ERANGE){
+				scale = 1.0f;
+			}
+		}
+
+		input->bind(axis, str_act, rel, scale);
+
+		return true;
+	});
 }
 
 Input::Input(Engine& e)

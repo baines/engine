@@ -4,6 +4,7 @@
 #include "renderer.h"
 #include "engine.h"
 #include <glm/glm.hpp>
+#include <iostream>
 
 static const size_t COLORCODE_START = 0xfdd0;
 static const size_t COLORCODE_COUNT = 16;

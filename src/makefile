@@ -2,8 +2,8 @@ dirs := . renderer
 output := ../engine.a
 builddir := ../build/$(OS)
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
+depends := $(foreach dir,$(dirs),$(wildcard $(builddir)/$(dir)/*.d))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources)) $(builddir)/zip.o
-depends := $(wildcard $(builddir)/*.d)
 includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I/usr/$(PREFIX)/include/freetype2
 CXXFLAGS := $(includes) -std=c++1y -Wall -pipe -ffast-math -fno-rtti -fno-exceptions\
  $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)

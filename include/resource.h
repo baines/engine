@@ -1,6 +1,7 @@
 #ifndef RESOURCE_H_
 #define RESOURCE_H_
 #include "common.h"
+#include "engine.h"
 #include "resource_system.h"
 #include <utility>
 #include <vector>
@@ -13,19 +14,83 @@ struct ResourceBase {
 
 template<class T, class... Args>
 struct Resource : ResourceBase {
-	Resource(Engine& e, std::initializer_list<const char*> names, Args&&... args);
-	Resource& operator=(Resource&& other);
+	Resource(Engine& e, std::initializer_list<const char*> names, Args&&... args)
+	: res_names(names)
+	, chosen_name()
+	, res_handle()
+	, resource()
+	, args(std::forward<Args>(args)...)
+	, e(e) {
 
-	bool load();
-	bool isLoaded() const;
-	bool forceReload();
+	}
 
-	const T* operator->();
-	const T& operator*();
+	Resource& operator=(Resource&& other){
+		std::swap(res_names, other.res_names);
+		std::swap(chosen_name, other.chosen_name);
+		std::swap(res_handle, other.res_handle);
+		std::swap(resource, other.resource);
+		std::swap(args, other.args);
 
-	void* getRawPtr() override;
+		if(!resource && !load()) res_error(res_names);
 
-	~Resource();	
+		return *this;
+	}
+
+	bool load(){
+		if(isLoaded()) return true;
+
+		for(auto* n : res_names){
+			if(e.res->cache<T, Args...>().get(n, resource, args)){
+				return true;
+			}
+		}
+
+		for(auto* n : res_names){
+			if(ResourceHandle rh = e.res->load(n)){
+				create_res(std::make_index_sequence<sizeof...(Args)>(), rh);
+				e.res->cache<T, Args...>().put(n, resource, args);
+				res_handle = std::move(rh);
+				chosen_name = n;
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	bool isLoaded() const {
+		return resource != nullptr;
+	}
+
+	bool forceReload(){
+		if(!resource){
+			return load();
+		} else {
+			recreate_res(std::make_index_sequence<sizeof...(Args)>(), res_handle);
+			return true;
+		}
+	}
+
+	const T* operator->(){
+		if(!resource && !load()) res_error(res_names);
+		return resource;
+	}
+	const T& operator*(){
+		if(!resource && !load()) res_error(res_names);
+		return *resource;
+	}
+
+	void* getRawPtr() override{
+		if(!resource){
+			DEBUGF("Resource '%s' being lazy loaded now...", res_names[0]);
+			if(!load()) res_error(res_names);
+		}
+		return reinterpret_cast<void*>(resource);
+	}
+
+	~Resource(){
+		if(resource && chosen_name) e.res->cache<T, Args...>().del(chosen_name, args);
+	}
 private:
 
 	std::vector<const char*> res_names;
@@ -34,6 +99,13 @@ private:
 	T* resource;
 	std::tuple<Args...> args;
 	Engine& e;
+
+	void res_error(const std::vector<const char*>& res_names){
+		std::string names = "[ ";
+		for(auto& i : res_names) names.append(i).append(1, ' ');
+		names.append(1, ']');
+		log(logging::fatal, "Resource not found: %s", names.c_str());
+	}
 
 	template<class U>
 	struct needs_engine_param {

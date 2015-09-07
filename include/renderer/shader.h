@@ -1,10 +1,8 @@
 #ifndef SHADER_H_
 #define SHADER_H_
 #include "gl_context.h"
-#include "resource_system.h"
 #include "shader_uniforms.h"
 #include "shader_attribs.h"
-#include "render_state.h"
 #include "proxy.h"
 #include <vector>
 

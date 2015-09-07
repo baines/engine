@@ -1,5 +1,6 @@
 #ifndef BLEND_MODE_H_
 #define BLEND_MODE_H_
+#include <array>
 #include "gl_context.h"
 
 struct RenderState;

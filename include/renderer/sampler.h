@@ -1,10 +1,9 @@
 #ifndef SAMPLER_H_
 #define SAMPLER_H_
+#include "common.h"
 #include "gl_context.h"
 #include <initializer_list>
 #include <map>
-
-struct RenderState;
 
 struct Sampler : public GLObject {
 	struct Param {

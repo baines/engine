@@ -156,7 +156,7 @@ Config::Config(Engine& e, int argc, char** argv){
 	} state = GET_NAME_START;
 	
 	
-	if((cfg_file = e.res.load("settings.cfg"))){
+	if((cfg_file = e.res->load("settings.cfg"))){
 		const char* data = reinterpret_cast<const char*>(cfg_file.data());
 		size_t sz = cfg_file.size();
 		

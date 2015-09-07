@@ -1,29 +1,45 @@
 #include "engine.h"
+#include "resource_system.h"
+#include "config.h"
+#include "input.h"
+#include "renderer.h"
+#include "text_system.h"
+#include "collision_system.h"
+#include "state_system.h"
 #include "game_state.h"
+#include "root_state.h"
+#include "cli.h"
+
+namespace {
+	static int get_ticks(){
 #ifdef __EMSCRIPTEN__
-static int get_ticks(){ return std::round(emscripten_get_now()); }
+		return std::round(emscripten_get_now());
 #else
-static int get_ticks(){ return SDL_GetTicks(); }
+		return SDL_GetTicks();
 #endif
+	}
+}
+
+using std::make_unique;
 
 Engine::Engine(int argc, char** argv, const char* name)
-: res        (argv[0])
-, cfg        (*this, argc, argv)
-, input      (*this)
-, renderer   (*this, name)
-, text       (*this)
-, collision  ()
-, state      ()
-, cli        (*this)
-, max_fps    (cfg.addVar<CVarInt>("max_fps", 200, 1, 1000))
+: res        (make_unique<ResourceSystem>(argv[0]))
+, cfg        (make_unique<Config>(*this, argc, argv))
+, input      (make_unique<Input>(*this))
+, renderer   (make_unique<Renderer>(*this, name))
+, text       (make_unique<TextSystem>(*this))
+, collision  (make_unique<CollisionSystem>())
+, state      (make_unique<StateSystem>())
+, cli        (make_unique<CLI>(*this))
+, max_fps    (cfg->addVar<CVarInt>("max_fps", 200, 1, 1000))
 , running    (true)
 , prev_ticks (0)
-, root_state (*this) {
-	addState(&root_state);
+, root_state (make_unique<RootState>(*this)) {
+	addState(root_state.get());
 }
 
 void Engine::addState(GameState* s){
-	state.push(s);
+	state->push(s);
 }
 
 bool Engine::run(void){
@@ -39,7 +55,7 @@ bool Engine::run(void){
 
 	delta = std::min(delta, 100);
 
-	state.processStateChanges(*this);
+	state->processStateChanges(*this);
 
 	SDL_Event e;
 	
@@ -52,24 +68,24 @@ bool Engine::run(void){
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
 			case SDL_MOUSEWHEEL:
-				state.onInput(*this, e);
+				state->onInput(*this, e);
 				break;
 			case SDL_TEXTINPUT:
-				state.onText(*this, e.text);
+				state->onText(*this, e.text);
 				break;
 			case SDL_MOUSEMOTION:
 			case SDL_CONTROLLERAXISMOTION:
-				state.onMotion(*this, e);
+				state->onMotion(*this, e);
 				break;
 			case SDL_CONTROLLERDEVICEADDED:
 			case SDL_CONTROLLERDEVICEREMOVED:
 			case SDL_CONTROLLERDEVICEREMAPPED:
-				input.onDeviceChange(e.cdevice);
+				input->onDeviceChange(e.cdevice);
 				break;
 			case SDL_WINDOWEVENT: {
 				if(e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED){
-					renderer.handleResize(e.window.data1, e.window.data2);
-					state.onResize(*this, e.window.data1, e.window.data2);
+					renderer->handleResize(e.window.data1, e.window.data2);
+					state->onResize(*this, e.window.data1, e.window.data2);
 				}
 				break;
 			}
@@ -80,11 +96,11 @@ bool Engine::run(void){
 		}
 	}
 	
-	state.update(*this, delta);
-	collision.update(delta);
-	state.draw(renderer);
+	state->update(*this, delta);
+	collision->update(delta);
+	state->draw(*renderer);
 		
-	renderer.drawFrame();
+	renderer->drawFrame();
 
 	return running;
 }

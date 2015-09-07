@@ -1,9 +1,5 @@
 #ifndef CVAR_H_
 #define CVAR_H_
-#include "common.h"
-#include <string>
-#include <vector>
-#include <cstdlib>
 #include "util.h"
 
 enum CVarType {

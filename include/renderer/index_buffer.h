@@ -1,5 +1,6 @@
 #ifndef INDEX_BUFFER_H_
 #define INDEX_BUFFER_H_
+#include "common.h"
 #include "gl_context.h"
 #include "buffer_common.h"
 #include "resource_system.h"

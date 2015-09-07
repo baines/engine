@@ -5,9 +5,8 @@
 #include <SDL.h>
 #include <map>
 #include <unordered_set>
+#include "common.h"
 #include "gl_functions.h"
-#include "util.h"
-#include "cvar.h"
 
 struct GLContext {
 	GLContext();

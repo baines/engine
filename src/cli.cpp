@@ -1,5 +1,8 @@
 #include "cli.h"
 #include "engine.h"
+#include "config.h"
+#include "input.h"
+#include "state_system.h"
 #include <numeric>
 
 enum {
@@ -35,10 +38,10 @@ CLI::CLI(Engine& e)
 , input_dirty      (false)
 , blink_timer      (0)
 , bg_scroll_timer  (0)
-, scrollback_lines (e.cfg.addVar<CVarInt>("cli_scrollback_lines", 64, 1, 8192))
-, visible_lines    (e.cfg.addVar<CVarInt>("cli_visible_lines",    8, 1, 64))
-, font_height      (e.cfg.addVar<CVarInt>("cli_font_height",      16, 8, 32))
-, cursor_blink_ms  (e.cfg.addVar<CVarInt>("cli_cursor_blink_ms",  500, 100, 10000))
+, scrollback_lines (e.cfg->addVar<CVarInt>("cli_scrollback_lines", 64, 1, 8192))
+, visible_lines    (e.cfg->addVar<CVarInt>("cli_visible_lines",    8, 1, 64))
+, font_height      (e.cfg->addVar<CVarInt>("cli_font_height",      16, 8, 32))
+, cursor_blink_ms  (e.cfg->addVar<CVarInt>("cli_cursor_blink_ms",  500, 100, 10000))
 , prev_vis_lines   (visible_lines->val)
 , font             (e, { "DejaVuSansMono.ttf" }, font_height->val)
 , bg_vs            (e, { "cli_bg.glslv" })
@@ -58,20 +61,20 @@ CLI::CLI(Engine& e)
 , cursor_text      (e, font, input_text.getEndPos() + glm::ivec2(0, 2), CURSOR)
 , cursor_idx       (PROMPT_SZ)
 , autocompletions  () {
-	e.input.subscribe(this, "cli_submit",       ACT_SUBMIT);
-	e.input.subscribe(this, "cli_backspace",    ACT_BACKSPACE);
-	e.input.subscribe(this, "cli_delete",       ACT_DELETE);
-	e.input.subscribe(this, "cli_del_word",     ACT_DEL_WORD);
-	e.input.subscribe(this, "cli_scroll_up",    ACT_SCROLL_UP);
-	e.input.subscribe(this, "cli_scroll_down",  ACT_SCROLL_DOWN);
-	e.input.subscribe(this, "cli_cursor_up",    ACT_CURSOR_UP);
-	e.input.subscribe(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
-	e.input.subscribe(this, "cli_cursor_left",  ACT_CURSOR_LEFT);
-	e.input.subscribe(this, "cli_cursor_right", ACT_CURSOR_RIGHT);
-	e.input.subscribe(this, "cli_home",         ACT_HOME);
-	e.input.subscribe(this, "cli_end",          ACT_END);
-	e.input.subscribe(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
-	e.input.subscribe(this, "console",          ACT_IGNORE_TEXT);
+	e.input->subscribe(this, "cli_submit",       ACT_SUBMIT);
+	e.input->subscribe(this, "cli_backspace",    ACT_BACKSPACE);
+	e.input->subscribe(this, "cli_delete",       ACT_DELETE);
+	e.input->subscribe(this, "cli_del_word",     ACT_DEL_WORD);
+	e.input->subscribe(this, "cli_scroll_up",    ACT_SCROLL_UP);
+	e.input->subscribe(this, "cli_scroll_down",  ACT_SCROLL_DOWN);
+	e.input->subscribe(this, "cli_cursor_up",    ACT_CURSOR_UP);
+	e.input->subscribe(this, "cli_cursor_down",  ACT_CURSOR_DOWN);
+	e.input->subscribe(this, "cli_cursor_left",  ACT_CURSOR_LEFT);
+	e.input->subscribe(this, "cli_cursor_right", ACT_CURSOR_RIGHT);
+	e.input->subscribe(this, "cli_home",         ACT_HOME);
+	e.input->subscribe(this, "cli_end",          ACT_END);
+	e.input->subscribe(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
+	e.input->subscribe(this, "console",          ACT_IGNORE_TEXT);
 
 	logging::addSink([&](logging::level l, const char* msg, size_t len){
 		if(l == logging::warn || l == logging::error){
@@ -79,10 +82,10 @@ CLI::CLI(Engine& e)
 		}
 	});
 
-	int w = e.cfg.getVar<CVarInt>("vid_width")->val,
+	int w = e.cfg->getVar<CVarInt>("vid_width")->val,
 	   	h = font_height->val * (visible_lines->val + 1);
 
-	e.input.enableText(this, true, SDL_Rect{ 0, h });
+	e.input->enableText(this, true, SDL_Rect{ 0, h });
 
 	bg_shader.link();
 	bg_sprite.setSize({ w, 4 + h });
@@ -96,7 +99,7 @@ void CLI::onStateChange(Engine& e, bool activated){
 
 	if(active){
 		// this can probably be handled better somehow...
-		onResize(e, e.cfg.getVar<CVarInt>("vid_width")->val, 0);
+		onResize(e, e.cfg->getVar<CVarInt>("vid_width")->val, 0);
 		ignore_next_text = false;
 	}
 }
@@ -110,10 +113,10 @@ void CLI::toggle(){
 	if(toggling) return;
 
 	if(active){
-		engine.state.pop(1);
+		engine.state->pop(1);
 		//XXX: what if it's not top-most?
 	} else {
-		engine.state.push(this);
+		engine.state->push(this);
 	}
 
 	toggling = true;
@@ -135,7 +138,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		int var_name_sz = split_idx - PROMPT_SZ;
 		
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
-		auto* v = e.cfg.getVar<CVar>(hash);
+		auto* v = e.cfg->getVar<CVar>(hash);
 
 		if(v
 		&& v->type != CVAR_FUNC 
@@ -199,7 +202,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 				input_str.c_str() + PROMPT_SZ,
 				input_str.size() - (PROMPT_SZ+1)
 			);
-			if(CVar* cvar = e.cfg.getVar<CVar>(hash)){
+			if(CVar* cvar = e.cfg->getVar<CVar>(hash)){
 				printVarInfo(*cvar);
 			}
 			return true;
@@ -208,9 +211,9 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		//TODO: maybe implement autocompletion of function args + enums too?
 		
 		autocompletions.clear();
-		e.cfg.getVarsWithPrefix(input_str.c_str()+PROMPT_SZ, autocompletions);
+		e.cfg->getVarsWithPrefix(input_str.c_str()+PROMPT_SZ, autocompletions);
 		
-		if(e.cfg.extendPrefix(input_str, PROMPT_SZ)){
+		if(e.cfg->extendPrefix(input_str, PROMPT_SZ)){
 			if(autocompletions.size() == 1){
 				input_str.append(1, ' ');
 			}

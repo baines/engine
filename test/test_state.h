@@ -1,19 +1,9 @@
 #ifndef TEST_STATE_H_
 #define TEST_STATE_H_
-#include "engine.h"
-#include "game_state.h"
-#include "resource.h"
-#include "shader.h"
-#include "font.h"
-#include "text.h"
-#include "texture.h"
-#include "material.h"
-#include "sprite_batch.h"
-#include "sprite.h"
+#include "engine_all.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "entity.h"
 
 static const constexpr struct {
 	float x, y;

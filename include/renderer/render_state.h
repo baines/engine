@@ -4,6 +4,7 @@
 #include "gl_context.h"
 #include "blend_mode.h"
 #include "shader_attribs.h"
+#include <array>
 #include <bitset>
 
 struct RenderState {

@@ -1,25 +1,27 @@
 #include "renderer.h"
 #include "engine.h"
-#include <climits>
 #include "enums.h"
+#include "config.h"
+#include "cli.h"
+#include <climits>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
 
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
 , render_state     ()
-, gl_debug         (e.cfg.addVar<CVarBool>   ("gl_debug",          true))
-, gl_fwd_compat    (e.cfg.addVar<CVarBool>   ("gl_fwd_compat",     true))
-, gl_core_profile  (e.cfg.addVar<CVarBool>   ("gl_core_profile",   true))
-, gl_multi_draw    (e.cfg.addVar<CVarBool>   ("gl_multi_draw",     true))
-, libgl            (e.cfg.addVar<CVarString> ("gl_library",        ""))
-, window_width     (e.cfg.addVar<CVarInt>    ("vid_width" ,        640, 320, INT_MAX))
-, window_height    (e.cfg.addVar<CVarInt>    ("vid_height",        480, 240, INT_MAX))
-, vsync            (e.cfg.addVar<CVarInt>    ("vid_vsync",         1, -2, 2))
-, fov              (e.cfg.addVar<CVarInt>    ("vid_fov",           90, 45, 135))
-, display_index    (e.cfg.addVar<CVarInt>    ("vid_display_index", 0, 0, 100))
-, fullscreen       (e.cfg.addVar<CVarBool>   ("vid_fullscreen",    false))
-, resizable        (e.cfg.addVar<CVarBool>   ("vid_resizable",     true))
+, gl_debug         (e.cfg->addVar<CVarBool>   ("gl_debug",          true))
+, gl_fwd_compat    (e.cfg->addVar<CVarBool>   ("gl_fwd_compat",     true))
+, gl_core_profile  (e.cfg->addVar<CVarBool>   ("gl_core_profile",   true))
+, gl_multi_draw    (e.cfg->addVar<CVarBool>   ("gl_multi_draw",     true))
+, libgl            (e.cfg->addVar<CVarString> ("gl_library",        ""))
+, window_width     (e.cfg->addVar<CVarInt>    ("vid_width" ,        640, 320, INT_MAX))
+, window_height    (e.cfg->addVar<CVarInt>    ("vid_height",        480, 240, INT_MAX))
+, vsync            (e.cfg->addVar<CVarInt>    ("vid_vsync",         1, -2, 2))
+, fov              (e.cfg->addVar<CVarInt>    ("vid_fov",           90, 45, 135))
+, display_index    (e.cfg->addVar<CVarInt>    ("vid_display_index", 0, 0, 100))
+, fullscreen       (e.cfg->addVar<CVarBool>   ("vid_fullscreen",    false))
+, resizable        (e.cfg->addVar<CVarBool>   ("vid_resizable",     true))
 , window_title     (name)
 , window           (nullptr)
 , main_uniforms    ()
@@ -32,7 +34,7 @@ Renderer::Renderer(Engine& e, const char* name)
 		log(logging::fatal, "Couldn't initialize SDL video subsystem (%s).", SDL_GetError());
 	}
 	
-	e.cfg.addVar<CVarFunc>("vid_reload", [&](const string_view&){
+	e.cfg->addVar<CVarFunc>("vid_reload", [&](const string_view&){
 		reload(e);
 		return true;
 	});
@@ -47,10 +49,10 @@ Renderer::Renderer(Engine& e, const char* name)
 		v->setReloadVar("vid_reload");
 	}
 
-	e.cfg.addVar<CVarFunc>("vid_display_info", [&](const string_view&){
+	e.cfg->addVar<CVarFunc>("vid_display_info", [&](const string_view&){
 		char buf[80] = {};
 		SDL_Rect r;
-		e.cli.echo("Displays:");
+		e.cli->echo("Displays:");
 
 		int num_disp = SDL_GetNumVideoDisplays();
 		for(int i = 0; i < num_disp; ++i){
@@ -60,7 +62,7 @@ Renderer::Renderer(Engine& e, const char* name)
 			snprintf(buf, sizeof(buf), "  %d: [%dx%d+%d+%d] '%s'",
 				i, r.w, r.h, r.x, r.y, name ? name : "(no name)"
 			);
-			e.cli.echo(buf);
+			e.cli->echo(buf);
 		}
 		return true;
 	}, "Show info about available displays / monitors");

@@ -57,7 +57,7 @@ Font::Font(Engine& e, MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 , face(nullptr)
 , atlas() {
 
-	FT_Library& ft_lib = e.text.getLib();
+	FT_Library& ft_lib = e.text->getLib();
 	assert(FT_New_Memory_Face(ft_lib, mem.ptr, mem.size, 0, &face) == 0);
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	assert(FT_IS_SCALABLE(face));

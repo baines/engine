@@ -38,7 +38,7 @@ void StateSystem::onInput(Engine& e, SDL_Event& ev){
 	}
 	
 	for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-		if(e.input.getKeyAction(*i, key, action_id)	&& (*i)->onInput(e, action_id, pressed)){
+		if(e.input->getKeyAction(*i, key, action_id)	&& (*i)->onInput(e, action_id, pressed)){
 			break;
 		}
 	}
@@ -52,7 +52,7 @@ void StateSystem::onMotion(Engine& e, SDL_Event& ev){
 		float scale = 1.0f;
 		
 		for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-			if(e.input.getAxisAction(*i, axis, action_id, rel, scale)
+			if(e.input->getAxisAction(*i, axis, action_id, rel, scale)
 			&& (*i)->onMotion(e, action_id, val * scale, rel)){
 				break;
 			}
@@ -103,7 +103,7 @@ void StateSystem::processStateChanges(Engine& e){
 		}
 		current_state = states.back();
 		current_state->onStateChange(e, true);
-		e.input.onStateChange(current_state);
+		e.input->onStateChange(current_state);
 	}
 }
 

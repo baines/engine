@@ -1,6 +1,7 @@
 #ifndef COLLISION_SYSTEM_H_
 #define COLLISION_SYSTEM_H_
 #include "common.h"
+#include "glm/glm.hpp"
 #include <vector>
 #include <map>
 

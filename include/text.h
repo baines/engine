@@ -1,13 +1,10 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 #include "common.h"
-#include "text.h"
 #include "shader_uniforms.h"
 #include "renderable.h"
 #include "proxy.h"
 #include <string>
-
-struct Font;
 
 #define TXT_COLOR(c)      "\xef\xb7" STRINGIFY(\x9 ## c)
 

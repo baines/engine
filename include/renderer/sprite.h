@@ -1,6 +1,7 @@
 #ifndef SPRITE_H_
 #define SPRITE_H_
 #include "common.h"
+#include "glm/glm.hpp"
 #include <tuple>
 
 struct Sprite {

@@ -1,9 +1,8 @@
 #ifndef VERTEX_STATE_H_
 #define VERTEX_STATE_H_
+#include "common.h"
 #include "gl_context.h"
-#include "vertex_buffer.h"
-#include "index_buffer.h"
-#include "render_state.h"
+#include "shader_attribs.h"
 #include <bitset>
 
 struct VertexState : public GLObject {

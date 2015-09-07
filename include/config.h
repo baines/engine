@@ -1,14 +1,11 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 #include "common.h"
-#include "resource_system.h"
 #include "cvar.h"
+#include "resource_system.h"
 #include "trie.h"
-#include <vector>
 #include <list>
-#include <cstring>
 #include <map>
-#include <algorithm>
 
 struct Config {
 

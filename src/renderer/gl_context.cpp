@@ -1,5 +1,6 @@
 #include "gl_context.h"
 #include "engine.h"
+#include "config.h"
 #include "enums.h"
 #include "util.h"
 
@@ -157,7 +158,7 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 	if(sdl_context) return true;
 	
 	if(!streaming_mode){
-		streaming_mode = e.cfg.addVar<CVarEnum>("gl_streaming_mode", gl_streaming_enum, 0);
+		streaming_mode = e.cfg->addVar<CVarEnum>("gl_streaming_mode", gl_streaming_enum, 0);
 	}
 	
 	int maj = 0, min = 0;

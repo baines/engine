@@ -1,6 +1,7 @@
 #ifndef COMPONENT_H_
 #define COMPONENT_H_
 #include "common.h"
+#include "glm/glm.hpp"
 #include <type_traits>
 
 unsigned getNextComponentID();

@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "text_system.h"
 #include "font.h"
 #include "text.h"
 #include <algorithm>

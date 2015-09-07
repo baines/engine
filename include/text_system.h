@@ -7,10 +7,8 @@
 #include "vertex_state.h"
 #include "renderable.h"
 #include "resource.h"
+#include "vertex_buffer.h"
 #include <list>
-
-struct Font;
-struct Text;
 
 struct TextSystem : public BufferInvalidateListener {
 	TextSystem(Engine& e);

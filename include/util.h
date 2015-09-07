@@ -1,10 +1,6 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 #include "common.h"
-#include <memory>
-#include <cstring>
-#include <array>
-//#include <codecvt>
 #include <SDL_stdinc.h>
 
 /* Macros */
@@ -217,6 +213,7 @@ private:
 };
 
 /* GLM stuff to determine if a type is a vector or matrix */
+#include "glm/glm.hpp"
 
 namespace glmstuff {
 

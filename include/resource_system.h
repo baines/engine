@@ -2,7 +2,6 @@
 #define RESOURCE_SYSTEM_H_
 #include "common.h"
 #include <memory>
-#include <string>
 #include <map>
 #include "util.h"
 
@@ -113,7 +112,7 @@ struct ResourceSystem {
 
 private:
 	ResourceHandle import(const char* name);
-	std::map<uint32_t, ResourceHandle> resources;
+	std::map<strhash_t, ResourceHandle> resources;
 };
 
 #endif

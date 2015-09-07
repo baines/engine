@@ -1,6 +1,7 @@
 #include "shader.h"
 #include "gl_context.h"
 #include "vertex_state.h"
+#include "render_state.h"
 #include <algorithm>
 
 using namespace std;

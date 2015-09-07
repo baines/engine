@@ -56,7 +56,7 @@ void AABB::setPrevPosition(vec2 p){
 }
 
 void AABB::initComponent(Engine& e, Entity& ent){
-	e.collision.addEntity(ent);
+	e.collision->addEntity(ent);
 }
 
 CollisionSystem::CollisionSystem()

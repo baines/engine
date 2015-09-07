@@ -1,12 +1,10 @@
 #ifndef RENDERABLE_H_
 #define RENDERABLE_H_
-#include "texture.h"
-#include "sampler.h"
-#include "vertex_state.h"
-#include "shader.h"
-#include "shader_uniforms.h"
+#include "common.h"
+#include "gl_context.h"
 #include "blend_mode.h"
-#include "util.h"
+#include "shader_uniforms.h"
+#include <array>
 
 struct RCount { GLsizei value; };
 struct RType  { GLenum  value; };

@@ -1,5 +1,7 @@
 #include "input.h"
 #include "engine.h"
+#include "config.h"
+#include "cli.h"
 #include <tuple>
 
 mouse_button_tag_t mouse_button_tag;
@@ -330,25 +332,25 @@ Input::Input(Engine& e)
 	using namespace std::placeholders;
 
 	//TODO: can all these cvar functions be merged into one?
-	e.cfg.addVar<CVarFunc>(
+	e.cfg->addVar<CVarFunc>(
 		"bind",
 		std::bind(&bind_key_fn, this, _1, false),
 		"Usage: bind <key_name> <action>"
 	);
 
-	e.cfg.addVar<CVarFunc>(
+	e.cfg->addVar<CVarFunc>(
 		"bind_raw",
 		std::bind(&bind_key_fn, this, _1, true),
 		"Usage: bind_raw <scancode> <action>"
 	);
 
-	e.cfg.addVar<CVarFunc>(
+	e.cfg->addVar<CVarFunc>(
 		"bind_axis",
 		std::bind(&bind_axis_fn, this, _1),
 		"Usage: bind_axis <axis_name> <action> [relative?] [scale]"
 	);
 
-	e.cfg.addVar<CVarFunc>("bindlist", [&](const string_view&){
+	e.cfg->addVar<CVarFunc>("bindlist", [&](const string_view&){
 		char bind_buf[32] = {};
 		size_t bind_len = sizeof(bind_buf);
 
@@ -361,13 +363,13 @@ Input::Input(Engine& e)
 				action = it->second.c_str();
 			}
 
-			e.cli.printf("%12s: %s\n", bind_buf, action);
+			e.cli->printf("%12s: %s\n", bind_buf, action);
 		}
 
 		return true;
 	}, "Lists the current set of keybindings.");
 
-	e.cfg.addVar<CVarFunc>("unbind", [&](const string_view& arg){
+	e.cfg->addVar<CVarFunc>("unbind", [&](const string_view& arg){
 		for(auto& bp : binds){
 			char bind_buf[32] = {};
 			bp.second.toString(bind_buf, sizeof(bind_buf));
@@ -377,7 +379,7 @@ Input::Input(Engine& e)
 				return true;
 			}
 		}
-		e.cli.printf("\"%.*s\" isn't bound.\n", (int)arg.size(), arg.data());
+		e.cli->printf("\"%.*s\" isn't bound.\n", (int)arg.size(), arg.data());
 		return true;
 	}, "Usage: unbind <key/axis>.");
 

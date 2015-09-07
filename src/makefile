@@ -1,9 +1,9 @@
 dirs := . renderer
 output := ../engine.a
 builddir := ../build/$(OS)
-headers := $(foreach dir,$(dirs),$(wildcard ../include/$(dir)/*.h))
 sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources)) $(builddir)/zip.o
+depends := $(wildcard $(builddir)/*.d)
 includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I/usr/$(PREFIX)/include/freetype2
 CXXFLAGS := $(includes) -std=c++1y -Wall -pipe -ffast-math -fno-rtti -fno-exceptions\
  $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)
@@ -17,10 +17,12 @@ endif
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer
 else
-    CXXFLAGS += -O2 -g -DDEBUG
+    CXXFLAGS += -Og -g -DDEBUG
 endif
 
 all: $(output) 
+
+include $(depends)
 
 $(output): $(objects)
 	$(AR) rcs $@ $^
@@ -31,10 +33,10 @@ $(output): $(objects)
 $(builddir)/zip.o: ../build/internal.zip
 	(cd $(<D) && $(LD) -r -b binary -o $@ $(<F))
 
-$(builddir)/%.o: %.cpp $(headers)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+$(builddir)/%.o: %.cpp
+	$(CXX) -MMD $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -f ../build/internal.zip $(objects) $(output) *~
+	rm -f ../build/internal.zip $(objects) $(output) $(depends) *~
 
 .PHONY: all clean

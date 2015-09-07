@@ -1,6 +1,7 @@
 #include "buffer_common.h"
 #include "enums.h"
 #include "render_state.h"
+#include "cvar.h"
 #include <algorithm>
 
 namespace {

@@ -1,7 +1,8 @@
 #ifndef TEXTURE_H_
 #define TEXTURE_H_
+#include "common.h"
+#include "util.h"
 #include "gl_context.h"
-#include "resource_system.h"
 #include <tuple>
 
 struct RenderState;

@@ -1,4 +1,7 @@
 #include "vertex_state.h"
+#include "vertex_buffer.h"
+#include "index_buffer.h"
+#include "render_state.h"
 
 VertexState::VertexState()
 : enabled_arrays()

@@ -1,20 +1,9 @@
 #ifndef TEST_COLLISION_STATE_H_
 #define TEST_COLLISION_STATE_H_
-#include "engine.h"
-#include "game_state.h"
-#include "resource.h"
-#include "shader.h"
-#include "font.h"
-#include "text.h"
-#include "texture.h"
-#include "material.h"
-#include "sprite_batch.h"
-#include "sprite.h"
+#include "engine_all.h"
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "entity.h"
-#include "canvas.h"
 
 enum {
 	ACT_LEFT,
@@ -53,18 +42,18 @@ struct TestCollisionState : public GameState {
 	, move          ({ 0.f, 0.f })
 	, cursor        ({ 0.f, 0.f })
 	, canvas        (e) {
-		e.input.subscribe(this, "left" , ACT_LEFT);
-		e.input.subscribe(this, "right", ACT_RIGHT);
-		e.input.subscribe(this, "up"   , ACT_UP);
-		e.input.subscribe(this, "down" , ACT_DOWN);
+		e.input->subscribe(this, "left" , ACT_LEFT);
+		e.input->subscribe(this, "right", ACT_RIGHT);
+		e.input->subscribe(this, "up"   , ACT_UP);
+		e.input->subscribe(this, "down" , ACT_DOWN);
 
-		e.input.subscribe(this, "switch", ACT_SWITCH);
-		e.input.subscribe(this, "click", ACT_CLICK);
+		e.input->subscribe(this, "switch", ACT_SWITCH);
+		e.input->subscribe(this, "click", ACT_CLICK);
 
-		e.input.subscribe(this, "cursor_x", ACT_CURSOR_X);
-		e.input.subscribe(this, "cursor_y", ACT_CURSOR_Y);
+		e.input->subscribe(this, "cursor_x", ACT_CURSOR_X);
+		e.input->subscribe(this, "cursor_y", ACT_CURSOR_Y);
 
-		e.collision.onCollision(0, 0, [&](Entity* a, Entity* b, float t){
+		e.collision->onCollision(0, 0, [&](Entity* a, Entity* b, float t){
 			static uint32_t color = 0xff0000ff;
 			for(auto* e : { a, b }){
 				if(auto* aabb = e->get<AABB>()){

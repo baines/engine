@@ -56,7 +56,7 @@ Text::Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const string_view& s)
 , uniforms()
 , renderable(nullptr) {
 
-	e.text.addText(*this);
+	e.text->addText(*this);
 
 	uniforms.setUniform("u_samp", { 0 });
 	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
@@ -92,7 +92,7 @@ int Text::update(const string_view& newstr, glm::ivec2 newpos){
 		return 0;
 	} else {
 		int char_count_diff = u32str.size() - str.size();
-		engine->text.updateText(*this, u32str, newpos);
+		engine->text->updateText(*this, u32str, newpos);
 		return char_count_diff;
 	}
 }
@@ -115,7 +115,7 @@ void Text::setOutlineColor(uint32_t col){
 }
 
 Text::~Text(){
-	if(engine) engine->text.delText(*this);
+	if(engine) engine->text->delText(*this);
 }
 
 void Text::setRenderable(Renderable* r){

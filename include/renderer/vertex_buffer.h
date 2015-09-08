@@ -3,8 +3,8 @@
 #include "common.h"
 #include "gl_context.h"
 #include "buffer_common.h"
-#include "resource_system.h"
 #include "shader_attribs.h"
+#include "util.h"
 
 struct VertexBuffer : public GLObject {
 	virtual void bind(RenderState& rs);
@@ -19,7 +19,7 @@ struct VertexBuffer : public GLObject {
 
 struct StaticVertexBuffer : VertexBuffer {
 	StaticVertexBuffer();
-	StaticVertexBuffer(const ResourceHandle& data, const char* fmt);
+	StaticVertexBuffer(const MemBlock& data, const char* fmt);
 	virtual const ShaderAttribs& getShaderAttribs() const;
 	virtual GLint  getStride() const;
 	virtual size_t getSize() const;
@@ -29,7 +29,7 @@ struct StaticVertexBuffer : VertexBuffer {
 	~StaticVertexBuffer();
 private:
 	void parseAttribs(const char* fmt);
-	ResourceHandle data;
+	MemBlock data;
 	ShaderAttribs attrs;
 	GLint stride;
 	GLuint id;

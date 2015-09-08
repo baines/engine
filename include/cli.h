@@ -3,7 +3,6 @@
 #include "common.h"
 #include "game_state.h"
 #include "resource.h"
-#include "font.h"
 #include "text.h"
 #include <vector>
 #include "material.h"

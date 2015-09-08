@@ -1,5 +1,6 @@
 #ifndef ROOT_STATE_H_
 #define ROOT_STATE_H_
+#include "common.h"
 #include "game_state.h"
 
 struct RootState : public GameState {

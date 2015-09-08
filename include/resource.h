@@ -8,7 +8,7 @@
 #include <tuple>
 
 struct ResourceBase {
-	virtual void* getRawPtr() = 0;
+	virtual const void* getRawPtr() = 0;
 	virtual ~ResourceBase(){}
 };
 
@@ -80,12 +80,12 @@ struct Resource : ResourceBase {
 		return *resource;
 	}
 
-	void* getRawPtr() override{
+	const void* getRawPtr() override {
 		if(!resource){
 			DEBUGF("Resource '%s' being lazy loaded now...", res_names[0]);
 			if(!load()) res_error(res_names);
 		}
-		return reinterpret_cast<void*>(resource);
+		return reinterpret_cast<const void*>(resource);
 	}
 
 	~Resource(){

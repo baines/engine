@@ -1,12 +1,9 @@
 #include "log.h"
 #include <list>
-#include <tuple>
 #include <algorithm>
 #include <stdarg.h>
 #include <cstdio>
 #include <cstdlib>
-#include <cassert>
-#include <cstring>
 #include <SDL.h>
 
 namespace {

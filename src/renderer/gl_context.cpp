@@ -235,11 +235,13 @@ void GLContext::registerObject(GLObject& obj){
 	objects[&obj] = VALID;
 }
 
-void GLContext::validateObject(GLObject& obj){
-	auto it = objects.find(&obj);
-	if(it != objects.end() && it->second == INVALID){
-		it->second = VALID;
-		it->first->onGLContextRecreate();
+void GLContext::validateObject(const GLObject& obj){
+	for(auto& pair : objects){
+		if(pair.first == &obj && pair.second == INVALID){
+			pair.second = VALID;
+			pair.first->onGLContextRecreate();
+			break;
+		}
 	}
 }
 

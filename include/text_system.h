@@ -1,14 +1,14 @@
 #ifndef TEXT_SYSTEM_H_
 #define TEXT_SYSTEM_H_
 #include "common.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include "blend_mode.h"
 #include "shader.h"
 #include "vertex_state.h"
-#include "renderable.h"
 #include "resource.h"
 #include "vertex_buffer.h"
 #include <list>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 struct TextSystem : public BufferInvalidateListener {
 	TextSystem(Engine& e);
@@ -23,7 +23,7 @@ struct TextSystem : public BufferInvalidateListener {
 
 	~TextSystem();
 private:
-	GLsizei writeString(Text& t, glm::ivec2 pos, const u32string_view& str);
+	size_t writeString(Text& t, glm::ivec2 pos, const u32string_view& str);
 
 	FT_Library ft_lib;
 	VertexState v_state;

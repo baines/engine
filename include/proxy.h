@@ -20,15 +20,6 @@ struct Proxy {
 	}
 	const T* operator->() const { return &(*(*this)); }
 	
-	T& operator* () {
-		return type == RAW 
-			? **reinterpret_cast<T**>(ptr)
-			: type == RES 
-			? *reinterpret_cast<T*>(reinterpret_cast<ResourceBase*>(ptr)->getRawPtr()) 
-			: **reinterpret_cast<std::shared_ptr<T>*>(ptr);
-	}
-	T* operator->() { return &(*(*this)); }
-
 	operator bool() const {
 		return ptr != nullptr;
 	}

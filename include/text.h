@@ -1,8 +1,8 @@
 #ifndef TEXT_H_
 #define TEXT_H_
 #include "common.h"
+#include "util.h"
 #include "shader_uniforms.h"
-#include "renderable.h"
 #include "proxy.h"
 #include <string>
 

@@ -2,6 +2,7 @@
 #include "game_state.h"
 #include "engine.h"
 #include "input.h"
+#include <cassert>
 
 StateSystem::StateSystem()
 : states()

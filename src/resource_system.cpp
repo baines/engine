@@ -73,3 +73,7 @@ ResourceHandle ResourceSystem::import(const char* name){
 	return ResourceHandle(file_data, file_size);
 }
 
+ResourceSystem::~ResourceSystem(){
+	PHYSFS_deinit();
+}
+

@@ -132,7 +132,7 @@ StaticVertexBuffer::StaticVertexBuffer()
 
 }
 
-StaticVertexBuffer::StaticVertexBuffer(const ResourceHandle& data, const char* fmt)
+StaticVertexBuffer::StaticVertexBuffer(const MemBlock& data, const char* fmt)
 : data(data)
 , attrs()
 , stride(0)
@@ -141,7 +141,7 @@ StaticVertexBuffer::StaticVertexBuffer(const ResourceHandle& data, const char* f
 	
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+	gl.BufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 }
 
 const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
@@ -153,7 +153,7 @@ GLint StaticVertexBuffer::getStride(void) const {
 }
 
 size_t StaticVertexBuffer::getSize(void) const {
-	return stride ? data.size() / stride : 0;
+	return stride ? data.size / stride : 0;
 }
 
 GLuint StaticVertexBuffer::getID(void) const {
@@ -169,7 +169,7 @@ void StaticVertexBuffer::onGLContextRecreate() {
 	gl.GenBuffers(1, &id);
 	DEBUGF("Reloading static vbo: [%d] -> [%d].", old_id, id);
 	gl.BindBuffer(GL_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ARRAY_BUFFER, data.size(), data.data(), GL_STATIC_DRAW);
+	gl.BufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 }
 
 StaticVertexBuffer::~StaticVertexBuffer(){

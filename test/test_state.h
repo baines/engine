@@ -18,7 +18,7 @@ struct TestState : public GameState {
 
 	TestState(Engine& e)
 	: timer(0)
-	, tri_vbo       (make_resource(vertices), "a_pos:2f|a_col:4BN")
+	, tri_vbo       (vertices, "a_pos:2f|a_col:4BN")
 	, tri_vs        (e, {"test.glslv"})
 	, sprite_vs     (e, {"sprite.glslv"})
 	, tri_fs        (e, {"test.glslf"})

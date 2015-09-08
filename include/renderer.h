@@ -3,13 +3,8 @@
 #include "common.h"
 #include <SDL.h>
 #include <vector>
-#include "renderer/shader.h"
-#include "renderer/vertex_state.h"
-#include "renderer/texture.h"
-#include "renderer/sampler.h"
-#include "renderer/renderable.h"
-#include "renderer/render_state.h"
-#include "cvar.h"
+#include "shader_uniforms.h"
+#include "render_state.h"
 
 struct Renderer {
 	Renderer(Engine& e, const char* name);

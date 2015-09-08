@@ -45,6 +45,8 @@ struct CVarString;
 struct CVarBool;
 struct CVarFunc;
 
+using strhash_t = uint32_t;
+
 struct string_view : alt::StrRef {
 	using alt::StrRef::StrRef;
 	string_view(const std::string& s) : alt::StrRef(s.data(), s.size()) {}

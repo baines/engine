@@ -1,9 +1,9 @@
 #ifndef RESOURCE_SYSTEM_H_
 #define RESOURCE_SYSTEM_H_
 #include "common.h"
+#include "util.h"
 #include <memory>
 #include <map>
-#include "util.h"
 
 struct ResourceHandle {
 	ResourceHandle()
@@ -50,7 +50,9 @@ struct ResourceSystem {
 	ResourceHandle load(const char* name);
 
 	size_t getUseCount(const char* name);
-	
+
+	~ResourceSystem();
+
 	template<size_t N>
 	void addImmediate(const str_const& name, const char (&data)[N]){
 		resources.emplace(name.hash, make_resource(data));

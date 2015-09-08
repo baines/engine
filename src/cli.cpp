@@ -1,6 +1,7 @@
 #include "cli.h"
 #include "engine.h"
 #include "config.h"
+#include "font.h"
 #include "input.h"
 #include "state_system.h"
 #include <numeric>

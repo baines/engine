@@ -9,6 +9,14 @@
 
 /* Simple wrapper for a block of memory */
 struct MemBlock {
+	MemBlock() = default;
+	MemBlock(const void* p, size_t sz)
+	: ptr(reinterpret_cast<const uint8_t*>(p)), size(sz){}
+
+	template<class T, size_t N>
+	MemBlock(const T (&arr)[N])
+	: ptr(reinterpret_cast<const uint8_t*>(arr)), size(N*sizeof(T)){}
+
 	const uint8_t* ptr;
 	size_t size;
 };
@@ -77,8 +85,6 @@ T lerp(T a, T b, float t){
 }
 
 /* fast string hashing functions */
-
-typedef uint32_t strhash_t;
 
 inline constexpr strhash_t str_hash(const char* str, uint32_t hash = 6159){
 	return *str ? str_hash(str+1, 187 * hash + *str) : hash;

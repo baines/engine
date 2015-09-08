@@ -3,6 +3,8 @@
 #include "enums.h"
 #include "config.h"
 #include "cli.h"
+#include "texture.h"
+#include "sampler.h"
 #include <climits>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>

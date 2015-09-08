@@ -1,8 +1,7 @@
-#include "engine.h"
 #include "text_system.h"
 #include "font.h"
 #include "text.h"
-#include <algorithm>
+#include "renderable.h"
 
 namespace {
 
@@ -67,7 +66,7 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-GLsizei TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
+size_t TextSystem::writeString(Text& t, glm::ivec2 pos, const u32string_view& str){
 	const Font& f = *t.font;
 
 	size_t str_len = str.size(),

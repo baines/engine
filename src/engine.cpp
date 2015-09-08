@@ -6,9 +6,9 @@
 #include "text_system.h"
 #include "collision_system.h"
 #include "state_system.h"
-#include "game_state.h"
 #include "root_state.h"
 #include "cli.h"
+#include <algorithm>
 
 namespace {
 	static int get_ticks(){

@@ -16,7 +16,7 @@ struct GLContext {
 	bool initialized();
 
 	void registerObject(GLObject& obj);
-	void validateObject(GLObject& obj);
+	void validateObject(const GLObject& obj);
 	void unregisterObject(GLObject& obj);
 
 	uint32_t version;

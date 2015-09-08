@@ -1,9 +1,7 @@
 #ifndef INPUT_H_
 #define INPUT_H_
 #include "common.h"
-#include "util.h"
 #include <SDL.h>
-#include "game_state.h"
 #include <map>
 #include <unordered_map>
 #include <string>

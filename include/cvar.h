@@ -1,5 +1,6 @@
 #ifndef CVAR_H_
 #define CVAR_H_
+#include "common.h"
 #include "util.h"
 
 enum CVarType {
@@ -99,9 +100,6 @@ struct CVarNumeric : public CVar {
 	const T init;
 	T val, min, max;
 };
-
-typedef CVarNumeric<int>   CVarInt;
-typedef CVarNumeric<float> CVarFloat;
 
 struct CVarString : public CVar {
 	CVarString(const str_const& name, const char* str);

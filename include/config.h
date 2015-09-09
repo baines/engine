@@ -51,27 +51,27 @@ struct Config {
 	}
 	
 	// sets value to val or calls function with val for CVarFuncs
-	bool evalVar(uint32_t hash, const string_view& str, bool hook = false){
+	bool evalVar(uint32_t hash, const alt::StrRef& args, bool hook = false){
 		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const std::unique_ptr<CVar>& cv){
 			return cv->name.hash == hash;
 		});
 		
 		bool ret_val = false;
 		if(it != cvars.end()){
-			(*it)->eval(str);
+			(*it)->eval(args);
 			ret_val = true; //XXX: return if setting the var to str succeeded or not instead?
 		} else if(hook){
-			cvar_hooks.emplace(hash, str);
+			cvar_hooks.emplace(hash, args);
 		}
 
 		return ret_val;
 	}
 
-	bool evalVar(const str_const& key, const string_view& value, bool hook = false){
+	bool evalVar(const str_const& key, const alt::StrRef& value, bool hook = false){
 		return evalVar(key.hash, value, hook);
 	}
 	
-	bool extendPrefix(std::string& prefix, size_t offset = 0){
+	bool extendPrefix(alt::StrMut& prefix, size_t offset = 0){
 		return cvar_trie.prefixExtend(prefix, offset);
 	}
 	
@@ -83,7 +83,7 @@ private:
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;
-	std::multimap<uint32_t, string_view> cvar_hooks;
+	std::multimap<uint32_t, alt::StrRef> cvar_hooks;
 };
 
 #endif

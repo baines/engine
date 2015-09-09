@@ -100,7 +100,7 @@ inline strhash_t str_hash_len(const char* str, size_t len){
 	return hash;
 }
 
-inline strhash_t str_hash(const string_view& str){
+inline strhash_t str_hash(const alt::StrRef& str){
 	return str_hash_len(str.data(), str.size());
 }
 
@@ -151,12 +151,12 @@ inline bool str_to_bool(const char* str){
 	return str[0] == '1' || strncasecmp(str, "true", 4) == 0; 
 }
 
-inline bool str_to_bool(const string_view& str){
+inline bool str_to_bool(const alt::StrRef& str){
 	return str[0] == '1' || str.cmp("true");
 }
 
 /* unicode related things */
-inline std::u32string to_utf32(const string_view& s){
+inline alt::StrMut32 to_utf32(const alt::StrRef& s){
 /* XXX: GCC doesn't have <codecvt> yet, despite it being part of the C++11 standard...
 
 	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv("");
@@ -175,7 +175,7 @@ inline std::u32string to_utf32(const string_view& s){
 	SDL_iconv(ctx, &in, &in_sz, &out, &out_sz);
 	SDL_iconv_close(ctx);
 	
-	auto ret = std::u32string(u32str, (u32str_max - out_sz) / sizeof(char32_t));
+	alt::StrMut32 ret(u32str, (u32str_max - out_sz) / sizeof(char32_t));
 	SDL_stack_free(u32str);
 	return ret;
 }
@@ -184,7 +184,7 @@ inline bool is_utf8_continuation(char c){
 	return (c & 0xC0) == 0x80;
 }
 
-inline size_t utf8_char_index(const string_view& str, size_t utf32_index){
+inline size_t utf8_char_index(const alt::StrRef& str, size_t utf32_index){
 	for(size_t i = 0; i < str.size(); ++i){
 		if(!is_utf8_continuation(str[i])){
 			if(utf32_index-- == 0) return i;

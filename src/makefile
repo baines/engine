@@ -17,7 +17,7 @@ endif
 ifdef RELEASE
     CXXFLAGS += -Os -fno-stack-protector -U_FORTIFY_SOURCE -fomit-frame-pointer
 else
-    CXXFLAGS += -Og -g -DDEBUG
+    CXXFLAGS += -O0 -g -DDEBUG
 endif
 
 all: $(output) 

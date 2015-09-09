@@ -47,15 +47,6 @@ struct CVarFunc;
 
 using strhash_t = uint32_t;
 
-struct string_view : alt::StrRef {
-	using alt::StrRef::StrRef;
-	string_view(const std::string& s) : alt::StrRef(s.data(), s.size()) {}
-};
-struct u32string_view : alt::StrRef32 {
-	using alt::StrRef32::StrRef32;
-	u32string_view(const std::u32string& s) : alt::StrRef32(s.data(), s.size()){}
-};
-
 #ifdef __EMSCRIPTEN__
 #include "emscripten.h"
 #endif

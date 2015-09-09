@@ -1,6 +1,6 @@
 includes = -I../include -I../include/renderer -I/usr/$(PREFIX)/include/freetype2
 
-CXXFLAGS = -std=c++1y -Wall -Werror -pipe -Og -g -ffast-math -fno-rtti -DDEBUG \
+CXXFLAGS = -std=c++1y -Wall -Werror -pipe -O0 -g -ffast-math -fno-rtti -DDEBUG \
 $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags)
 
 LDFLAGS = -lphysfs -lfreetype $(shell /usr/$(PREFIX)/bin/sdl2-config --libs)

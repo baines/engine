@@ -79,7 +79,7 @@ CLI::CLI(Engine& e)
 
 	logging::addSink([&](logging::level l, const char* msg, size_t len){
 		if(l == logging::warn || l == logging::error){
-			echo({ TXT_YELLOW, lvl_str(l), string_view(msg, len), TXT_WHITE });
+			echo({ TXT_YELLOW, lvl_str(l), alt::StrRef(msg, len), TXT_WHITE });
 		}
 	});
 
@@ -130,22 +130,18 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		echo(input_str);
 
-		auto split_idx = input_str.find_first_of(' ', PROMPT_SZ);
-		if(split_idx == std::string::npos){
-			split_idx = input_str.size();
-		}
-
+		char* var_args = std::find(input_str.begin() + PROMPT_SZ, input_str.end(), ' ');
 		const char* var_name = input_str.c_str() + PROMPT_SZ;
-		int var_name_sz = split_idx - PROMPT_SZ;
+
+		int var_name_sz = (var_args - input_str.begin()) - PROMPT_SZ;
+		if(var_args != input_str.end()) ++var_args;
 		
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
 		auto* v = e.cfg->getVar<CVar>(hash);
 
-		if(v
-		&& v->type != CVAR_FUNC 
-		&& input_str.find_first_not_of(' ', split_idx) == std::string::npos){
+		if(v && v->type != CVAR_FUNC && !input_str.find_not(' ', var_args)){
 			printVarInfo(*v);
-		} else if(v && v->eval(&input_str[std::min(input_str.size(), split_idx+1)])){
+		} else if(v && v->eval(var_args)){
 			if(auto* str = v->getReloadVar()){
 				echo({ " New value will take effect on ", str, "." });
 			} else {
@@ -160,7 +156,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		input_history.push_back(std::move(input_str));
 		history_idx = input_history.size();
-		input_str.assign(PROMPT);
+		input_str = PROMPT;
 		input_dirty = true;
 
 	} else if(action == ACT_BACKSPACE && cursor_idx > PROMPT_SZ){
@@ -188,12 +184,11 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		
 	} else if(action == ACT_DEL_WORD && input_str.size() > PROMPT_SZ){
 
-		size_t end_idx = utf8_char_index(input_str, cursor_idx);
-		//XXX: this assumes the prompt contains both a space and non-space to always work.
-		size_t mid_idx = std::max(PROMPT_SZ-1, input_str.find_last_not_of(' ', end_idx));
-		size_t beg_idx = std::max(PROMPT_SZ-1, input_str.find_last_of(' ', mid_idx)) + 1;
+		char* end = input_str.begin() + utf8_char_index(input_str, cursor_idx);
+		char* mid = input_str.rfind_not(' ', end, &input_str[PROMPT_SZ]);
+		char* beg = input_str.rfind_any(' ', mid, &input_str[PROMPT_SZ]) + 1;
 
-		input_str.erase(input_str.begin() + beg_idx, input_str.begin() + end_idx);
+		input_str.erase(beg, end);
 		input_dirty = true;
 
 	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > PROMPT_SZ){
@@ -248,12 +243,12 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			
 			echo(input_str);
 
-			std::vector<std::string> lines(rows, " "); //FIXME: avoid allocating this.
+			std::vector<alt::StrMut> lines(rows, " "); //FIXME: avoid allocating this.
 
 			for(size_t i = 0; i < autocompletions.size(); ++i){
 				const str_const& str = autocompletions[i]->name;
 
-				lines[i % rows].append(str.str, str.size);
+				lines[i % rows].append(alt::StrRef(str.str, str.size));
 				
 				if(i != autocompletions.size()-1){
 					size_t num_spaces = col_widths[i / rows] - str.size;
@@ -392,7 +387,7 @@ void CLI::draw(Renderer& r){
 		cursor_text.draw(r);
 	}
 	if(output_dirty){
-		std::string output_concat;
+		alt::StrMut output_concat;
 		for(int i = visible_lines->val; i > 0; --i){
 			int idx = (output_line_idx + (output_lines.size() - scroll_offset - i)) % output_lines.size();
 			output_concat.append(output_lines[idx]).append(1, '\n');
@@ -413,16 +408,16 @@ void CLI::draw(Renderer& r){
 	output_text.draw(r);
 }
 
-void CLI::echo(const string_view& str){
+void CLI::echo(const alt::StrRef& str){
 	echo({ str });
 }
 
-void CLI::echo(std::initializer_list<string_view> strs){
+void CLI::echo(std::initializer_list<alt::StrRef> strs){
 	for(auto& str : strs){
-		string_view::const_iterator begin = str.begin(), end;
+		alt::StrRef::const_iterator begin = str.begin(), end;
 		do {
 			end = std::find(begin, str.end(), '\n');
-			output_lines[output_line_idx].append(begin, end);
+			output_lines[output_line_idx].append(alt::StrRef(begin, end));
 			begin = end + 1;
 			if(end != str.end()){
 				output_line_idx = (output_line_idx + 1) % output_lines.size();
@@ -444,7 +439,7 @@ void CLI::printf(const char* fmt, ...){
 
 	do {
 		end = strchrnul(start, '\n');
-		output_lines[output_line_idx].append(start, end);
+		output_lines[output_line_idx].append(alt::StrRef(start, end));
 		if(*end){
 			start = end + 1;
 			output_line_idx = (output_line_idx + 1) % output_lines.size();

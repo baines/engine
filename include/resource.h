@@ -101,7 +101,7 @@ private:
 	Engine& e;
 
 	void res_error(const std::vector<const char*>& res_names){
-		std::string names = "[ ";
+		alt::StrMut names = "[ ";
 		for(auto& i : res_names) names.append(i).append(1, ' ');
 		names.append(1, ']');
 		log(logging::fatal, "Resource not found: %s", names.c_str());

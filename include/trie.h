@@ -110,14 +110,14 @@ struct Trie {
 	}
 	
 	// auto-completes the given string as much as possible.
-	bool prefixExtend(std::string& prefix, size_t offset){
+	bool prefixExtend(alt::StrMut& prefix, size_t offset){
 		bool modified = false;
 
 		if(unsigned node_idx = find_idx(prefix.c_str()+offset)){
 			Node* n = &storage[node_idx];
 
 			while(!n->val && popcount64(n->bitset) == 1){
-				prefix += bitset_pos_to_char(log2ll(n->bitset));
+				prefix.append(bitset_pos_to_char(log2ll(n->bitset)));
 				n = &storage[n->children_idx];
 				modified = true;
 			} 

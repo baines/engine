@@ -60,8 +60,8 @@ struct Input {
 
 	Input(Engine& e);
 
-	void bind(const Key& key, const string_view& action);
-	void bind(const Axis& axis, const string_view& action, bool rel, float scale = 1.0f);
+	void bind(const Key& key, const alt::StrRef& action);
+	void bind(const Axis& axis, const alt::StrRef& action, bool rel, float scale = 1.0f);
 
 	void subscribe(GameState* s, const str_const& action, int action_id);
 	void subscribe(GameState* s, const str_const& action, int action_id, const Key& dflt);
@@ -113,7 +113,7 @@ private:
 	std::map<StateBind, int> active_binds;
 	std::multimap<strhash_t, StateAction> bound_actions;
 
-	std::map<strhash_t, std::string> action_names;
+	std::map<strhash_t, alt::StrMut> action_names;
 	
 	std::unordered_map<GameState*, SDL_Rect> text_states;
 	GameState* current_state;

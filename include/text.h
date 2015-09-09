@@ -27,12 +27,12 @@
 
 struct Text {
 	Text();
-	Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const string_view& s);
+	Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const alt::StrRef& s);
 	Text(Text&&) = default;
 	Text& operator=(Text&&) = default;
 	
-	int update(const string_view& newstr);
-	int update(const string_view& newstr, glm::ivec2 newpos);
+	int update(const alt::StrRef& newstr);
+	int update(const alt::StrRef& newstr, glm::ivec2 newpos);
 
 	void draw(Renderer& r);
 
@@ -65,7 +65,7 @@ private:
 	Proxy<Font> font;
 	std::array<uint32_t, 16> palette;
 	glm::ivec2 start_pos, end_pos;
-	std::u32string str;
+	alt::StrMut32 str;
 	ShaderUniforms uniforms;
 	NullOnMovePtr<Renderable> renderable;
 };

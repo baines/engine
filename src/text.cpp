@@ -46,7 +46,7 @@ Text::Text()
 	uniforms.setUniform("u_outline_col", { glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) });
 }
 
-Text::Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const string_view& s)
+Text::Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const alt::StrRef& s)
 : engine(&e)
 , font(f)
 , palette(default_palette)
@@ -74,14 +74,14 @@ std::array<uint32_t, 16> Text::getDefaultPalette(){
 	return default_palette;
 }
 
-int Text::update(const string_view& newstr){
+int Text::update(const alt::StrRef& newstr){
 	return update(newstr, start_pos); 
 }
 
-int Text::update(const string_view& newstr, glm::ivec2 newpos){
+int Text::update(const alt::StrRef& newstr, glm::ivec2 newpos){
 	if(!engine || !font) return 0;
 
-	std::u32string u32str = to_utf32(newstr);
+	alt::StrMut32 u32str = to_utf32(newstr);
 
 	//XXX: tab hack
 	for(size_t i = 0; i < u32str.size(); ++i){

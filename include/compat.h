@@ -71,13 +71,6 @@ namespace std {
 	T& get(Tuple& t){
 		return compat::do_tuple_get<0, T, Tuple>(t);
 	}
-
-	namespace experimental {
-
-		using string_view = typename compat::string_view_template<char>;
-		using u32string_view = typename compat::string_view_template<char32_t>;
-
-	}
 }
 
 #endif

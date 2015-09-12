@@ -44,6 +44,8 @@ void Engine::addState(GameState* s){
 
 bool Engine::run(void){
 
+	TRACEF("---------- Frame Begin ----------");
+
 	const int min_delta = 1000 / std::max(1, max_fps->val);
 	int delta = std::max<int>(0, get_ticks() - prev_ticks);
 
@@ -101,6 +103,8 @@ bool Engine::run(void){
 	state->draw(*renderer);
 		
 	renderer->drawFrame();
+
+	TRACEF("---------- Frame End ----------");
 
 	return running;
 }

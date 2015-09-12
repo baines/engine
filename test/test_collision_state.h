@@ -54,14 +54,12 @@ struct TestCollisionState : public GameState {
 		e.input->subscribe(this, "cursor_y", ACT_CURSOR_Y);
 
 		e.collision->onCollision(0, 0, [&](Entity* a, Entity* b, float t){
-			static uint32_t color = 0xff0000ff;
 			for(auto* e : { a, b }){
 				if(auto* aabb = e->get<AABB>()){
 					glm::vec2 pos = lerp(aabb->prev_pos + 32.f, aabb->pos + 32.f, t);
-					canvas.addBox(pos,{ 64.f, 64.f }, color);
+					canvas.addBox(pos,{ 64.f, 64.f }, 0xff0000ff);
 				}
 			}
-			color ^= 0x00ff0000;
 		});
 	}
 	

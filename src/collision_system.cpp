@@ -1,19 +1,30 @@
 #include "collision_system.h"
 #include "entity.h"
 #include "engine.h"
+#include "util.h"
 #include <cmath>
 #include <algorithm>
 using glm::vec2;
 using std::abs;
 namespace {
 
-bool point_test_sweep(vec2 p, vec2 q, float& t){
+enum {
+	BEG_POS,
+	END_POS
+};
 
-	if(p[0] > q[0]){
+enum {
+	X_AXIS,
+	Y_AXIS
+};
+
+bool point_test_sweep(vec2 lo, vec2 hi, float& t){
+
+	if(lo[BEG_POS] > hi[BEG_POS]){
 		t = 0.0f;
 	} else {
-		float num   = (p[0] - q[0]);
-		float denom = (q[1] - q[0]) - (p[1] - p[0]);
+		float num   = (lo[BEG_POS] - hi[BEG_POS]);
+		float denom = (hi[END_POS] - hi[BEG_POS]) - (lo[END_POS] - lo[BEG_POS]);
 		
 		if(abs(denom) <= FLT_EPSILON){
 			return false;
@@ -23,6 +34,18 @@ bool point_test_sweep(vec2 p, vec2 q, float& t){
 	}
 
 	return t >= 0.0f && t <= 1.0f;
+}
+
+bool colliding_at(AABB* a, AABB* b, float t, int axis){
+
+	float a_pos = lerp(a->prev_pos[axis], a->pos[axis], t);
+	float b_pos = lerp(b->prev_pos[axis], b->pos[axis], t);
+
+	if(a_pos <= b_pos){
+		return a_pos + a->size[axis] >= b_pos;
+	} else {
+		return b_pos + b->size[axis] >= a_pos;
+	}
 }
 
 /*bool aabb_test(vec2 pos0, vec2 size0, vec2 pos1, vec2 size1){
@@ -111,15 +134,24 @@ void CollisionSystem::update(uint32_t delta){
 
 			vec2 i_collide, j_collide;
 
-			float t1 = 0.0f, t2 = 0.0f;
+			float t_x = 0.0f, t_y = 0.0f;
 
-			if(!point_test_sweep(min_x, max_x, t1)) continue;
-			if(!point_test_sweep(min_y, max_y, t2)) continue;
+			if(!point_test_sweep(min_x, max_x, t_x)) continue;
+			if(!point_test_sweep(min_y, max_y, t_y)) continue;
 
-			//TODO: sub t1 / t2 into each other's equations to find if there was
-			//      actually a collision, instead of sending both x and y separately.
-			collision_fn(entities[i], entities[j], t1);
-			collision_fn(entities[i], entities[j], t2);
+			bool t_x_collision = colliding_at(boxes[i], boxes[j], t_x, Y_AXIS),
+			     t_y_collision = colliding_at(boxes[i], boxes[j], t_y, X_AXIS);
+
+			if(t_x_collision && t_y_collision){
+				printf("BOTH, [%s]: %.2f\n", t_x < t_y ? "t_x" : "t_y", std::min(t_x, t_y));
+				collision_fn(entities[i], entities[j], std::min(t_x, t_y));
+			} else if(t_x_collision){
+				printf("t_x: %.2f\n", t_x);
+				collision_fn(entities[i], entities[j], t_x);
+			} else if(t_y_collision){
+				printf("t_y: %.2f\n", t_y);
+				collision_fn(entities[i], entities[j], t_y);
+			}
 		}
 	}
 

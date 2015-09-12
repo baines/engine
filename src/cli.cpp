@@ -139,7 +139,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
 		auto* v = e.cfg->getVar<CVar>(hash);
 
-		if(v && v->type != CVAR_FUNC && !input_str.find_not(' ', var_args)){
+		if(v && v->type != CVAR_FUNC && !*input_str.find_not(' ', var_args)){
 			printVarInfo(*v);
 		} else if(v && v->eval(var_args)){
 			if(auto* str = v->getReloadVar()){

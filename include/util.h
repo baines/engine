@@ -2,7 +2,7 @@
 #define UTIL_H_
 #include "common.h"
 #include <SDL_stdinc.h>
-
+#include <array>
 /* Macros */
 
 #define STRINGIFY(x) #x
@@ -199,7 +199,7 @@ inline size_t utf8_char_index(const alt::StrRef& str, size_t utf32_index){
 template<class T>
 struct NullOnMovePtr {
 	NullOnMovePtr() : ptr(nullptr){}
-	NullOnMovePtr(nullptr_t) : NullOnMovePtr(){}
+	NullOnMovePtr(std::nullptr_t) : NullOnMovePtr(){}
 	NullOnMovePtr(T* ptr) : ptr(ptr){}
 
 	T& operator* (){ return *ptr; }

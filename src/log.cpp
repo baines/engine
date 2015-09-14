@@ -75,7 +75,6 @@ namespace logging {
 		va_start(args, fmt);
 
 		if(l <= verbosity){
-
 			char msg[4096] = {};
 
 			int msg_len = vsnprintf(msg, sizeof(msg), fmt, args);
@@ -89,10 +88,11 @@ namespace logging {
 
 			if(l == fatal){
 				msgbox(msg);
+				va_end(args);
 				exit(1);
 			}
 		}
-
+		va_end(args);
 	}
 
 	void setVerbosity(level l){

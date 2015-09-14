@@ -3,10 +3,11 @@
 *.a
 *~
 test/test
-test/test.html*
-test/test.data
-test/test.js
-test/internal.zip
+test/emscripten/test.html*
+test/emscripten/test.data
+test/emscripten/test.js
+test/emscripten/internal.zip
+test/win
 test/*.log
 test/*.png
 test/*.sh

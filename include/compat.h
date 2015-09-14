@@ -22,16 +22,6 @@ struct gen_seq : concat<typename gen_seq<N/2>::type, typename gen_seq<N - N/2>::
 template<> struct gen_seq<0> : seq<>{};
 template<> struct gen_seq<1> : seq<0>{};
 
-inline const char* strchrnul(const char* haystack, char needle){
-	const char* p = haystack;
-	
-	for(; *p; ++p){
-		if(*p == needle) break;
-	}
-
-	return p;
-}
-
 template<size_t N, class T, class Tuple>
 constexpr typename std::enable_if<
 	std::is_same<T, typename std::tuple_element<N, Tuple>::type>::value,
@@ -50,8 +40,15 @@ constexpr typename std::enable_if<
 		
 }
 
-using strchrnul = compat::strchrnul;
+inline const char* strchrnul(const char* haystack, char needle){
+	const char* p = haystack;
+	
+	for(; *p; ++p){
+		if(*p == needle) break;
+	}
 
+	return p;
+}
 namespace std {
 
 	template<size_t... SZ>

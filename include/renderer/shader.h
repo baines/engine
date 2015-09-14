@@ -12,7 +12,7 @@ struct ShaderBase : public GLObject {
 	ShaderBase(GLenum type, MemBlock mem);
 	GLuint getID() const;
 	virtual ~ShaderBase();
-private:
+protected:
 	GLenum type;
 	GLuint id;
 };

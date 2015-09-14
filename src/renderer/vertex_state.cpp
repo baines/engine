@@ -126,17 +126,18 @@ void VertexState::bind(RenderState& rs){
 }
 
 void VertexState::onGLContextRecreate(){
-	int old_id = id;
+	GLuint new_id = 0;
 
 	enabled_arrays.reset();
 	active_attribs.clear();
 
 	if(using_vao){
-		gl.GenVertexArrays(1, &id);
-		gl.BindVertexArray(id);
+		gl.GenVertexArrays(1, &new_id);
+		gl.BindVertexArray(new_id);
 	}
 
-	DEBUGF("Reloading VState: vao id [%d] -> [%d].", old_id, id);
+	DEBUGF("Reloading VState: vao id [%d] -> [%d].", id, new_id);
+	id = new_id;
 
 	GLint vbo_bind_point = 0;
 	for(auto* buf : vertex_buffers){

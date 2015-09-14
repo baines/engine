@@ -5,6 +5,7 @@
 #include "cli.h"
 #include "texture.h"
 #include "sampler.h"
+#include <math.h>
 #include <climits>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,7 +16,6 @@ Renderer::Renderer(Engine& e, const char* name)
 , gl_debug         (e.cfg->addVar<CVarBool>   ("gl_debug",          true))
 , gl_fwd_compat    (e.cfg->addVar<CVarBool>   ("gl_fwd_compat",     true))
 , gl_core_profile  (e.cfg->addVar<CVarBool>   ("gl_core_profile",   true))
-, gl_multi_draw    (e.cfg->addVar<CVarBool>   ("gl_multi_draw",     true))
 , libgl            (e.cfg->addVar<CVarString> ("gl_library",        ""))
 , window_width     (e.cfg->addVar<CVarInt>    ("vid_width" ,        640, 320, INT_MAX))
 , window_height    (e.cfg->addVar<CVarInt>    ("vid_height",        480, 240, INT_MAX))
@@ -64,7 +64,7 @@ Renderer::Renderer(Engine& e, const char* name)
 			snprintf(buf, sizeof(buf), "  %d: [%dx%d+%d+%d] '%s'",
 				i, r.w, r.h, r.x, r.y, name ? name : "(no name)"
 			);
-			e.cli->echo(buf);
+			e.cli->echo(reinterpret_cast<const char*>(buf));
 		}
 		return true;
 	}, "Show info about available displays / monitors");
@@ -76,9 +76,7 @@ void Renderer::reload(Engine& e){
 	//TODO: check if we can get away with just using SDL_SetWindow{Size, Position} e.t.c.
 	//      instead of destroying the window & GL context.
 
-	if(gl.initialized()){
-		gl.deleteContext();
-	}
+	gl.deleteContext();
 
 	if(window){
 		SDL_DestroyWindow(window);
@@ -99,32 +97,68 @@ void Renderer::reload(Engine& e){
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE   , 8);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER , 1);
 
+	constexpr struct glversion {
+		int maj, min;
+	} ctx_versions[] = {
+		{ 4, 5 }, { 4, 4 }, { 4, 3 }, { 4, 2 }, { 4, 1 }, { 4, 0 },
+		{ 3, 3 }, { 3, 2 }, { 3, 1 }, { 3, 0 }, { 2, 1 }, { 2, 0 }
+	};
+
 	bool created = false;
+
+	for(auto& v : ctx_versions){
+#ifndef __EMSCRIPTEN__
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, v.maj);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, v.min);
 		
-	int window_flags = SDL_WINDOW_OPENGL;
-	if(fullscreen->val){
-		window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-	}
-	if(resizable->val){
-		window_flags |= SDL_WINDOW_RESIZABLE;
+		if(gl_core_profile->val && v.maj >= 3){
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		} else {
+			SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+		}
+		
+		int ctx_flags = 0;
+		if(gl_debug->val){
+			ctx_flags |= SDL_GL_CONTEXT_DEBUG_FLAG;
+		}
+		if(gl_fwd_compat->val && v.maj >= 3){
+			ctx_flags |= SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+		}
+		
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, ctx_flags);
+#endif		
+		int window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIDDEN;
+		if(fullscreen->val){
+			window_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		}
+		if(resizable->val){
+			window_flags |= SDL_WINDOW_RESIZABLE;
+		}
+
+		display_index->val = std::min(display_index->val, SDL_GetNumVideoDisplays()-1);
+
+		window = SDL_CreateWindow(
+			window_title,
+			SDL_WINDOWPOS_CENTERED_DISPLAY(display_index->val),
+			SDL_WINDOWPOS_CENTERED_DISPLAY(display_index->val),
+			window_width->val,
+			window_height->val,
+			window_flags
+		);
+
+		if((created = gl.createContext(e, window))){
+			break;
+		} else {
+			if(window) SDL_DestroyWindow(window);
+		}
 	}
 
-	display_index->val = std::min(display_index->val, SDL_GetNumVideoDisplays()-1);
-
-	window = SDL_CreateWindow(
-		window_title,
-		SDL_WINDOWPOS_UNDEFINED_DISPLAY(display_index->val),
-		SDL_WINDOWPOS_UNDEFINED_DISPLAY(display_index->val),
-		window_width->val,
-		window_height->val,
-		window_flags
-	);
-	
-	if(!(created = gl.createContext(e, window))){
+	if(!created){
 		log(logging::fatal, "Couldn't get an OpenGL context of any version!");
 	}
 
 	SDL_SetWindowMinimumSize(window, window_width->min, window_height->min);
+	SDL_ShowWindow(window);
 
 	gl.Enable(GL_BLEND);
 	SDL_GL_SetSwapInterval(vsync->val);

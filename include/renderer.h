@@ -22,15 +22,12 @@ struct Renderer {
 	~Renderer();
 private:
 	std::vector<Renderable*> renderables;
-	std::vector<GLint> multi_offs;
-	std::vector<GLsizei> multi_counts;
 	
 	RenderState render_state;
 		
 	CVarBool* gl_debug;
 	CVarBool* gl_fwd_compat;
 	CVarBool* gl_core_profile;
-	CVarBool* gl_multi_draw;
 	CVarString* libgl;
 	CVarInt* window_width;
 	CVarInt* window_height;

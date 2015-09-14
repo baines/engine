@@ -22,19 +22,23 @@ namespace {
 
 using std::make_unique;
 
-Engine::Engine(int argc, char** argv, const char* name)
-: res        (make_unique<ResourceSystem>(argv[0]))
-, cfg        (make_unique<Config>(*this, argc, argv))
-, input      (make_unique<Input>(*this))
-, renderer   (make_unique<Renderer>(*this, name))
-, text       (make_unique<TextSystem>(*this))
-, collision  (make_unique<CollisionSystem>())
-, state      (make_unique<StateSystem>())
-, cli        (make_unique<CLI>(*this))
-, max_fps    (cfg->addVar<CVarInt>("max_fps", 200, 1, 1000))
-, running    (true)
-, prev_ticks (0)
-, root_state (make_unique<RootState>(*this)) {
+Engine::Engine(int argc, char** argv, const char* name){
+
+	SDL_Init(0);
+
+	res        = make_unique<ResourceSystem>(argv[0]);
+	cfg        = make_unique<Config>(*this, argc, argv);
+	input      = make_unique<Input>(*this);
+	renderer   = make_unique<Renderer>(*this, name);
+	text       = make_unique<TextSystem>(*this);
+	collision  = make_unique<CollisionSystem>();
+	state      = make_unique<StateSystem>();
+	cli        = make_unique<CLI>(*this);
+	max_fps    = cfg->addVar<CVarInt>("max_fps", 200, 1, 1000);
+	running    = true;
+	prev_ticks = 0;
+	root_state = make_unique<RootState>(*this);
+
 	addState(root_state.get());
 }
 

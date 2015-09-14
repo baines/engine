@@ -143,13 +143,10 @@ void CollisionSystem::update(uint32_t delta){
 			     t_y_collision = colliding_at(boxes[i], boxes[j], t_y, X_AXIS);
 
 			if(t_x_collision && t_y_collision){
-				printf("BOTH, [%s]: %.2f\n", t_x < t_y ? "t_x" : "t_y", std::min(t_x, t_y));
 				collision_fn(entities[i], entities[j], std::min(t_x, t_y));
 			} else if(t_x_collision){
-				printf("t_x: %.2f\n", t_x);
 				collision_fn(entities[i], entities[j], t_x);
 			} else if(t_y_collision){
-				printf("t_y: %.2f\n", t_y);
 				collision_fn(entities[i], entities[j], t_y);
 			}
 		}

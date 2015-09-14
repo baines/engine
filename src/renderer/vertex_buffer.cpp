@@ -165,9 +165,10 @@ void StaticVertexBuffer::update(RenderState&){
 }
 
 void StaticVertexBuffer::onGLContextRecreate() {
-	int old_id = id;
-	gl.GenBuffers(1, &id);
-	DEBUGF("Reloading static vbo: [%d] -> [%d].", old_id, id);
+	GLuint new_id;
+	gl.GenBuffers(1, &new_id);
+	DEBUGF("Reloading static vbo: [%d] -> [%d].", id, new_id);
+	id = new_id;
 	gl.BindBuffer(GL_ARRAY_BUFFER, id);
 	gl.BufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 }

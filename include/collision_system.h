@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include <vector>
 #include <map>
+#include <array>
 
 struct AABB {
 	AABB();

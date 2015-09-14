@@ -5,6 +5,15 @@
 #include <memory>
 #include "altlib/alt.h"
 
+#if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
+	#include "compat.h"
+	#include <stdio.h>
+#endif
+
+#ifndef M_PI
+	#define M_PI 3.14159265358979323846	
+#endif
+
 struct Engine;
 struct Renderable;
 struct ResourceSystem;

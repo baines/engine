@@ -4,7 +4,7 @@
 #include "util.h"
 #include "shader_uniforms.h"
 #include "proxy.h"
-#include <string>
+#include <array>
 
 #define TXT_COLOR(c)      "\xef\xb7" STRINGIFY(\x9 ## c)
 

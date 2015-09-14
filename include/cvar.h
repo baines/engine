@@ -2,6 +2,7 @@
 #define CVAR_H_
 #include "common.h"
 #include "util.h"
+#include <vector>
 
 enum CVarType {
 	CVAR_INVALID,

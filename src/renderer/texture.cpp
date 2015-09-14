@@ -217,6 +217,6 @@ void Texture2D::onGLContextRecreate(){
 }
 
 Texture2D::~Texture2D(){
-	if(id) gl.DeleteTextures(1, &id);
+	if(id && gl.initialized()) gl.DeleteTextures(1, &id);
 }
 

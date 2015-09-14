@@ -47,7 +47,7 @@ namespace {
 	}
 
 	void gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
-	GLsizei len, const char* msg, const void* p){
+	GLsizei len, const char* msg, const void* p) {
 		logging::level lvl = 
 			(sev == GL_DEBUG_SEVERITY_HIGH)   ? logging::error :
 			(sev == GL_DEBUG_SEVERITY_MEDIUM) ? logging::warn  :
@@ -185,10 +185,13 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 			}
 		}
 
+#if defined(DEBUG) && !defined(_WIN32)
+// this is bugged on WINE: https://bugs.winehq.org/show_bug.cgi?id=38402
 		if(DebugMessageCallback){
 			DebugMessageCallback(&gl_dbg_callback, nullptr);
 			Enable(GL_DEBUG_OUTPUT);
 		}
+#endif
 
 		sdl_context = ctx;
 

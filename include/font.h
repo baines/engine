@@ -4,6 +4,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include "texture.h"
+#include <vector>
 
 struct Font : public GLObject {
 	struct GlyphInfo {

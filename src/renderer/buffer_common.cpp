@@ -180,13 +180,14 @@ void StreamingBuffer::update(RenderState& rs){
 }
 
 void StreamingBuffer::onGLContextRecreate(){
-	int old_id = id;
-	gl.GenBuffers(1, &id);
-	DEBUGF("Reloading streaming_buf. id [%d] -> [%d].", old_id, id);
+	GLuint new_id;
+	gl.GenBuffers(1, &new_id);
+	DEBUGF("Reloading streaming_buf. id [%u] -> [%u].", id, new_id);
 
 	prev_capacity = 0;
 	prev_size = 0;
 	dirty = true;
+	id = new_id;
 }
 
 StreamingBuffer::~StreamingBuffer(){

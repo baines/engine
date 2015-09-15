@@ -14,16 +14,13 @@ LDFLAGS = -s USE_SDL=0\
  $(deps)/bytecode/libfreetype.a\
  $(deps)/bytecode/libphysfs.a\
  $(deps)/bytecode/libSDL2.a\
- --preload-file ../data@/data --preload-file internal.zip\
+ --preload-file ../data@/data --preload-file ../../build/internal.zip@/internal.zip\
  --pre-js args.js
 
 all: test.html
 
-test.html: $(srcs) ../../engine.bc args.js ../data internal.zip
+test.html: $(srcs) ../../engine.bc args.js ../data ../../build/internal.zip
 	$(CXX) $(CXXFLAGS) $(includes) $< ../../engine.bc -o $@$(SUFFIX) $(LDFLAGS)
-	
-internal.zip: ../../build/internal.zip
-	cp $< $@
 
 clean:
-	$(RM) test.html test.html.mem test.js test.data internal.zip
+	$(RM) test.html test.html.mem test.js test.data

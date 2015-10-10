@@ -4,6 +4,10 @@
 #include "enums.h"
 #include "util.h"
 
+#ifndef CALLBACK
+	#define CALLBACK
+#endif
+
 #define GL_STRINGIFY(name) STRINGIFY(gl##name)
 #undef OPTIONAL
 GLContext gl;
@@ -46,7 +50,7 @@ namespace {
 		}
 	}
 
-	void gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
+	void CALLBACK gl_dbg_callback(GLenum src, GLenum type, GLuint id, GLenum sev, 
 	GLsizei len, const char* msg, const void* p) {
 		logging::level lvl = 
 			(sev == GL_DEBUG_SEVERITY_HIGH)   ? logging::error :

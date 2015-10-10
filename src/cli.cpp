@@ -218,7 +218,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 			// figure out a pretty column layout for the list of completions.
 			size_t rows = 0, row_width;
-			std::vector<size_t> col_widths; //FIXME: avoid allocating this.
+			std::vector<int> col_widths;
 
 			do {
 				row_width = 1;
@@ -243,21 +243,18 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 			
 			echo(input_str);
 
-			std::vector<alt::StrMut> lines(rows, " "); //FIXME: avoid allocating this.
+			size_t cols = col_widths.size();
 
-			for(size_t i = 0; i < autocompletions.size(); ++i){
-				const str_const& str = autocompletions[i]->name;
+			for(size_t i = 0; i < rows; ++i){
+				for(size_t j = 0; i < cols; ++j){
+					size_t index = j * rows + i;
+					if(index >= autocompletions.size()) break;
+					const str_const& str = autocompletions[index]->name;
 
-				lines[i % rows].append(alt::StrRef(str.str, str.size));
-				
-				if(i != autocompletions.size()-1){
-					size_t num_spaces = col_widths[i / rows] - str.size;
-					lines[i % rows].append(1, ',').append(num_spaces, ' ');
+					printf(" %*.*s", -col_widths[j], (int)str.size, str.str);
+
 				}
-			}
-
-			for(auto&& l : lines){
-				echo(l);
+				printf("\n");
 			}
 		}
 
@@ -337,7 +334,7 @@ void CLI::update(Engine& e, uint32_t delta){
 	bool font_size_changed = (size_t) font_height->val != font->getLineHeight();
 
 	if(font_size_changed){
-		font = Resource<Font, size_t>(e, { "DejaVuSansMono.ttf" }, font_height->val);
+		font = { e, { "DejaVuSansMono.ttf" }, (size_t)font_height->val };
 		output_dirty = true;
 		input_dirty = true;
 	}

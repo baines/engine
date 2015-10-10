@@ -9,6 +9,7 @@
 #include "root_state.h"
 #include "cli.h"
 #include <algorithm>
+#include <clocale>
 
 namespace {
 	static int get_ticks(){
@@ -23,6 +24,8 @@ namespace {
 using std::make_unique;
 
 Engine::Engine(int argc, char** argv, const char* name){
+
+	setlocale(LC_ALL, "");
 
 	SDL_Init(0);
 

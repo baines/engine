@@ -4,7 +4,7 @@
 #include "cvar.h"
 #include "resource_system.h"
 #include "trie.h"
-#include <list>
+#include <vector>
 #include <map>
 
 struct Config {

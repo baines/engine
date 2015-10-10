@@ -7,8 +7,6 @@
 #include "test_state.h"
 #include "test_collision_state.h"
 
-#include <iostream>
-
 #ifdef __EMSCRIPTEN__
 #include "emscripten.h"
 #endif

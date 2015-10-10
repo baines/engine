@@ -37,11 +37,11 @@ struct TestState : public GameState {
 	, center        ({ 320, 240 }){
 		tri_vstate.setVertexBuffers({ &tri_vbo });
 	}
-	
+
 	bool onInit(Engine& e){
 		tri_shader.link();
 		sprite_shader.link();
-		
+
 		return true;
 	}
 
@@ -61,7 +61,7 @@ struct TestState : public GameState {
 			center - (text_sz / 2)
 		);
 	}
-	
+
 	void update(Engine& e, uint32_t delta){
 		timer = (timer + delta / 2);
 		float tri_timer    = sinf((timer % 628)  / 100.0f);
@@ -70,7 +70,7 @@ struct TestState : public GameState {
 		tri_uniforms.setUniform("timer", { 1.0f + tri_timer });
 		test_sprite.setPosition({ center.x + sprite_timer * 200.0f, (center.y + 140.0f) });
 	}
-	
+
 	void draw(Renderer& renderer){
 		renderer.addRenderable(triangle);
 		text.draw(renderer);
@@ -87,7 +87,7 @@ private:
 	ShaderUniforms tri_uniforms;
 	VertexState tri_vstate;
 	Renderable triangle;
-	
+
 	Resource<Font, uint16_t> font;
 	Text text;
 

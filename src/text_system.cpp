@@ -168,7 +168,7 @@ void TextSystem::updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 new
 	if(!pos_changed
 	&& newstr.size() >= t.str.size()
 	&& size_t(t.renderable->offset + t.renderable->count) == text_buffer.getSize()
-	&& newstr.find(t.str) == newstr.begin()){
+	&& newstr.find(t.str) == 0){
 
 		alt::StrRef32 suffix(newstr.data() + t.str.size(), newstr.size() - t.str.size());
 		
@@ -182,7 +182,7 @@ void TextSystem::updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 new
 	} else {
 		// if the new text is a substring of the old text starting at offset 0, then don't 
 		// add to the vertex buffer, just lower the renderable's count and invalidate the end.
-		if(!t.str.empty() && t.str.find(newstr) == t.str.begin() && !pos_changed){
+		if(!t.str.empty() && t.str.find(newstr) == 0 && !pos_changed){
 			size_t start = t.renderable->offset * sizeof(TextVert),
 			       count = t.renderable->count * sizeof(TextVert),
 			       verts = count_verts(newstr),

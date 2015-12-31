@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
-#include "altlib/alt.h"
+#include "alt/alt_str.h"
 
 #if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"

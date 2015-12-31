@@ -136,10 +136,12 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		int var_name_sz = (var_args - input_str.begin()) - PROMPT_SZ;
 		if(var_args != input_str.end()) ++var_args;
 		
+		int var_idx = var_args - input_str.begin();
+
 		uint32_t hash = str_hash_len(var_name, var_name_sz);
 		auto* v = e.cfg->getVar<CVar>(hash);
 
-		if(v && v->type != CVAR_FUNC && !*input_str.find_not(' ', var_args)){
+		if(v && v->type != CVAR_FUNC && !input_str.contains_not(' ', var_idx)){
 			printVarInfo(*v);
 		} else if(v && v->eval(var_args)){
 			if(auto* str = v->getReloadVar()){
@@ -184,11 +186,11 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 		
 	} else if(action == ACT_DEL_WORD && input_str.size() > PROMPT_SZ){
 
-		char* end = input_str.begin() + utf8_char_index(input_str, cursor_idx);
-		char* mid = input_str.rfind_not(' ', end, &input_str[PROMPT_SZ]);
-		char* beg = input_str.rfind_any(' ', mid, &input_str[PROMPT_SZ]) + 1;
+		size_t end = utf8_char_index(input_str, cursor_idx);
+		size_t mid = input_str.rfind_not(' ', end, PROMPT_SZ);
+		size_t beg = input_str.rfind_any(' ', mid, PROMPT_SZ) + 1;
 
-		input_str.erase(beg, end);
+		input_str.erase(beg, end - beg);
 		input_dirty = true;
 
 	} else if(action == ACT_AUTOCOMPLETE && input_str.size() > PROMPT_SZ){

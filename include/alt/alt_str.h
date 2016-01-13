@@ -1,20 +1,44 @@
 #ifndef ALT_STR_H_
 #define ALT_STR_H_
-#include <algorithm>
-#include <functional>
-#include <cstring>
 #include <cstdint>
-#include <memory>
-#include <numeric>
-#include <type_traits>
+#include <alloca.h>
+#include <initializer_list>
+
+/********************************************************
+  Define these to use your own memory-related functions
+********************************************************/
+
+#if !defined(ALT_STR_ALLOC) || !defined(ALT_STR_FREE)
+	#include <cstdlib>
+	#define ALT_STR_ALLOC    malloc
+	#define ALT_STR_FREE     free
+#endif
+
+#if !defined(ALT_STR_MEMCPY)
+	#include <cstring>
+	#define ALT_STR_MEMCPY   memcpy
+#endif
+
+#if !defined(ALT_STR_MEMMOVE)
+	#include <cstring>
+	#define ALT_STR_MEMMOVE  memmove
+#endif
+
+#if !defined(ALT_STR_MEMCMP)
+	#include <cstring>
+	#define ALT_STR_MEMCMP   memcmp
+#endif
 
 namespace alt {
 
 /********************************************************
-   StrRef, StrRef16, StrRef32 - Immutable string types
+          Miscellanea used by the string types
 ********************************************************/
 
 namespace detail {
+
+	template<class T> constexpr T min(const T& a, const T& b){ return a <  b ? a : b; }
+	template<class T> constexpr T max(const T& a, const T& b){ return a >= b ? a : b; }
 
 	template<class T>
 	size_t StrLen(const T* ptr){
@@ -23,10 +47,25 @@ namespace detail {
 		return p - ptr;
 	}
 
+	inline size_t get_next_size(size_t current, size_t required){
+		current = max<size_t>(current, 32);
+		while(current < required){
+			current <<= 2;
+		}
+		return current;
+	}
+
+	template<bool, class T = void> struct enable_if{};
+	template<class T> struct enable_if<true, T> { typedef T type; };
+
 	static const size_t STR_REF_ALLOCA_LIMIT = 1024;
 }
 
 template<class T> class TStrMut;
+
+/********************************************************
+   StrRef, StrRef16, StrRef32 - Immutable string types
+********************************************************/
 
 template<class T>
 struct TStrRef {
@@ -36,38 +75,43 @@ struct TStrRef {
 
 	TStrRef() = default;
 	
-	constexpr TStrRef(const T* p, size_t sz) : p(p), sz(sz){}
-	constexpr TStrRef(const T* a, const T* b) : p(a), sz(b - a){}
-	constexpr TStrRef(const T& c) : p(&c), sz(1){}
+	constexpr TStrRef(const T* p, size_t sz) : ptr(p), sz(sz){}
+	constexpr TStrRef(const T* a, const T* b) : ptr(a), sz(b - a){}
+	constexpr TStrRef(const T& c) : ptr(&c), sz(1){}
 
 	constexpr TStrRef(const TStrMut<T>& str);
 
 	template<size_t N>
-	constexpr TStrRef(const T (&p)[N]) : p(p), sz(N-1){}
+	constexpr TStrRef(const T (&p)[N]) : ptr(p), sz(N-1){}
 
 	template<class U>
-	constexpr TStrRef(const U* const& p) : p(p), sz(detail::StrLen<T>(p)){}
+	constexpr TStrRef(const U* const& p) : ptr(p), sz(detail::StrLen<T>(p)){}
 
 	template<class F>
-	typename std::result_of<F(T*)>::type pass_c_str(F&& func) const {
-		std::unique_ptr<T[]> heap_buf;
+	auto pass_c_str(F&& func) const -> decltype(func((T*)1)) {
+
+		struct ScopeDel {
+			~ScopeDel(){ if(ptr) ALT_STR_FREE(ptr); }
+			T* ptr = nullptr;
+		} auto_del;
+
 		T* buf;
 		
 		if((sz * sizeof(T)) >= detail::STR_REF_ALLOCA_LIMIT){
-			heap_buf = std::unique_ptr<T[]>(new T[sz+1]);
-			buf = heap_buf.get();
+			buf = (T*) ALT_STR_ALLOC((sz+1) * sizeof(T));
+			auto_del.ptr = buf;
 		} else {
 			buf = reinterpret_cast<T*>(alloca((sz+1)*sizeof(T)));
 		}
 
-		memcpy(buf, p, sz * sizeof(T));
+		ALT_STR_MEMCPY(buf, ptr, sz * sizeof(T));
 		buf[sz] = 0;
 
 		return func(buf);
 	}
 
-	constexpr const T& front() const { return p[0]; }
-	constexpr const T& back() const { return p[sz-1]; }
+	constexpr const T& front() const { return ptr[0]; }
+	constexpr const T& back() const { return ptr[sz-1]; }
 	
 	bool contains(const TStrRef<T>& needle, size_t b = 0, size_t e = -1) const {
 		return find(needle, b, e) != sz;
@@ -78,89 +122,114 @@ struct TStrRef {
 	}
 
 	size_t find(const TStrRef<T>& needle, size_t b = 0, size_t e = -1) const {
-		return std::search(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, sz),
-			needle.begin(),
-			needle.end()
-		) - begin();
+		const size_t max_sz = detail::min<uint32_t>(e, sz);
+		const size_t limit  = detail::max<ssize_t>(0, max_sz - needle.size());
+
+		for(const T* p = ptr + b; p < ptr + limit; ++p){
+			if(substr(p, p + needle.size()) == needle){
+				return p - ptr;
+			}
+		}
+
+		return max_sz; 
 	}	
-	
-	size_t rfind(const TStrRef<T>& needle, size_t b = -1, size_t e = 0) const {
-		return (std::search(
-			rend() - std::min<uint32_t>(b, sz),
-			rend() - e,
-			needle.rbegin(),
-			needle.rend()
-		).base() - needle.size()) - begin();
+
+	size_t rfind(const TStrRef<T>& needle, size_t b = -1, size_t e = -1) const {
+		const size_t max_sz = detail::min<uint32_t>(b, sz);
+		const size_t limit  = detail::max<ssize_t>(0, max_sz - needle.size());
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			if(substr(p, p + needle.size()) == needle){
+				return p - ptr;
+			}
+		}
+
+		return e; 
 	}
 	
 	size_t find_any(const TStrRef<T>& chars, size_t b = 0, size_t e = -1) const {
-		return std::find_first_of(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, sz),
-			chars.begin(),
-			chars.end()
-		) - begin();
+		const size_t max_sz = detail::min<uint32_t>(e, sz);
+
+		for(const T* p = ptr + b; p < ptr + max_sz; ++p){
+			for(char c : chars){
+				if(c == *p) return p - ptr;
+			}
+		}
+
+		return max_sz; 
 	}
 
-	size_t rfind_any(const TStrRef<T>& chars, size_t b = -1, size_t e = 0) const {
-		return (std::find_first_of(
-			rend() - std::min<uint32_t>(b, sz),
-			rend() - e,
-			chars.begin(),
-			chars.end()
-		).base() - 1) - begin();
+	size_t rfind_any(const TStrRef<T>& chars, size_t b = -1, size_t e = -1) const {
+		const size_t max_sz = detail::min<uint32_t>(b, sz);
+		const size_t limit  = detail::max<ssize_t>(0, max_sz - 1);
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			for(char c : chars){
+				if(c == *p) return p - ptr;
+			}
+		}
+
+		return e; 
 	}
 
 	size_t find_not(const TStrRef<T>& chars, size_t b = 0, size_t e = -1) const {
-		return std::find_first_of(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, sz),
-			chars.begin(),
-			chars.end(),
-			std::not_equal_to<T>()
-		) - begin();
+		const size_t max_sz = detail::min<uint32_t>(e, sz);
+
+		for(const T* p = ptr + b; p < ptr + max_sz; ++p){
+			for(char c : chars){
+				if(c != *p) return p - ptr;
+			}
+		}
+
+		return max_sz; 
 	}
 
-	size_t rfind_not(const TStrRef<T>& chars, size_t b = -1, size_t e = 0) const {
-		return (std::find_first_of(
-			rend() - std::min<uint32_t>(b, sz),
-			rend() - e,
-			chars.begin(),
-			chars.end(),
-			std::not_equal_to<T>()
-		).base() - 1) - begin();
+	size_t rfind_not(const TStrRef<T>& chars, size_t b = -1, size_t e = -1) const {
+		const size_t max_sz = detail::min<uint32_t>(b, sz);
+		const size_t limit  = detail::max<ssize_t>(0, max_sz - 1);
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			for(char c : chars){
+				if(c != *p) return p - ptr;
+			}
+		}
+
+		return e; 
 	}
-		
+
 	void remove_prefix(size_t n){
-		size_t min_sz = std::min(sz, n);
-		p += min_sz;
+		size_t min_sz = detail::min(sz, n);
+		ptr += min_sz;
 		sz -= min_sz;	
 	}
 
 	void remove_suffix(size_t n){
-		sz = std::max<ssize_t>(0, sz - n);
+		sz = detail::max<intmax_t>(0, sz - n);
+	}
+
+	TStrRef<T> substr(size_t index, size_t count) const {
+		return substr(ptr + index, ptr + index + count);
+	}
+	TStrRef<T> substr(const T* begin, const T* end) const {
+		return TStrRef<T>(begin, end);
 	}
 	
 	bool cmp(const TStrRef<T>& other) const {
-		return size() == other.size() && memcmp(p, other.data(), size() * sizeof(T)) == 0;
+		return size() == other.size() && ALT_STR_MEMCMP(ptr, other.data(), size() * sizeof(T)) == 0;
 	}
 	
 	bool operator==(const TStrRef<T>& other) const { return cmp(other); }
 	bool operator!=(const TStrRef<T>& other) const { return !cmp(other); }
 	
-	constexpr const T* data() const { return p; }
-	constexpr const T* begin() const { return p; }
-	constexpr const T* end() const { return p + sz; }
-	constexpr std::reverse_iterator<const T*> rbegin() const { return std::reverse_iterator<const T*>(end()); }
-	constexpr std::reverse_iterator<const T*> rend() const { return std::reverse_iterator<const T*>(begin()); }
-	constexpr const T& operator[](size_t i) const { return p[i]; }
+	constexpr const T* data() const { return ptr; }
+	constexpr const T* begin() const { return ptr; }
+	constexpr const T* end() const { return ptr + sz; }
+	constexpr const T& operator[](size_t i) const { return ptr[i]; }
 	
 	constexpr size_t size() const { return sz; }
 	constexpr int sizei() const { return static_cast<int>(sz); }
 private:
-	const T* p;
+	const T* ptr;
 	size_t sz;
 };
 
@@ -172,17 +241,6 @@ using StrRef32 = TStrRef<char32_t>;
    StrMut, StrMut16, StrMut32 - Mutable string types
 ********************************************************/
 
-namespace detail {
-
-	inline size_t get_next_size(size_t current, size_t required){
-		current = std::max<size_t>(current, 32);
-		while(current < required){
-			current <<= 2;
-		}
-		return current;
-	}
-}
-
 template<class T>
 class TStrMut {
 	static constexpr size_t LOCAL_SZ = (28 - sizeof(T*)) / sizeof(T);
@@ -190,24 +248,24 @@ public:
 	TStrMut() : ptr(local_str), used_size(0) {}
 		
 	template<size_t N>
-	TStrMut(const T (&ref)[N], typename std::enable_if<!(N <= LOCAL_SZ)>::type* = 0)
-	: ptr(new T[detail::get_next_size(0, N)])
+	TStrMut(const T (&ref)[N], typename detail::enable_if<!(N <= LOCAL_SZ)>::type* = 0)
+	: ptr(ALT_STR_ALLOC(detail::get_next_size(0, N) * sizeof(T)))
 	, used_size(N-1)
 	, allocated_size(detail::get_next_size(0, N)) {
-		memcpy(ptr, &ref, N * sizeof(T));
+		ALT_STR_MEMCPY(ptr, &ref, N * sizeof(T));
 	}
 
 	template<size_t N>
-	TStrMut(const T (&ref)[N], typename std::enable_if<N <= LOCAL_SZ>::type* = 0)
+	TStrMut(const T (&ref)[N], typename detail::enable_if<N <= LOCAL_SZ>::type* = 0)
 	: ptr(local_str)
 	, used_size(N-1) {
-		memcpy(local_str, &ref, N * sizeof(T));
+		ALT_STR_MEMCPY(local_str, &ref, N * sizeof(T));
 	}
 	
 	TStrMut(const T* t, size_t sz)
-	: ptr(sz >= LOCAL_SZ ? new T[detail::get_next_size(0, sz+1)] : local_str)
+	: ptr(sz >= LOCAL_SZ ? (T*)ALT_STR_ALLOC(detail::get_next_size(0, sz+1) * sizeof(T)) : local_str)
 	, used_size(sz){
-		memcpy(ptr, t, sz * sizeof(T));
+		ALT_STR_MEMCPY(ptr, t, sz * sizeof(T));
 		ptr[used_size] = 0;
 		if(ptr != local_str){
 			allocated_size = detail::get_next_size(0, sz+1);
@@ -229,7 +287,7 @@ public:
 			other.ptr = other.local_str;
 		} else {
 			reserve(used_size);
-			memcpy(ptr, other.ptr, other.used_size * sizeof(T));
+			ALT_STR_MEMCPY(ptr, other.ptr, other.used_size * sizeof(T));
 			ptr[used_size] = 0;
 		}
 
@@ -241,7 +299,7 @@ public:
 	TStrMut<T>& operator=(const TStrMut<T>& other){
 		used_size = other.size();
 		reserve(used_size);
-		memcpy(ptr, other.c_str(), used_size * sizeof(T));
+		ALT_STR_MEMCPY(ptr, other.c_str(), used_size * sizeof(T));
 		ptr[used_size] = 0;
 
 		return *this;
@@ -255,7 +313,7 @@ public:
 	TStrMut<T>& operator=(const char (&other)[N]){
 		used_size = N-1;
 		reserve(used_size);
-		memcpy(ptr, &other, used_size * sizeof(T));
+		ALT_STR_MEMCPY(ptr, &other, used_size * sizeof(T));
 		ptr[used_size] = 0;
 
 		return *this;
@@ -273,9 +331,9 @@ public:
 
 		if(amount >= limit){
 			const size_t new_size = detail::get_next_size(limit, amount + 1);
-			T* new_ptr = new T[new_size];
-			memcpy(new_ptr, ptr, (1 + used_size) * sizeof(T));
-			if(!using_local) delete [] ptr;
+			T* new_ptr = (T*) ALT_STR_ALLOC(new_size * sizeof(T));
+			ALT_STR_MEMCPY(new_ptr, ptr, (1 + used_size) * sizeof(T));
+			if(!using_local) ALT_STR_FREE(ptr);
 			ptr = new_ptr;
 			allocated_size = new_size;
 		}
@@ -284,8 +342,8 @@ public:
 	TStrMut<T>& insert(size_t index, const TStrRef<T>& str){
 		const size_t _sz = str.size();
 		reserve(used_size + _sz);
-		memmove(ptr + index + _sz, ptr + index, (used_size - index) * sizeof(T));
-		memcpy(ptr + index, str.data(), _sz * sizeof(T));
+		ALT_STR_MEMMOVE(ptr + index + _sz, ptr + index, (used_size - index) * sizeof(T));
+		ALT_STR_MEMCPY(ptr + index, str.data(), _sz * sizeof(T));
 		used_size += _sz;
 		ptr[used_size] = 0;
 
@@ -299,7 +357,7 @@ public:
 	}
 	
 	TStrMut<T>& erase(T* _begin, T* _end){
-		memmove(_begin, _end, (end() - _end) * sizeof(T));
+		ALT_STR_MEMMOVE(_begin, _end, (end() - _end) * sizeof(T));
 		used_size -= _end - _begin;
 		ptr[used_size] = 0;
 
@@ -309,7 +367,7 @@ public:
 	TStrMut<T>& append(const TStrRef<T>& str){
 		const size_t _sz = str.size();
 		reserve(used_size + _sz);
-		memcpy(ptr + used_size, str.data(), _sz * sizeof(T));
+		ALT_STR_MEMCPY(ptr + used_size, str.data(), _sz * sizeof(T));
 		used_size += _sz;
 		ptr[used_size] = 0;
 
@@ -317,16 +375,16 @@ public:
 	}
 	
 	TStrMut<T>& append(std::initializer_list<TStrRef<T>> strs){
-		const size_t total = std::accumulate(strs.begin(), strs.end(), used_size,
-		[](size_t a, const TStrRef<T>& b){
-			return a + b.size();
-		});
+		size_t total = 0;
+		for(const auto& s : strs){
+			total += s.size();	
+		}
 
 		reserve(total);
 		
-		for(auto& s : strs){
+		for(const auto& s : strs){
 			const size_t _sz = s.size();
-			memcpy(ptr + used_size, s.data(), _sz * sizeof(T));
+			ALT_STR_MEMCPY(ptr + used_size, s.data(), _sz * sizeof(T));
 			used_size += _sz;
 		}
 		
@@ -341,7 +399,7 @@ public:
 		
 		reserve(used_size + (_sz * num));
 		while(num--){
-			memcpy(ptr + used_size, _data, _sz * sizeof(T));
+			ALT_STR_MEMCPY(ptr + used_size, _data, _sz * sizeof(T));
 			used_size += _sz;
 		}
 		ptr[used_size] = 0;
@@ -356,11 +414,11 @@ public:
 		reserve(used_size + diff);
 		T *_begin = ptr + index, *_end = ptr + index + count;
 		if(diff != 0){
-			memmove(_begin + _sz, _end, (end() - _end) * sizeof(T));
+			ALT_STR_MEMMOVE(_begin + _sz, _end, (end() - _end) * sizeof(T));
 			used_size += diff;
 			ptr[used_size] = 0;
 		}
-		memcpy(_begin, str.data(), _sz * sizeof(T));
+		ALT_STR_MEMCPY(_begin, str.data(), _sz * sizeof(T));
 
 		return *this;
 	}
@@ -380,63 +438,83 @@ public:
 	}
 
 	size_t find(const TStrRef<T>& needle, size_t b = 0, size_t e = -1) const {
-		return std::search(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, used_size),
-			needle.begin(),
-			needle.end()
-		) - begin();
+		const size_t max_used_size = detail::min<uint32_t>(e, used_size);
+		const size_t limit  = detail::max<ssize_t>(0, max_used_size - needle.size());
+
+		for(const T* p = ptr + b; p < ptr + limit; ++p){
+			if(substr(p, p + needle.size()) == needle){
+				return p - ptr;
+			}
+		}
+
+		return max_used_size; 
 	}	
-	
-	size_t rfind(const TStrRef<T>& needle, size_t b = -1, size_t e = 0) const {
-		return (std::search(
-			rend() - std::min<uint32_t>(b, used_size),
-			rend() - e,
-			needle.rbegin(),
-			needle.rend()
-		).base() - needle.size()) - begin();
+
+	size_t rfind(const TStrRef<T>& needle, size_t b = -1, size_t e = -1) const {
+		const size_t max_used_size = detail::min<uint32_t>(b, used_size);
+		const size_t limit  = detail::max<ssize_t>(0, max_used_size - needle.size());
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			if(substr(p, p + needle.size()) == needle){
+				return p - ptr;
+			}
+		}
+
+		return e; 
 	}
 	
 	size_t find_any(const TStrRef<T>& chars, size_t b = 0, size_t e = -1) const {
-		return std::find_first_of(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, used_size),
-			chars.begin(),
-			chars.end()
-		) - begin();
+		const size_t max_used_size = detail::min<uint32_t>(e, used_size);
+
+		for(const T* p = ptr + b; p < ptr + max_used_size; ++p){
+			for(char c : chars){
+				if(c == *p) return p - ptr;
+			}
+		}
+
+		return max_used_size; 
 	}
 
-	size_t rfind_any(const TStrRef<T>& chars, size_t b = -1, size_t e = 0) const {
-		return (std::find_first_of(
-			rend() - std::min<uint32_t>(b, used_size),
-			rend() - e,
-			chars.begin(),
-			chars.end()
-		).base() - 1) - begin();
+	size_t rfind_any(const TStrRef<T>& chars, size_t b = -1, size_t e = -1) const {
+		const size_t max_used_size = detail::min<uint32_t>(b, used_size);
+		const size_t limit  = detail::max<ssize_t>(0, max_used_size - 1);
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			for(char c : chars){
+				if(c == *p) return p - ptr;
+			}
+		}
+
+		return e; 
 	}
 
 	size_t find_not(const TStrRef<T>& chars, size_t b = 0, size_t e = -1) const {
-		return std::find_first_of(
-			begin() + b,
-			begin() + std::min<uint32_t>(e, used_size),
-			chars.begin(),
-			chars.end(),
-			std::not_equal_to<T>()
-		) - begin();
+		const size_t max_used_size = detail::min<uint32_t>(e, used_size);
+
+		for(const T* p = ptr + b; p < ptr + max_used_size; ++p){
+			for(char c : chars){
+				if(c != *p) return p - ptr;
+			}
+		}
+
+		return max_used_size; 
 	}
 
-	size_t rfind_not(const TStrRef<T>& chars, size_t b = -1, size_t e = 0) const {
-		return (std::find_first_of(
-			rend() - std::min<uint32_t>(b, used_size),
-			rend() - e,
-			chars.begin(),
-			chars.end(),
-			std::not_equal_to<T>()
-		).base() - 1) - begin();
+	size_t rfind_not(const TStrRef<T>& chars, size_t b = -1, size_t e = -1) const {
+		const size_t max_used_size = detail::min<uint32_t>(b, used_size);
+		const size_t limit  = detail::max<ssize_t>(0, max_used_size - 1);
+
+		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
+			for(char c : chars){
+				if(c != *p) return p - ptr;
+			}
+		}
+
+		return e; 
 	}
-	
+
 	bool cmp(const TStrRef<T>& other) const {
-		return size() == other.size() && memcmp(ptr, other.data(), size() * sizeof(T)) == 0;
+		return size() == other.size() && ALT_STR_MEMCMP(ptr, other.data(), size() * sizeof(T)) == 0;
 	}
 	
 	bool operator==(const TStrRef<T>& other) const { return cmp(other); }
@@ -458,9 +536,6 @@ public:
 
 	constexpr T* begin(){ return ptr; }
 	constexpr T* end(){ return ptr + used_size; }
-
-	constexpr std::reverse_iterator<T*> rbegin(){ return std::reverse_iterator<T*>(end()); }
-	constexpr std::reverse_iterator<T*> rend(){ return std::reverse_iterator<T*>(begin()); }
 	
 	constexpr size_t size() const { return used_size; }
 	
@@ -487,7 +562,7 @@ using StrMut16 = TStrMut<char16_t>;
 using StrMut32 = TStrMut<char32_t>;
 
 template<class T>
-constexpr TStrRef<T>::TStrRef(const TStrMut<T>& str) : p(str.data()), sz(str.size()){}
+constexpr TStrRef<T>::TStrRef(const TStrMut<T>& str) : ptr(str.data()), sz(str.size()){}
 
 }
 

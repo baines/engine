@@ -271,7 +271,7 @@ bool Input::StateBind::operator<(const StateBind& rhs) const {
 	return tie(state, bind) < tie(rhs.state, rhs.bind);
 }
 
-static bool bind_key_fn(Input* const input, const alt::StrRef& str, bool raw){
+static bool bind_key_fn(Input* const input, const StrRef& str, bool raw){
 	return str.pass_c_str([&](char* buff){
 		
 		char* state = nullptr;
@@ -287,7 +287,7 @@ static bool bind_key_fn(Input* const input, const alt::StrRef& str, bool raw){
 	});
 }
 
-static bool bind_axis_fn(Input* const input, const alt::StrRef& str){
+static bool bind_axis_fn(Input* const input, const StrRef& str){
 	return str.pass_c_str([&](char* buff){
 		char* state = nullptr;
 		char* str_axis  = strtok_r(buff   , " \t", &state);
@@ -350,7 +350,7 @@ Input::Input(Engine& e)
 		"Usage: bind_axis <axis_name> <action> [relative?] [scale]"
 	);
 
-	e.cfg->addVar<CVarFunc>("bindlist", [&](const alt::StrRef&){
+	e.cfg->addVar<CVarFunc>("bindlist", [&](const StrRef&){
 		char bind_buf[32] = {};
 		size_t bind_len = sizeof(bind_buf);
 
@@ -369,7 +369,7 @@ Input::Input(Engine& e)
 		return true;
 	}, "Lists the current set of keybindings.");
 
-	e.cfg->addVar<CVarFunc>("unbind", [&](const alt::StrRef& arg){
+	e.cfg->addVar<CVarFunc>("unbind", [&](const StrRef& arg){
 		for(auto& bp : binds){
 			char bind_buf[32] = {};
 			bp.second.toString(bind_buf, sizeof(bind_buf));
@@ -386,7 +386,7 @@ Input::Input(Engine& e)
 	SDL_StopTextInput();
 }
 
-void Input::bind(const Key& key, const alt::StrRef& action){
+void Input::bind(const Key& key, const StrRef& action){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,
@@ -406,7 +406,7 @@ void Input::bind(const Key& key, const alt::StrRef& action){
 }
 
 //TODO: merge this function with the other bind?
-void Input::bind(const Axis& axis, const alt::StrRef& action, bool rel, float scale){
+void Input::bind(const Axis& axis, const StrRef& action, bool rel, float scale){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,

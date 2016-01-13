@@ -8,13 +8,13 @@
 #include "state_system.h"
 #include "root_state.h"
 #include "cli.h"
-#include <algorithm>
 #include <clocale>
+#include <SDL.h>
 
 namespace {
 	static int get_ticks(){
 #ifdef __EMSCRIPTEN__
-		return std::round(emscripten_get_now());
+		return emscripten_get_now() + 0.5;
 #else
 		return SDL_GetTicks();
 #endif

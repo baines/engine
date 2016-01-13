@@ -2,7 +2,9 @@
 #define INPUT_H_
 #include "common.h"
 #include "game_state.h"
-#include <SDL.h>
+#include <SDL_events.h>
+#include <SDL_keyboard.h>
+#include <SDL_gamecontroller.h>
 #include <map>
 #include <unordered_map>
 #include <string>
@@ -12,12 +14,14 @@ extern struct mouse_wheel_tag_t {} mouse_wheel_tag;
 extern struct pad_button_tag_t {} pad_button_tag;
 extern struct mouse_tag_t {} mouse_tag;
 
+struct SDL_KeySym;
+
 struct Input {
 	
 	struct Key {
 		Key() = default;
 		
-		Key(SDL_Scancode code);
+		Key(uint32_t scancode);
 		Key(const SDL_Keysym& key);
 		
 		Key(mouse_button_tag_t, uint8_t button); //TODO: multiple mice.
@@ -39,7 +43,7 @@ struct Input {
 	struct Axis {
 		Axis() = default;
 		
-		Axis(SDL_GameControllerAxis pad_axis);
+		//Axis(SDL_GameControllerAxis pad_axis);
 		
 		Axis(mouse_tag_t, int axis);
 		
@@ -61,8 +65,8 @@ struct Input {
 
 	Input(Engine& e);
 
-	void bind(const Key& key, const alt::StrRef& action);
-	void bind(const Axis& axis, const alt::StrRef& action, bool rel, float scale = 1.0f);
+	void bind(const Key& key, const StrRef& action);
+	void bind(const Axis& axis, const StrRef& action, bool rel, float scale = 1.0f);
 
 	void subscribe(GameState* s, const str_const& action, int action_id);
 	void subscribe(GameState* s, const str_const& action, int action_id, const Key& dflt);
@@ -114,7 +118,7 @@ private:
 	std::map<StateBind, int> active_binds;
 	std::multimap<strhash_t, StateAction> bound_actions;
 
-	std::map<strhash_t, alt::StrMut> action_names;
+	std::map<strhash_t, StrMut> action_names;
 	
 	std::unordered_map<GameState*, SDL_Rect> text_states;
 	GameState* current_state;

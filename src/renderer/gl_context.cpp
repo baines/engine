@@ -3,6 +3,7 @@
 #include "config.h"
 #include "enums.h"
 #include "util.h"
+#include <SDL.h>
 
 #ifndef CALLBACK
 	#define CALLBACK

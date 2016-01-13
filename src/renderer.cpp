@@ -9,6 +9,7 @@
 #include <climits>
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
+#include <SDL.h>
 
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
@@ -36,7 +37,7 @@ Renderer::Renderer(Engine& e, const char* name)
 		log(logging::fatal, "Couldn't initialize SDL video subsystem (%s).", SDL_GetError());
 	}
 	
-	e.cfg->addVar<CVarFunc>("vid_reload", [&](const alt::StrRef&){
+	e.cfg->addVar<CVarFunc>("vid_reload", [&](const StrRef&){
 		reload(e);
 		return true;
 	});
@@ -51,7 +52,7 @@ Renderer::Renderer(Engine& e, const char* name)
 		v->setReloadVar("vid_reload");
 	}
 
-	e.cfg->addVar<CVarFunc>("vid_display_info", [&](const alt::StrRef&){
+	e.cfg->addVar<CVarFunc>("vid_display_info", [&](const StrRef&){
 		char buf[80] = {};
 		SDL_Rect r;
 		e.cli->echo("Displays:");

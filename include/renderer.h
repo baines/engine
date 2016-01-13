@@ -1,10 +1,11 @@
 #ifndef RENDERER_H_
 #define RENDERER_H_
 #include "common.h"
-#include <SDL.h>
 #include <vector>
 #include "shader_uniforms.h"
 #include "render_state.h"
+
+struct SDL_Window;
 
 struct Renderer {
 	Renderer(Engine& e, const char* name);

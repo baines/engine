@@ -2,8 +2,12 @@
 #define COMMON_H_
 #include <cstdint>
 #include <cstdlib>
-#include <memory>
 #include "alt/alt_str.h"
+
+using alt::StrRef;
+using alt::StrRef32;
+using alt::StrMut;
+using alt::StrMut32;
 
 #if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"
@@ -60,7 +64,29 @@ using strhash_t = uint32_t;
 #include "emscripten.h"
 #endif
 
-#include "log.h"
+namespace logging {
+
+	enum level : uint32_t {
+		fatal = 0,
+		error = 1,
+		warn  = 2,
+		info  = 3,
+		debug = 4,
+		trace = 5
+	};
+
+	const char* lvl_str(level l);
+
+	void log(level l, const char* fmt, ...) __attribute__ ((format (printf, 2, 3)));
+	
+	void setVerbosity(level l);
+	
+	typedef void (*log_fn)(level, const char* msg, size_t msg_sz, void* usr);
+	typedef int log_handle;
+
+	log_handle addSink(log_fn fn, void* usr);
+	void delSink(log_handle handle);
+}
 
 #ifdef DEBUG
 	#define DEBUGF(fmt, ...) do { log(logging::debug, fmt, ##__VA_ARGS__); } while (0)

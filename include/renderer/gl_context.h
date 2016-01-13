@@ -2,11 +2,12 @@
 #define GL_CONTEXT_H
 #include <GL/gl.h>
 #include <GL/glext.h>
-#include <SDL.h>
 #include <map>
 #include <unordered_set>
 #include "common.h"
 #include "gl_functions.h"
+
+struct SDL_Window;
 
 struct GLContext {
 	GLContext();
@@ -39,7 +40,7 @@ private:
 	std::unordered_set<uint32_t> extensions;
 	enum GLObjStatus { VALID, INVALID, DELETED };
 	std::map<GLObject*, GLObjStatus> objects;
-	SDL_GLContext sdl_context;
+	void* sdl_context;
 };
 
 extern GLContext gl;

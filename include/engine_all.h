@@ -26,7 +26,6 @@
 #include "trie.h"
 #include "resource_system.h"
 #include "state_system.h"
-#include "log.h"
 #include "resource.h"
 #include "proxy.h"
 #include "font.h"

@@ -3,7 +3,7 @@
 
 /* CVarNumeric: int*/
 
-template<> bool CVarNumeric<int>::eval(const alt::StrRef& str){
+template<> bool CVarNumeric<int>::eval(const StrRef& str){
 	return set(strtol(str.data(), nullptr, 0));
 }
 
@@ -13,7 +13,7 @@ template<> void CVarNumeric<int>::printInfo(CLI& cli) const {
 
 /* CVarNumeric: float */
 
-template<> bool CVarNumeric<float>::eval(const alt::StrRef& str){
+template<> bool CVarNumeric<float>::eval(const StrRef& str){
 	return set(strtof(str.data(), nullptr));
 }
 
@@ -30,7 +30,7 @@ CVarString::CVarString(const str_const& name, const char* str)
 
 }
 
-bool CVarString::eval(const alt::StrRef& s){
+bool CVarString::eval(const StrRef& s){
 	return set(s);
 }
 
@@ -38,7 +38,7 @@ void CVarString::printInfo(CLI& cli) const {
 	cli.printf("\"%s\" (default \"%s\") [string]\n", str.c_str(), init);
 }
 
-bool CVarString::set(const alt::StrRef& view){
+bool CVarString::set(const StrRef& view){
 	auto s = view;
 	if(  s.size() > 1
 	&& ((s.front() == s.back() && s.front() == '\'')
@@ -46,18 +46,18 @@ bool CVarString::set(const alt::StrRef& view){
 		s.remove_prefix(1);
 		s.remove_suffix(1);
 	}
-	str = alt::StrMut(s.begin(), s.end());
+	str = StrMut(s.begin(), s.end());
 	return true;
 }
 
-bool CVarString::set(alt::StrMut&& s){
+bool CVarString::set(StrMut&& s){
 	str = std::move(s);
 	return true;
 }
 
 /* CVarEnum */
 
-bool CVarEnum::eval(const alt::StrRef& s){
+bool CVarEnum::eval(const StrRef& s){
 	const char* ptr = s.data();
 	size_t len = s.size();
 	if(len > 1
@@ -112,7 +112,7 @@ const str_const& CVarEnum::get() const {
 CVarBool::CVarBool(const str_const& name, bool b)
 : CVar(name, this), init(b), val(b){}
 
-bool CVarBool::eval(const alt::StrRef& s){
+bool CVarBool::eval(const StrRef& s){
 	const char* ptr = s.data();
 	size_t len = s.size();
 	if(len > 1
@@ -121,7 +121,7 @@ bool CVarBool::eval(const alt::StrRef& s){
 		++ptr;
 		len -= 2;
 	}
-	return set(str_to_bool(alt::StrRef(ptr, len)));
+	return set(str_to_bool(StrRef(ptr, len)));
 }
 
 void CVarBool::printInfo(CLI& cli) const {
@@ -136,7 +136,7 @@ bool CVarBool::set(bool b){
 
 /* CVarFunc */
 
-bool CVarFunc::eval(const alt::StrRef& s){
+bool CVarFunc::eval(const StrRef& s){
 	return call(s);
 }
 
@@ -148,7 +148,7 @@ const char* CVarFunc::getErrorString() const {
 	return usage_str ? usage_str : "Function returned error.";
 }
 
-bool CVarFunc::call(const alt::StrRef& s){
+bool CVarFunc::call(const StrRef& s){
 	const char* ptr = s.data();
 	size_t len = s.size();
 	if(len > 1

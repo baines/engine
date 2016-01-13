@@ -1,6 +1,7 @@
 #ifndef ENGINE_H_
 #define ENGINE_H_
 #include "common.h"
+#include <memory>
 #include <vector>
 
 struct Engine {

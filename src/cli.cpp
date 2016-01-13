@@ -77,11 +77,13 @@ CLI::CLI(Engine& e)
 	e.input->subscribe(this, "cli_autocomplete", ACT_AUTOCOMPLETE);
 	e.input->subscribe(this, "console",          ACT_IGNORE_TEXT);
 
-	logging::addSink([&](logging::level l, const char* msg, size_t len){
+	logging::addSink([](logging::level l, const char* msg, size_t len, void* usr){
+		CLI* cli = static_cast<CLI*>(usr);
+
 		if(l == logging::warn || l == logging::error){
-			echo({ TXT_YELLOW, lvl_str(l), alt::StrRef(msg, len), TXT_WHITE });
+			cli->echo({ TXT_YELLOW, lvl_str(l), StrRef(msg, len), TXT_WHITE });
 		}
-	});
+	}, this);
 
 	int w = e.cfg->getVar<CVarInt>("vid_width")->val,
 	   	h = font_height->val * (visible_lines->val + 1);
@@ -188,7 +190,7 @@ bool CLI::onInput(Engine& e, int action, bool pressed){
 
 		size_t end = utf8_char_index(input_str, cursor_idx);
 		size_t mid = input_str.rfind_not(' ', end, PROMPT_SZ);
-		size_t beg = input_str.rfind_any(' ', mid, PROMPT_SZ) + 1;
+		size_t beg = input_str.rfind_any(' ', mid, PROMPT_SZ);
 
 		input_str.erase(beg, end - beg);
 		input_dirty = true;
@@ -386,7 +388,7 @@ void CLI::draw(Renderer& r){
 		cursor_text.draw(r);
 	}
 	if(output_dirty){
-		alt::StrMut output_concat;
+		StrMut output_concat;
 		for(int i = visible_lines->val; i > 0; --i){
 			int idx = (output_line_idx + (output_lines.size() - scroll_offset - i)) % output_lines.size();
 			output_concat.append(output_lines[idx]).append(1, '\n');
@@ -407,16 +409,16 @@ void CLI::draw(Renderer& r){
 	output_text.draw(r);
 }
 
-void CLI::echo(const alt::StrRef& str){
+void CLI::echo(const StrRef& str){
 	echo({ str });
 }
 
-void CLI::echo(std::initializer_list<alt::StrRef> strs){
+void CLI::echo(std::initializer_list<StrRef> strs){
 	for(auto& str : strs){
-		alt::StrRef::const_iterator begin = str.begin(), end;
+		StrRef::const_iterator begin = str.begin(), end;
 		do {
 			end = std::find(begin, str.end(), '\n');
-			output_lines[output_line_idx].append(alt::StrRef(begin, end));
+			output_lines[output_line_idx].append(StrRef(begin, end));
 			begin = end + 1;
 			if(end != str.end()){
 				output_line_idx = (output_line_idx + 1) % output_lines.size();
@@ -438,7 +440,7 @@ void CLI::printf(const char* fmt, ...){
 
 	do {
 		end = strchrnul(start, '\n');
-		output_lines[output_line_idx].append(alt::StrRef(start, end));
+		output_lines[output_line_idx].append(StrRef(start, end));
 		if(*end){
 			start = end + 1;
 			output_line_idx = (output_line_idx + 1) % output_lines.size();

@@ -23,8 +23,8 @@ struct CLI : public GameState {
 	void toggle(void);
 	bool execute(const char* line);
 	
-	void echo(const alt::StrRef& str);
-	void echo(const std::initializer_list<alt::StrRef> str);
+	void echo(const StrRef& str);
+	void echo(const std::initializer_list<StrRef> str);
 	void printf(const char* fmt, ...) __attribute__ ((format (printf, 2, 3)));
 	void printVarInfo(const CVar& cvar);
 
@@ -52,14 +52,14 @@ private:
 	Sprite bg_sprite;
 	
 	Text output_text;
-	std::vector<alt::StrMut> output_lines;
+	std::vector<StrMut> output_lines;
 	size_t output_line_idx;
 	size_t scroll_offset;
 
 	Text input_text;
-	std::vector<alt::StrMut> input_history; //XXX unbounded history is probably a bad idea..
+	std::vector<StrMut> input_history; //XXX unbounded history is probably a bad idea..
 	size_t history_idx;
-	alt::StrMut input_str;
+	StrMut input_str;
 
 	Text cursor_text;
 	size_t cursor_idx;

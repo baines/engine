@@ -2,8 +2,9 @@
 #include "entity.h"
 #include "collision_system.h"
 #include "sprite.h"
+#include <atomic>
 
-static unsigned id = 0;
+static std::atomic<unsigned> id(0);
 
 unsigned getNextComponentID(){
 	return id++;

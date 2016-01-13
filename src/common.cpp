@@ -1,4 +1,4 @@
-#include "log.h"
+#include "common.h"
 #include <list>
 #include <algorithm>
 #include <stdarg.h>
@@ -8,7 +8,12 @@
 
 namespace {
 
-	static std::list<logging::log_fn> sinks;
+	struct LogSink {
+		logging::log_fn fn;
+		void* usr;
+	};
+
+	static std::vector<LogSink> sinks;
 	static logging::level verbosity = 
 #ifdef DEBUG
 		logging::debug;
@@ -80,7 +85,7 @@ namespace logging {
 			int msg_len = vsnprintf(msg, sizeof(msg), fmt, args);
 
 			for(auto& s : sinks){
-				s(l, msg, msg_len);
+				s.fn(l, msg, msg_len, s.usr);
 			}
 
 			fprintf(stderr, "%s%s\n", lvl_str(l), msg);
@@ -99,20 +104,32 @@ namespace logging {
 		verbosity = l;
 	}
 
-	logsink* addSink(log_fn&& fn){
-		sinks.push_back(std::move(fn));
-		return static_cast<logsink*>(&sinks.back());
+	log_handle addSink(log_fn fn, void* usr){
+		sinks.push_back({ fn, usr });
+		return sinks.size() - 1;
 	}
 
-	void delSink(logsink* handle){
-		log_fn* fn = reinterpret_cast<log_fn*>(handle);
-
-		for(auto i = sinks.begin(), j = sinks.end(); i != j; ++i){
-			if(&(*i) == fn){
-				sinks.erase(i);
-				break;
-			}
-		}
+	void delSink(log_handle handle){
+		sinks.erase(sinks.begin() + handle, sinks.begin() + handle + 1);
 	}
 }
 
+StrMut32 to_utf32(const StrRef& s){
+	size_t u32str_max = s.size() * sizeof(char32_t);
+	
+	char32_t* u32str = SDL_stack_alloc(char32_t, s.size());
+	
+	char* out        = reinterpret_cast<char*>(u32str);
+	const char* in   = s.data();
+	size_t out_sz    = u32str_max;
+	size_t in_sz     = s.size();
+	
+	auto ctx = SDL_iconv_open("UTF-32LE", "UTF-8");
+	SDL_iconv(ctx, &in, &in_sz, &out, &out_sz);
+	SDL_iconv_close(ctx);
+	
+	StrMut32 ret(u32str, (u32str_max - out_sz) / sizeof(char32_t));
+	SDL_stack_free(u32str);
+
+	return ret;
+}

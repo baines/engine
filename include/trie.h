@@ -110,7 +110,7 @@ struct Trie {
 	}
 	
 	// auto-completes the given string as much as possible.
-	bool prefixExtend(alt::StrMut& prefix, size_t offset){
+	bool prefixExtend(StrMut& prefix, size_t offset){
 		bool modified = false;
 
 		if(unsigned node_idx = find_idx(prefix.c_str()+offset)){

@@ -6,6 +6,7 @@
 #include "trie.h"
 #include <vector>
 #include <map>
+#include <algorithm>
 
 struct Config {
 
@@ -30,15 +31,6 @@ struct Config {
 	}
 
 	template<class Var>
-	Var* getVar(const char* name){
-		if(CVar* v = cvar_trie.find(name)){
-			return v->template get<Var>();
-		} else {
-			return nullptr;
-		}
-	}
-
-	template<class Var>
 	Var* getVar(uint32_t hash){
 		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const std::unique_ptr<CVar>& cv){
 			return cv->name.hash == hash;
@@ -49,9 +41,14 @@ struct Config {
 			return nullptr;
 		}
 	}
-	
+
+	template<class Var>
+	Var* getVar(const StrRef& name){
+		return getVar<Var>(str_hash_len(name.data(), name.size()));
+	}
+
 	// sets value to val or calls function with val for CVarFuncs
-	bool evalVar(uint32_t hash, const alt::StrRef& args, bool hook = false){
+	bool evalVar(uint32_t hash, const StrRef& args, bool hook = false){
 		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const std::unique_ptr<CVar>& cv){
 			return cv->name.hash == hash;
 		});
@@ -67,11 +64,11 @@ struct Config {
 		return ret_val;
 	}
 
-	bool evalVar(const str_const& key, const alt::StrRef& value, bool hook = false){
+	bool evalVar(const str_const& key, const StrRef& value, bool hook = false){
 		return evalVar(key.hash, value, hook);
 	}
 	
-	bool extendPrefix(alt::StrMut& prefix, size_t offset = 0){
+	bool extendPrefix(StrMut& prefix, size_t offset = 0){
 		return cvar_trie.prefixExtend(prefix, offset);
 	}
 	
@@ -83,7 +80,7 @@ private:
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;
-	std::multimap<uint32_t, alt::StrRef> cvar_hooks;
+	std::multimap<strhash_t, StrRef> cvar_hooks;
 };
 
 #endif

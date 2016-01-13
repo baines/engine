@@ -3,6 +3,7 @@
 #include "common.h"
 #include "util.h"
 #include <vector>
+#include <functional>
 
 enum CVarType {
 	CVAR_INVALID,
@@ -57,7 +58,7 @@ struct CVar {
 		return this;
 	}
 	
-	virtual bool eval(const alt::StrRef& val) = 0;
+	virtual bool eval(const StrRef& val) = 0;
 
 	virtual void printInfo(CLI& cli) const = 0;
 	
@@ -86,7 +87,7 @@ struct CVarNumeric : public CVar {
 	CVarNumeric(const str_const& name, T init, T min, T max)
 	: CVar(name, this), init(init), val(init), min(min), max(max){}
 
-	bool eval(const alt::StrRef& s);
+	bool eval(const StrRef& s);
 	void printInfo(CLI& cli) const;
 
 	bool set(T v){
@@ -104,13 +105,13 @@ struct CVarNumeric : public CVar {
 
 struct CVarString : public CVar {
 	CVarString(const str_const& name, const char* str);
-	bool eval(const alt::StrRef& s);
+	bool eval(const StrRef& s);
 	void printInfo(CLI& cli) const;
-	bool set(const alt::StrRef& s);
-	bool set(alt::StrMut&& s);
+	bool set(const StrRef& s);
+	bool set(StrMut&& s);
 
 	const char* const init;
-	alt::StrMut str;
+	StrMut str;
 };
 
 struct CVarEnum : public CVar {
@@ -123,7 +124,7 @@ struct CVarEnum : public CVar {
 
 	}
 
-	bool eval(const alt::StrRef& s);
+	bool eval(const StrRef& s);
 	void printInfo(CLI& cli) const;
 	bool set(const str_const& s);
 	bool set(uint32_t hash);
@@ -136,7 +137,7 @@ struct CVarEnum : public CVar {
 
 struct CVarBool : public CVar {
 	CVarBool(const str_const& name, bool b);
-	bool eval(const alt::StrRef& val);
+	bool eval(const StrRef& val);
 	void printInfo(CLI& cli) const;
 	bool set(bool b);
 
@@ -148,12 +149,12 @@ struct CVarFunc : public CVar {
 	template<class F>
 	CVarFunc(const str_const& name, F&& fn, const char* usage = nullptr)
 	: CVar(name, this), func(std::forward<F>(fn)), usage_str(usage){}	
-	bool eval(const alt::StrRef& str);
+	bool eval(const StrRef& str);
 	void printInfo(CLI& cli) const;
 	const char* getErrorString() const;
-	bool call(const alt::StrRef& str);
+	bool call(const StrRef& str);
 
-	std::function<bool(const alt::StrRef&)> func;
+	std::function<bool(const StrRef&)> func;
 	const char* usage_str;
 };
 

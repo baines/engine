@@ -16,14 +16,14 @@ struct TextSystem : public BufferInvalidateListener {
 	FT_Library& getLib();
 	
 	void addText(Text& t);
-	void updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 newpos);
+	void updateText(Text& t, const StrRef32& newstr, glm::ivec2 newpos);
 	void delText(Text& t);
 
 	virtual void onBufferRangeInvalidated(size_t off, size_t len); 
 
 	~TextSystem();
 private:
-	size_t writeString(Text& t, glm::ivec2 pos, const alt::StrRef32& str);
+	size_t writeString(Text& t, glm::ivec2 pos, const StrRef32& str);
 
 	FT_Library ft_lib;
 	VertexState v_state;

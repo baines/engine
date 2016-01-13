@@ -15,7 +15,7 @@ using namespace std;
 
 void test_shader_uniforms(int, char**){
 	ShaderUniforms su;
-	
+
 	//glm::vec2 v1, v2;
 	//glm::ivec4 v3, v4;
 	//glm::mat4 m1, m2;

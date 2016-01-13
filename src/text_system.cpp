@@ -33,7 +33,7 @@ bool get_color_code(char32_t c, const std::array<uint32_t, 16>& pal, uint32_t* o
 	return true;
 }
 
-size_t count_verts(const alt::StrRef32& str){
+size_t count_verts(const StrRef32& str){
 	size_t result = 0;
 
 	for(size_t i = 0; i < str.size(); ++i){
@@ -66,7 +66,7 @@ FT_Library& TextSystem::getLib(){
 	return ft_lib;
 }
 
-size_t TextSystem::writeString(Text& t, glm::ivec2 pos, const alt::StrRef32& str){
+size_t TextSystem::writeString(Text& t, glm::ivec2 pos, const StrRef32& str){
 	const Font& f = *t.font;
 
 	size_t str_len = str.size(),
@@ -159,7 +159,7 @@ void TextSystem::addText(Text& t){
 	t.setRenderable(&text_renderables.back());
 }
 
-void TextSystem::updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 newpos){
+void TextSystem::updateText(Text& t, const StrRef32& newstr, glm::ivec2 newpos){
 	if(!t.renderable) return;
 
 	bool pos_changed = t.start_pos != newpos;
@@ -170,7 +170,7 @@ void TextSystem::updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 new
 	&& size_t(t.renderable->offset + t.renderable->count) == text_buffer.getSize()
 	&& newstr.find(t.str) == 0){
 
-		alt::StrRef32 suffix(newstr.data() + t.str.size(), newstr.size() - t.str.size());
+		StrRef32 suffix(newstr.data() + t.str.size(), newstr.size() - t.str.size());
 		
 		t.renderable->count += writeString(
 			t,
@@ -191,13 +191,13 @@ void TextSystem::updateText(Text& t, const alt::StrRef32& newstr, glm::ivec2 new
 			text_buffer.invalidate(BufferRange{ start + bytes, count - bytes, this });
 
 			t.renderable->count = verts;
-			t.str = alt::StrMut32(newstr);
+			t.str = StrMut32(newstr);
 			t.end_pos = t.getPos(newstr.size());
 
 		} else {
 			// otherwise we'll have to invalidate all the old vertices and append new ones.
 			delText(t);
-			t.str = alt::StrMut32(newstr);
+			t.str = StrMut32(newstr);
 			t.start_pos = newpos;
 			addText(t);
 		}

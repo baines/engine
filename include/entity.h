@@ -2,6 +2,8 @@
 #define ENTITY_H_
 #include "common.h"
 #include "component.h"
+#include <tuple>
+
 struct Entity {
 
 	template<class T>

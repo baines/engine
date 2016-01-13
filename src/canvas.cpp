@@ -65,6 +65,6 @@ void Canvas::clear(){
 	lines.count = 0;
 }
 
-void Canvas::draw(Renderer& r){
+void Canvas::draw(IRenderer& r){
 	r.addRenderable(lines);
 }

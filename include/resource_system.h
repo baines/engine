@@ -6,42 +6,19 @@
 #include <map>
 
 struct ResourceHandle {
-	ResourceHandle()
-	: data_handle(nullptr, ArrayDeleter())
-	, _size(0) {
-	
-	}
-	
+	ResourceHandle() : data_handle(nullptr, ArrayDeleter()), _size(0) {}
 	ResourceHandle(uint8_t* ptr, size_t sz)
 	: data_handle(ptr, ArrayDeleter())
-	, _size(sz) {
+	, _size(sz) {}
 	
-	}
-	
-	size_t size() const {
-		return _size;
-	}
-	
-	uint8_t* data() const {
-		return data_handle.get();
-	}
-	
-	operator bool() const {
-		return data_handle.get() != nullptr;
-	}
-
+	size_t size() const { return _size; }
+	uint8_t* data() const { return data_handle.get(); }
+	operator bool() const { return data_handle.get() != nullptr; }
 	std::shared_ptr<uint8_t>* operator->(){ return &data_handle; }
 private:
 	std::shared_ptr<uint8_t> data_handle;
 	size_t _size;
 };
-
-template<class T>
-ResourceHandle make_resource(const T& data){
-	uint8_t* new_data = new uint8_t[sizeof(data)];
-	memcpy(new_data, data, sizeof(data));
-	return ResourceHandle(new_data, sizeof(data));
-}
 
 struct ResourceSystem {
 

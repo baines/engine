@@ -20,7 +20,7 @@ struct SpriteBatch : public BufferInvalidateListener {
 		return material;
 	}
 
-	void draw(Renderer& r);
+	void draw(IRenderer& r);
 
 	void onBufferRangeInvalidated(size_t off, size_t len) override;
 

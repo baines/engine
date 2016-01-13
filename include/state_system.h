@@ -18,7 +18,7 @@ struct StateSystem {
 
 	void processStateChanges(Engine& e);
 	void update(Engine& e, uint32_t delta);
-	void draw(Renderer& r);
+	void draw(IRenderer& r);
 private:
 	std::vector<GameState*> states, new_states;
 	int pop_num;

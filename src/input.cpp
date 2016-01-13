@@ -1,4 +1,4 @@
-#include "input.h"
+#include "input_private.h"
 #include "engine.h"
 #include "config.h"
 #include "cli.h"
@@ -11,7 +11,7 @@ mouse_tag_t mouse_tag;
 
 using namespace std;
 
-Input::Key::Key(const SDL_Keysym& k)
+InputKey::InputKey(const SDL_Keysym& k)
 : code  (k.scancode)
 , shift (k.mod & (KMOD_LSHIFT | KMOD_RSHIFT))
 , ctrl  (k.mod & (KMOD_LCTRL  | KMOD_RCTRL))
@@ -42,7 +42,7 @@ static const uint32_t KEY_MOUSEBUTTON_BIT = 0x10000;
 static const uint32_t KEY_MOUSEWHEEL_BIT  = 0x20000;
 static const uint32_t KEY_GAMEPAD_BIT     = 0x40000;
 
-Input::Key::Key(mouse_button_tag_t, uint8_t button)
+InputKey::InputKey(mouse_button_tag_t, uint8_t button)
 : code(KEY_MOUSEBUTTON_BIT | button)
 , shift(false)
 , ctrl(false)
@@ -51,7 +51,7 @@ Input::Key::Key(mouse_button_tag_t, uint8_t button)
 
 }
 
-Input::Key::Key(mouse_wheel_tag_t, int dir)
+InputKey::InputKey(mouse_wheel_tag_t, int dir)
 : code(dir > 0 ? KEY_MOUSEWHEEL_BIT : dir < 0 ? KEY_MOUSEWHEEL_BIT | 1 : 0)
 , shift(false) //TODO: get the actual current keyboard mods
 , ctrl(false)
@@ -59,7 +59,7 @@ Input::Key::Key(mouse_wheel_tag_t, int dir)
 , ignore_mods(true) {
 }
 
-Input::Key::Key(pad_button_tag_t, uint8_t button)
+InputKey::InputKey(pad_button_tag_t, uint8_t button)
 : code(KEY_GAMEPAD_BIT | button)
 , shift(false)
 , ctrl(false)
@@ -68,7 +68,7 @@ Input::Key::Key(pad_button_tag_t, uint8_t button)
 	
 }
 
-Input::Key::Key(const char* str, bool raw_scancode)
+InputKey::InputKey(const char* str, bool raw_scancode)
 : code(SDL_SCANCODE_UNKNOWN)
 , shift(false)
 , ctrl(false)
@@ -121,7 +121,7 @@ Input::Key::Key(const char* str, bool raw_scancode)
 	}
 }
 
-size_t Input::Key::toString(char* buf, size_t len){
+size_t InputKey::toString(char* buf, size_t len){
 	if(!buf || len < 8) return 0;
 	const char* orig_buf = buf;
 
@@ -152,7 +152,7 @@ size_t Input::Key::toString(char* buf, size_t len){
 	return buf - orig_buf;
 }
 
-bool Input::Key::operator<(const Key& rhs) const {
+bool InputKey::operator<(const InputKey& rhs) const {
 	if(ignore_mods || rhs.ignore_mods){
 		return code < rhs.code;
 	} else {
@@ -160,7 +160,7 @@ bool Input::Key::operator<(const Key& rhs) const {
 	}
 }
 
-bool Input::Key::operator==(const Key& rhs) const {
+bool InputKey::operator==(const InputKey& rhs) const {
 	if(ignore_mods || rhs.ignore_mods){
 		return code == rhs.code;
 	} else {
@@ -168,7 +168,7 @@ bool Input::Key::operator==(const Key& rhs) const {
 	}
 }
 
-Input::Axis::Axis(mouse_tag_t, int axis)
+InputAxis::InputAxis(mouse_tag_t, int axis)
 : type(AXIS_MOUSE)
 , device_index(0)
 , axis_index(axis) {
@@ -176,20 +176,20 @@ Input::Axis::Axis(mouse_tag_t, int axis)
 }
 
 constexpr struct axis_map {
-	Input::Axis::AxisType type;
+	InputAxis::AxisType type;
 	const char* name;
 } axes[] = {
-	{ Input::Axis::AXIS_MOUSE, "mouse_x" },
-	{ Input::Axis::AXIS_MOUSE, "mouse_y" },
-	{ Input::Axis::AXIS_PAD,   "pad_ls_x" },
-	{ Input::Axis::AXIS_PAD,   "pad_ls_y" },
-	{ Input::Axis::AXIS_PAD,   "pad_rs_x" },
-	{ Input::Axis::AXIS_PAD,   "pad_rs_y" },
-	{ Input::Axis::AXIS_PAD,   "pad_lt" },
-	{ Input::Axis::AXIS_PAD,   "pad_rt" }
+	{ InputAxis::AXIS_MOUSE, "mouse_x" },
+	{ InputAxis::AXIS_MOUSE, "mouse_y" },
+	{ InputAxis::AXIS_PAD,   "pad_ls_x" },
+	{ InputAxis::AXIS_PAD,   "pad_ls_y" },
+	{ InputAxis::AXIS_PAD,   "pad_rs_x" },
+	{ InputAxis::AXIS_PAD,   "pad_rs_y" },
+	{ InputAxis::AXIS_PAD,   "pad_lt" },
+	{ InputAxis::AXIS_PAD,   "pad_rt" }
 };
 
-Input::Axis::Axis(const char* str)
+InputAxis::InputAxis(const char* str)
 : type(AXIS_INVALID)
 , device_index()
 , axis_index() {
@@ -203,7 +203,7 @@ Input::Axis::Axis(const char* str)
 	}
 }
 
-size_t Input::Axis::toString(char* buf, size_t len){
+size_t InputAxis::toString(char* buf, size_t len){
 	for(size_t i = 0; i < SDL_arraysize(axes); ++i){
 		if(type == axes[i].type){
 			return SDL_strlcpy(buf, axes[i].name, len);
@@ -212,22 +212,22 @@ size_t Input::Axis::toString(char* buf, size_t len){
 	return SDL_strlcpy(buf, "[unknown axis]", len);
 }
 
-bool Input::Axis::operator<(const Axis& rhs) const {
+bool InputAxis::operator<(const InputAxis& rhs) const {
 	return tie(type, device_index, axis_index)
 	     < tie(rhs.type, rhs.device_index, rhs.axis_index);
 }
 
-bool Input::Axis::operator==(const Axis& rhs) const {
+bool InputAxis::operator==(const InputAxis& rhs) const {
 	return tie(type, device_index, axis_index)
 	    == tie(rhs.type, rhs.device_index, rhs.axis_index);
 }
 
-Input::Binding::Binding(Key k)
+Input::Binding::Binding(InputKey k)
 : type(BINDING_KEY) {
 	data.key = k;
 }
 
-Input::Binding::Binding(Axis a, bool rel, float scale)
+Input::Binding::Binding(InputAxis a, bool rel, float scale)
 : type(BINDING_AXIS) {
 	data.axis = { a, rel, scale };
 }
@@ -251,11 +251,11 @@ bool Input::Binding::operator==(const Binding& b) const {
 	}
 }
 
-bool Input::Binding::operator==(const Key& k) const {
+bool Input::Binding::operator==(const InputKey& k) const {
 	return type == BINDING_KEY && data.key == k;
 }
 
-bool Input::Binding::operator==(const Axis& a) const {
+bool Input::Binding::operator==(const InputAxis& a) const {
 	return type == BINDING_AXIS && data.axis.axis == a;
 }
 
@@ -279,7 +279,7 @@ static bool bind_key_fn(Input* const input, const StrRef& str, bool raw){
 		char* act = strtok_r(nullptr, " \t", &state);
 		
 		if(key && act){
-			input->bind(Input::Key(key, raw), act);
+			input->bind(InputKey(key, raw), act);
 			return true;
 		} else {
 			return false;
@@ -299,8 +299,8 @@ static bool bind_axis_fn(Input* const input, const StrRef& str){
 			return false;
 		}
 
-		Input::Axis axis(str_axis);
-		if(axis.type == Input::Axis::AXIS_INVALID){
+		InputAxis axis(str_axis);
+		if(axis.type == InputAxis::AXIS_INVALID){
 			return false;
 		}
 
@@ -386,7 +386,7 @@ Input::Input(Engine& e)
 	SDL_StopTextInput();
 }
 
-void Input::bind(const Key& key, const StrRef& action){
+void Input::bind(const InputKey& key, const StrRef& action){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,
@@ -406,7 +406,7 @@ void Input::bind(const Key& key, const StrRef& action){
 }
 
 //TODO: merge this function with the other bind?
-void Input::bind(const Axis& axis, const StrRef& action, bool rel, float scale){
+void Input::bind(const InputAxis& axis, const StrRef& action, bool rel, float scale){
 	strhash_t act_hash = str_hash_len(action.data(), action.size());
 	action_names.emplace(
 		piecewise_construct,
@@ -414,7 +414,7 @@ void Input::bind(const Axis& axis, const StrRef& action, bool rel, float scale){
 		forward_as_tuple(action.data(), action.size())
 	);
 
-	if(axis.type != Axis::AXIS_INVALID){
+	if(axis.type != InputAxis::AXIS_INVALID){
 		binds.emplace(act_hash, Binding{ axis, rel, scale });
 
 		auto pair = bound_actions.equal_range(act_hash);
@@ -481,7 +481,7 @@ void Input::enableText(GameState* gs, bool enable, const SDL_Rect& pos){
 	}
 }
 
-bool Input::getKeyAction(GameState* s, const Key& key, int& act_id){
+bool Input::getKeyAction(GameState* s, const InputKey& key, int& act_id){
 
 	auto it = active_binds.find(StateBind{s, key});
 	
@@ -493,7 +493,7 @@ bool Input::getKeyAction(GameState* s, const Key& key, int& act_id){
 	}
 }
 
-bool Input::getAxisAction(GameState* s, const Axis& a, int& act_id, bool& rel, float& scale){
+bool Input::getAxisAction(GameState* s, const InputAxis& a, int& act_id, bool& rel, float& scale){
 
 	auto it = active_binds.find(StateBind{s, Binding{a, 0, 0}});
 	

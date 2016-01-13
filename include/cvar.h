@@ -60,7 +60,7 @@ struct CVar {
 	
 	virtual bool eval(const StrRef& val) = 0;
 
-	virtual void printInfo(CLI& cli) const = 0;
+	virtual void printInfo(ICLI& cli) const = 0;
 	
 	void setReloadVar(const char* str){
 		reload_var = str;
@@ -88,7 +88,7 @@ struct CVarNumeric : public CVar {
 	: CVar(name, this), init(init), val(init), min(min), max(max){}
 
 	bool eval(const StrRef& s);
-	void printInfo(CLI& cli) const;
+	void printInfo(ICLI& cli) const;
 
 	bool set(T v){
 		if(v >= min && v <= max){
@@ -106,7 +106,7 @@ struct CVarNumeric : public CVar {
 struct CVarString : public CVar {
 	CVarString(const str_const& name, const char* str);
 	bool eval(const StrRef& s);
-	void printInfo(CLI& cli) const;
+	void printInfo(ICLI& cli) const;
 	bool set(const StrRef& s);
 	bool set(StrMut&& s);
 
@@ -125,7 +125,7 @@ struct CVarEnum : public CVar {
 	}
 
 	bool eval(const StrRef& s);
-	void printInfo(CLI& cli) const;
+	void printInfo(ICLI& cli) const;
 	bool set(const str_const& s);
 	bool set(uint32_t hash);
 	const str_const& get() const;
@@ -138,7 +138,7 @@ struct CVarEnum : public CVar {
 struct CVarBool : public CVar {
 	CVarBool(const str_const& name, bool b);
 	bool eval(const StrRef& val);
-	void printInfo(CLI& cli) const;
+	void printInfo(ICLI& cli) const;
 	bool set(bool b);
 
 	const bool init;
@@ -150,7 +150,7 @@ struct CVarFunc : public CVar {
 	CVarFunc(const str_const& name, F&& fn, const char* usage = nullptr)
 	: CVar(name, this), func(std::forward<F>(fn)), usage_str(usage){}	
 	bool eval(const StrRef& str);
-	void printInfo(CLI& cli) const;
+	void printInfo(ICLI& cli) const;
 	const char* getErrorString() const;
 	bool call(const StrRef& str);
 

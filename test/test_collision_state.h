@@ -102,7 +102,7 @@ struct TestCollisionState : public GameState {
 		}
 	}
 	
-	void draw(Renderer& renderer){
+	void draw(IRenderer& renderer){
 		sprite_batch.draw(renderer);
 		canvas.draw(renderer);
 	}

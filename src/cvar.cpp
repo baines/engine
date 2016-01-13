@@ -7,7 +7,7 @@ template<> bool CVarNumeric<int>::eval(const StrRef& str){
 	return set(strtol(str.data(), nullptr, 0));
 }
 
-template<> void CVarNumeric<int>::printInfo(CLI& cli) const {
+template<> void CVarNumeric<int>::printInfo(ICLI& cli) const {
 	cli.printf("%d (default %d) [int: %d < x < %d]\n", val, init, min, max);
 }
 
@@ -17,7 +17,7 @@ template<> bool CVarNumeric<float>::eval(const StrRef& str){
 	return set(strtof(str.data(), nullptr));
 }
 
-template<> void CVarNumeric<float>::printInfo(CLI& cli) const {
+template<> void CVarNumeric<float>::printInfo(ICLI& cli) const {
 	cli.printf("%.2f (default %.2f) [int: %.2f < x < %.2f]\n", val, init, min, max);
 }
 
@@ -34,7 +34,7 @@ bool CVarString::eval(const StrRef& s){
 	return set(s);
 }
 
-void CVarString::printInfo(CLI& cli) const {
+void CVarString::printInfo(ICLI& cli) const {
 	cli.printf("\"%s\" (default \"%s\") [string]\n", str.c_str(), init);
 }
 
@@ -70,7 +70,7 @@ bool CVarEnum::eval(const StrRef& s){
 	return set(str_hash_len(ptr, len));
 }
 
-void CVarEnum::printInfo(CLI& cli) const {
+void CVarEnum::printInfo(ICLI& cli) const {
 	cli.printf("'%s' (default '%s')\n [enum: ", strs[index].str, strs[init].str);
 
 	const size_t max_sz = 80;
@@ -124,7 +124,7 @@ bool CVarBool::eval(const StrRef& s){
 	return set(str_to_bool(StrRef(ptr, len)));
 }
 
-void CVarBool::printInfo(CLI& cli) const {
+void CVarBool::printInfo(ICLI& cli) const {
 	const char* bstr[] = { "false", "true" };
 	cli.printf("%s (default %s) [bool]\n", bstr[val], bstr[init]);
 }
@@ -140,7 +140,7 @@ bool CVarFunc::eval(const StrRef& s){
 	return call(s);
 }
 
-void CVarFunc::printInfo(CLI& cli) const {
+void CVarFunc::printInfo(ICLI& cli) const {
 	cli.printf("[func] %s\n", usage_str ? usage_str : "");
 }
 

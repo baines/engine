@@ -1,4 +1,4 @@
-#include "cli.h"
+#include "cli_private.h"
 #include "engine.h"
 #include "config.h"
 #include "font.h"
@@ -361,7 +361,7 @@ void CLI::update(Engine& e, uint32_t delta){
 	bg_material.uniforms.setUniform("timer",  { bg_scroll_timer / 40.0f });
 }
 
-void CLI::draw(Renderer& r){
+void CLI::draw(IRenderer& r){
 	if(!active) return;
 	
 	bg_batch.draw(r);

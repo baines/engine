@@ -71,7 +71,7 @@ struct TestState : public GameState {
 		test_sprite.setPosition({ center.x + sprite_timer * 200.0f, (center.y + 140.0f) });
 	}
 
-	void draw(Renderer& renderer){
+	void draw(IRenderer& renderer){
 		renderer.addRenderable(triangle);
 		text.draw(renderer);
 		sprite_batch.draw(renderer);

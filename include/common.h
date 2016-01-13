@@ -18,6 +18,11 @@ using alt::StrMut32;
 	#define M_PI 3.14159265358979323846	
 #endif
 
+struct IInput;
+struct IRenderer;
+struct ITextSystem;
+struct ICLI;
+
 struct Engine;
 struct Renderable;
 struct ResourceSystem;

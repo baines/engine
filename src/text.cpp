@@ -92,12 +92,12 @@ int Text::update(const StrRef& newstr, glm::ivec2 newpos){
 		return 0;
 	} else {
 		int char_count_diff = u32str.size() - str.size();
-		engine->text->updateText(*this, u32str, newpos);
+		engine->text->updateText(*this, u32str, newpos.x, newpos.y);
 		return char_count_diff;
 	}
 }
 
-void Text::draw(Renderer& r){
+void Text::draw(IRenderer& r){
 	if(renderable){
 		renderable->uniforms = &uniforms;
 		r.addRenderable(*renderable);

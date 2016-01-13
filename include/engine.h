@@ -13,12 +13,12 @@ struct Engine {
 
 	std::unique_ptr<ResourceSystem>  res;
 	std::unique_ptr<Config>          cfg;
-	std::unique_ptr<Input>           input;
-	std::unique_ptr<Renderer>        renderer;
-	std::unique_ptr<TextSystem>      text;
+	std::unique_ptr<IInput>          input;
+	std::unique_ptr<IRenderer>       renderer;
+	std::unique_ptr<ITextSystem>     text;
 	std::unique_ptr<CollisionSystem> collision;
 	std::unique_ptr<StateSystem>     state;
-	std::unique_ptr<CLI>             cli;
+	std::unique_ptr<ICLI>            cli;
 	
 private:
 

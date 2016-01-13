@@ -1,6 +1,7 @@
 #include "engine.h"
 #include "root_state.h"
 #include "input.h"
+#include "util.h"
 #include "cli.h"
 
 enum {
@@ -17,7 +18,7 @@ void RootState::update(Engine& e, uint32_t delta){
 
 }
 
-void RootState::draw(Renderer& r){
+void RootState::draw(IRenderer& r){
 
 }
 

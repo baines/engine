@@ -34,7 +34,7 @@ struct Text {
 	int update(const StrRef& newstr);
 	int update(const StrRef& newstr, glm::ivec2 newpos);
 
-	void draw(Renderer& r);
+	void draw(IRenderer& r);
 
 	void setPalette(const std::array<uint32_t, 16>& colors);
 	void resetPalette();

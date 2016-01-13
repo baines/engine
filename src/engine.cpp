@@ -1,13 +1,13 @@
 #include "engine.h"
 #include "resource_system.h"
 #include "config.h"
-#include "input.h"
-#include "renderer.h"
-#include "text_system.h"
+#include "input_private.h"
+#include "renderer_private.h"
+#include "text_system_private.h"
 #include "collision_system.h"
 #include "state_system.h"
 #include "root_state.h"
-#include "cli.h"
+#include "cli_private.h"
 #include <clocale>
 #include <SDL.h>
 
@@ -22,6 +22,7 @@ namespace {
 }
 
 using std::make_unique;
+using std::unique_ptr;
 
 Engine::Engine(int argc, char** argv, const char* name){
 
@@ -31,12 +32,12 @@ Engine::Engine(int argc, char** argv, const char* name){
 
 	res        = make_unique<ResourceSystem>(argv[0]);
 	cfg        = make_unique<Config>(*this, argc, argv);
-	input      = make_unique<Input>(*this);
-	renderer   = make_unique<Renderer>(*this, name);
-	text       = make_unique<TextSystem>(*this);
+	input      = unique_ptr<IInput>(new Input(*this));
+	renderer   = unique_ptr<IRenderer>(new Renderer(*this, name));
+	text       = unique_ptr<ITextSystem>(new TextSystem(*this));
 	collision  = make_unique<CollisionSystem>();
 	state      = make_unique<StateSystem>();
-	cli        = make_unique<CLI>(*this);
+	cli        = unique_ptr<ICLI>(new CLI(*this));
 	max_fps    = cfg->addVar<CVarInt>("max_fps", 200, 1, 1000);
 	running    = true;
 	prev_ticks = 0;

@@ -22,24 +22,24 @@ void StateSystem::pop(int amount){
 void StateSystem::onInput(Engine& e, SDL_Event& ev){
 	int action_id = 0;
 	bool pressed = true;
-	Input::Key key;
+	InputKey key;
 	
 	if(ev.type == SDL_KEYDOWN || ev.type == SDL_KEYUP){
-		key = Input::Key(ev.key.keysym);
+		key = InputKey(ev.key.keysym);
 		pressed = ev.key.state;
 	} else if(ev.type == SDL_CONTROLLERBUTTONDOWN || ev.type == SDL_CONTROLLERBUTTONUP){
-		key = Input::Key(pad_button_tag, ev.cbutton.button);
+		key = InputKey(pad_button_tag, ev.cbutton.button);
 		pressed = ev.cbutton.state;
 	} else if(ev.type == SDL_MOUSEBUTTONDOWN || ev.type == SDL_MOUSEBUTTONUP){
-		key = Input::Key(mouse_button_tag, ev.button.button);
+		key = InputKey(mouse_button_tag, ev.button.button);
 		pressed = ev.button.state;
 	} else if(ev.type == SDL_MOUSEWHEEL){
-		key = Input::Key(mouse_wheel_tag, ev.wheel.y);
+		key = InputKey(mouse_wheel_tag, ev.wheel.y);
 		//XXX: no released event for mouse wheel.
 	}
 	
 	for(auto i = states.rbegin(), j = states.rend(); i != j; ++i){
-		if(e.input->getKeyAction(*i, key, action_id)	&& (*i)->onInput(e, action_id, pressed)){
+		if(e.input->getKeyAction(*i, key, action_id) && (*i)->onInput(e, action_id, pressed)){
 			break;
 		}
 	}
@@ -47,7 +47,7 @@ void StateSystem::onInput(Engine& e, SDL_Event& ev){
 
 void StateSystem::onMotion(Engine& e, SDL_Event& ev){
 	
-	auto send_motion_fn = [&](const Input::Axis& axis, int val){
+	auto send_motion_fn = [&](const InputAxis& axis, int val){
 		int action_id = -1;
 		bool rel = false;
 		float scale = 1.0f;
@@ -61,8 +61,8 @@ void StateSystem::onMotion(Engine& e, SDL_Event& ev){
 	};
 
 	if(ev.type == SDL_MOUSEMOTION){
-		send_motion_fn(Input::Axis(mouse_tag, 0), ev.motion.x);
-		send_motion_fn(Input::Axis(mouse_tag, 1), ev.motion.y);
+		send_motion_fn(InputAxis(mouse_tag, 0), ev.motion.x);
+		send_motion_fn(InputAxis(mouse_tag, 1), ev.motion.y);
 	} else {
 		//TODO
 	}
@@ -113,7 +113,7 @@ void StateSystem::update(Engine& e, uint32_t delta){
 	states.back()->update(e, delta);
 }
 
-void StateSystem::draw(Renderer& r){
+void StateSystem::draw(IRenderer& r){
 	for(auto* s : states){
 		s->draw(r);
 	}

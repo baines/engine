@@ -1,10 +1,14 @@
-#include "renderer.h"
+#include "renderer_private.h"
 #include "engine.h"
 #include "enums.h"
 #include "config.h"
 #include "cli.h"
 #include "texture.h"
 #include "sampler.h"
+#include "renderable.h"
+#include "shader.h"
+#include "vertex_state.h"
+#include "index_buffer.h"
 #include <math.h>
 #include <climits>
 #define GLM_FORCE_RADIANS
@@ -27,9 +31,7 @@ Renderer::Renderer(Engine& e, const char* name)
 , resizable        (e.cfg->addVar<CVarBool>   ("vid_resizable",     true))
 , window_title     (name)
 , window           (nullptr)
-, main_uniforms    ()
-, window_w         (window_width->val)
-, window_h         (window_height->val) {
+, main_uniforms    () {
 
 	SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 

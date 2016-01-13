@@ -40,7 +40,7 @@ void SpriteBatch::updateSprite(const Sprite& s){
 	}
 }
 
-void SpriteBatch::draw(Renderer& r){
+void SpriteBatch::draw(IRenderer& r){
 	for(auto& pair : sprites){
 		if(!pair.second.dirty) continue;
 

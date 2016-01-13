@@ -1,4 +1,4 @@
-#include "text_system.h"
+#include "text_system_private.h"
 #include "font.h"
 #include "text.h"
 #include "renderable.h"
@@ -159,8 +159,10 @@ void TextSystem::addText(Text& t){
 	t.setRenderable(&text_renderables.back());
 }
 
-void TextSystem::updateText(Text& t, const StrRef32& newstr, glm::ivec2 newpos){
+void TextSystem::updateText(Text& t, const StrRef32& newstr, int x, int y){
 	if(!t.renderable) return;
+	
+	glm::ivec2 newpos = { x, y };
 
 	bool pos_changed = t.start_pos != newpos;
 	// if this is only appending text, and it's at the end of the vertex buffer,

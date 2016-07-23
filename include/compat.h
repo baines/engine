@@ -2,7 +2,7 @@
 #ifndef COMPAT_H_
 #define COMPAT_H_
 #include <memory>
-#include <cstring>
+#include <string.h>
 #include <algorithm>
 
 namespace compat {

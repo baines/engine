@@ -7,7 +7,7 @@ BlendMode::BlendMode()
 
 }
 
-BlendMode::BlendMode(const std::array<GLenum, 4>& fns, const std::array<GLenum, 2>& eqs)
+BlendMode::BlendMode(const Array<GLenum, 4>& fns, const Array<GLenum, 2>& eqs)
 : funcs(fns)
 , equations(eqs) {
 	if(funcs[2] == 0 && funcs[3] == 0){

@@ -1,4 +1,5 @@
 #include "resource_system.h"
+#include <limits.h>
 #include <physfs.h>
 
 using namespace std;
@@ -47,13 +48,7 @@ ResourceHandle ResourceSystem::load(const char* name){
 }
 
 size_t ResourceSystem::getUseCount(const char* name){
-	auto it = resources.find(str_hash(name));
-	
-	if(it != resources.end()){
-		return it->second->use_count();
-	} else {
-		return 0;
-	}
+	return 0; //FIXME
 }
 
 ResourceHandle ResourceSystem::import(const char* name){
@@ -70,7 +65,7 @@ ResourceHandle ResourceSystem::import(const char* name){
 		PHYSFS_close(f);
 	}
 
-	return ResourceHandle(file_data, file_size);
+	return ResourceHandle { file_data, file_size, this };
 }
 
 ResourceSystem::~ResourceSystem(){

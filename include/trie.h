@@ -1,7 +1,7 @@
 #ifndef TRIE_H_
 #define TRIE_H_
 #include <vector>
-#include <cstdint>
+#include "common.h"
 #include "util.h"
 
 /* I implemented this pretty weirdly. Instead of an array of 64 pointers, each

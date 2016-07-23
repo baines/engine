@@ -8,6 +8,12 @@
 #include "text.h"
 #include <vector>
 
+//extern template struct Resource<Font, size_t>;
+//extern template struct Resource<FragShader>;
+//extern template struct Resource<VertShader>;
+//extern template class std::vector<StrMut>;
+//extern template class std::vector<CVar*>;
+
 struct CLI : public ICLI {
 	CLI(Engine& e);
 	

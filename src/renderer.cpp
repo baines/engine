@@ -10,9 +10,7 @@
 #include "vertex_state.h"
 #include "index_buffer.h"
 #include <math.h>
-#include <climits>
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
+#include <limits.h>
 #include <SDL.h>
 
 Renderer::Renderer(Engine& e, const char* name)
@@ -177,7 +175,7 @@ void Renderer::handleResize(float w, float h){
 		gl.Viewport(0, 0, w, h);
 
 		main_uniforms.setUniform("u_ortho", {
-			glm::ortho(0.f, w, h, 0.f)
+			alt::ortho(0.f, w, h, 0.f, -1.0f, 1.0f)
 		});
 		
 		const float half_angle = (fov->val / 360.f) * M_PI;
@@ -185,7 +183,7 @@ void Renderer::handleResize(float w, float h){
 		const float y_dist = x_dist * (h/w);
 		
 		main_uniforms.setUniform("u_perspective", {
-			glm::frustum(-x_dist, x_dist, -y_dist, y_dist, 1.0f, 1000.0f)
+			alt::frustum(-x_dist, x_dist, -y_dist, y_dist, 1.0f, 1000.0f)
 		});
 	}
 }
@@ -194,9 +192,7 @@ void Renderer::drawFrame(){
 
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for(auto i = renderables.begin(), j = renderables.end(); i != j; ++i){
-		auto* r = *i;
-		
+	for(auto* r : renderables){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
 		
@@ -229,7 +225,6 @@ void Renderer::drawFrame(){
 			gl.DrawArrays(r->prim_type, r->offset, r->count);
 		}
 	}
-
 	
 	SDL_GL_SwapWindow(window);
 	renderables.clear();

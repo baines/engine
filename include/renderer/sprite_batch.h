@@ -10,7 +10,7 @@
 struct SpriteBatch : public BufferInvalidateListener {
 
 	SpriteBatch() = default;
-	SpriteBatch(Material& m, glm::ivec2 tex_cells = { 1, 1 });
+	SpriteBatch(Material& m, vec2i tex_cells = { 1, 1 });
 
 	void addSprite(const Sprite& s);
 	void delSprite(const Sprite& s);
@@ -36,8 +36,11 @@ private:
 	DynamicIndexBuffer<uint16_t> indices;
 	Material* material;
 	Renderable renderable;
-	glm::ivec2 tex_cells;
+	vec2i tex_cells;
 };
+
+//extern template class std::map<const Sprite*, SpriteBatch::SpriteInfo>;
+//extern template struct DynamicIndexBuffer<uint16_t>;
 
 #endif
 

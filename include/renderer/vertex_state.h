@@ -3,7 +3,8 @@
 #include "common.h"
 #include "gl_context.h"
 #include "shader_attribs.h"
-#include <bitset>
+
+//extern template class std::vector<VertexBuffer*>;
 
 struct VertexState : public GLObject {
 	VertexState();
@@ -15,7 +16,7 @@ struct VertexState : public GLObject {
 	void onGLContextRecreate();
 	~VertexState();
 private:
-	std::bitset<16> enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
+	uint16_t enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
 	ShaderAttribs active_attribs;
 	std::vector<VertexBuffer*> vertex_buffers;
 	IndexBuffer* index_buffer;

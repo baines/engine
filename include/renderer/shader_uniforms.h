@@ -1,7 +1,7 @@
 #ifndef SHADER_UNIFORMS_
 #define SHADER_UNIFORMS_
 #include "common.h"
-#include "gl_context.h"
+#include <GL/gl.h>
 #include "util.h"
 #include <vector>
 #include <initializer_list>
@@ -19,38 +19,33 @@ struct ShaderUniforms {
 		setUniform(str.hash, std::forward<std::initializer_list<T>>(t));
 	}
 	
-	// for setUniform({ float, int, ... });
 	template<class T>
 	typename std::enable_if<std::is_scalar<T>::value>::type
 	setUniform(uint32_t hash, std::initializer_list<T> vals){
 		_setUniform(hash, 1, 1, vals.size(), get_glenum<T>::value, vals.begin());
 	}
-	
-	// for setUniform({ glm::{i}vec{2,3,4}, ... });
-	template<template<class, glm::precision> class V, class T, glm::precision P>
-	typename std::enable_if<glmstuff::is_glm_vector<V, T>::value>::type
-	setUniform(uint32_t hash, std::initializer_list<V<T, P>> vals){
+
+	template<class T>
+	void_t<typename T::alt_vector_type> setUniform(uint32_t hash, std::initializer_list<T> vals){
 		_setUniform(
 			hash,
 			1,
-			vals.begin()->length(),
+			T::size,
 			vals.size(),
-			get_glenum<T>::value,
-			reinterpret_cast<const T*>(vals.begin())
+			get_glenum<typename T::value_type>::value,
+			static_cast<const T*>(vals.begin())
 		);
 	}
 	
-	// for setUniform({ glm::mat{2,3,4}{x{2,3,4}}, ... });
-	template<template<class, glm::precision> class M, class T, glm::precision P>
-	typename std::enable_if<glmstuff::is_glm_matrix<M, T>::value>::type
-	setUniform(uint32_t hash, std::initializer_list<M<T, P>> vals){
+	template<class T>
+	void_t<typename T::alt_matrix_type> setUniform(uint32_t hash, std::initializer_list<T> vals){
 		_setUniform(
 			hash,
-			typename M<T, P>::row_type().length(),
-			typename M<T, P>::col_type().length(),
+			T::row_size,
+			T::col_size,
 			vals.size(),
-			get_glenum<T>::value,
-			reinterpret_cast<const T*>(vals.begin())
+			get_glenum<typename T::value_type>::value,
+			static_cast<const T*>(vals.begin())
 		);
 	}
 	
@@ -78,6 +73,9 @@ private:
 	std::vector<ustorage> uniforms;
 	std::vector<uinfo> uniform_info;
 };
+
+//extern template class std::vector<ShaderUniforms::ustorage>;
+//extern template class std::vector<ShaderUniforms::uinfo>;
 
 #endif
 

@@ -1,7 +1,6 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 #include "common.h"
-#include <array>
 
 /* Macros */
 
@@ -21,18 +20,25 @@ struct MemBlock {
 	size_t size;
 };
 
-/* Get the arity (number of args) from a member function */
 template<class T>
-struct mf_arity;
+struct Range {
+	constexpr Range(T* a, T* b) : _begin(a), _end(b){}
 
-template<class R, class C, class... Args>
-struct mf_arity<R(C::*)(Args...)> {
-	static const size_t value = sizeof...(Args);
+	T* begin(){ return _begin; }
+	T* end(){ return _end; }
+
+	constexpr const T* begin() const { return _begin; }
+	constexpr const T* end() const { return _end; }
+
+private:	
+	T *_begin, *_end;
 };
 
 template<class T>
 T clamp(T val, T min, T max){
-	return std::max<T>(min, std::min<T>(max, val));
+	return val < min ? min :
+	       val > max ? max :
+	       val;
 }
 
 /* type to store multiple types with correct alignment */
@@ -55,8 +61,14 @@ struct variant {
 
 	static const size_t alignment = helper<Ts...>::align;
 	static const size_t union_size = helper<Ts...>::size;
-	using type = typename std::aligned_storage<union_size, alignment>::type;
+
+	typedef struct {
+		alignas(alignment) char data[union_size];
+	} type;
 };
+
+template<typename... Ts> struct make_void { typedef void type;};
+template<typename... Ts> using void_t = typename make_void<Ts...>::type;
 
 /* fast integer log2 */
 inline unsigned log2ll(uint64_t n){
@@ -128,17 +140,6 @@ struct str_const {
 	const strhash_t hash;
 };
 
-/* makes an array from variadic args */
-template<class T, class... Args>
-constexpr typename std::array<T, sizeof...(Args)> make_array(Args&&... args){
-	return {{ T(std::forward<Args>(args))... }};
-}
-
-/* specialization of make_array for str_const used in enums.h */
-template<class... Args>
-constexpr typename std::array<str_const, sizeof...(Args)> make_enum(Args&&... args){
-	return make_array<str_const>(std::forward<Args>(args)...);
-}
 
 /* array deletion functor for use with std::shared_ptr */
 struct ArrayDeleter {
@@ -195,40 +196,6 @@ struct NullOnMovePtr {
 private:
 	T* ptr;
 };
-
-/* GLM stuff to determine if a type is a vector or matrix */
-#include "glm/glm.hpp"
-
-namespace glmstuff {
-
-using namespace glm;
-using namespace glm::detail;
-	
-template<template<class, glm::precision> class V, class T>
-struct is_glm_vector {
-	static const bool value =
-		std::is_same<V<T, highp>, tvec2<T, highp>>::value ||
-		std::is_same<V<T, highp>, tvec3<T, highp>>::value ||
-		std::is_same<V<T, highp>, tvec4<T, highp>>::value
-	;
-};
-
-template<template<class, glm::precision> class M, class T>
-struct is_glm_matrix {
-	static const bool value =
-		std::is_same<M<T, highp>, tmat2x2<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat2x3<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat2x4<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat3x2<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat3x3<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat3x4<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat4x2<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat4x3<T, highp>>::value ||
-		std::is_same<M<T, highp>, tmat4x4<T, highp>>::value
-	;
-};
-
-}
 
 #endif
 

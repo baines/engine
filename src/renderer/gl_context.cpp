@@ -3,7 +3,9 @@
 #include "config.h"
 #include "enums.h"
 #include "util.h"
-#include <SDL.h>
+#include <SDL_video.h>
+#include <map>
+#include <unordered_set>
 
 #ifndef CALLBACK
 	#define CALLBACK
@@ -41,7 +43,7 @@ namespace {
 		}
 	}
 
-	static const char* gl_dbgsev2str(GLenum sev){
+	static const char* gl_dbgsevec2str(GLenum sev){
 		switch(sev){
 			case GL_DEBUG_SEVERITY_HIGH:         return "HIGH";
 			case GL_DEBUG_SEVERITY_MEDIUM:       return "MED";
@@ -63,7 +65,7 @@ namespace {
 			"[GL-%s-%s-%s] [%u] %s",
 			gl_dbgsrc2str(src),
 			gl_dbgtype2str(type),
-			gl_dbgsev2str(sev),
+			gl_dbgsevec2str(sev),
 			id,
 			msg
 		);
@@ -146,6 +148,15 @@ namespace {
 		return load_func(name, A, ptr, v, ext, B);
 	}
 }
+
+
+std::unordered_set<uint32_t> extensions;
+
+enum GLObjStatus { VALID, INVALID, DELETED };
+std::map<GLObject*, GLObjStatus> objects;
+
+//extern template class std::unordered_set<uint32_t>;
+//extern template class std::map<GLObject*, GLObjStatus>;
 
 GLContext::GLContext()
 : version(0)

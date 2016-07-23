@@ -1,11 +1,10 @@
 #include "collision_system.h"
-#include "entity.h"
 #include "engine.h"
+#include "entity.h"
 #include "util.h"
+#include <cfloat>
 #include <cmath>
-#include <algorithm>
-using glm::vec2;
-using std::abs;
+
 namespace {
 
 enum {
@@ -89,11 +88,12 @@ CollisionSystem::CollisionSystem()
 
 void CollisionSystem::addEntity(Entity& e){
 	if(AABB* aabb = e.get<AABB>()){
-		auto it = std::find(boxes.begin(), boxes.end(), aabb);
-
-		if(it == boxes.end()){
-			entities.push_back(&e);
-			boxes.push_back(aabb);
+		for(auto* b : boxes){
+			if(b == aabb){
+				entities.push_back(&e);
+				boxes.push_back(aabb);
+				break;
+			}
 		}
 	}
 }
@@ -131,8 +131,6 @@ void CollisionSystem::update(uint32_t delta){
 			     min_y = i_y_smaller ? i_y + boxes[i]->size.y : j_y + boxes[j]->size.y,
 			     max_x = i_x_smaller ? j_x : i_x,
 			     max_y = i_y_smaller ? j_y : i_y;
-
-			vec2 i_collide, j_collide;
 
 			float t_x = 0.0f, t_y = 0.0f;
 

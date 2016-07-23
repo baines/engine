@@ -1,31 +1,30 @@
 #ifndef SPRITE_H_
 #define SPRITE_H_
 #include "common.h"
-#include "glm/glm.hpp"
 #include <tuple>
 
 struct Sprite {
 
 	Sprite() = default;
-	Sprite(SpriteBatch& batch, glm::ivec2 position  = { 0, 0 },
-	                           glm::ivec2 size      = { 0, 0 },
-	                           glm::ivec2 tex_frame = { 0, 0 });
+	Sprite(SpriteBatch& batch, vec2i position  = { 0, 0 },
+	                           vec2i size      = { 0, 0 },
+	                           vec2i tex_frame = { 0, 0 });
 
-	Sprite(std::tuple<SpriteBatch&, glm::ivec2&&, glm::ivec2&&>&&);
+	Sprite(std::tuple<SpriteBatch&, vec2i&&, vec2i&&>&&);
 	Sprite(Sprite&&);
 
-	void setPosition(glm::ivec2 pos);
-	void setSize(glm::ivec2 size);
-	void setFrame(glm::ivec2 frame);
+	void setPosition(vec2i pos);
+	void setSize(vec2i size);
+	void setFrame(vec2i frame);
 
-	glm::ivec2 getPosition() const { return position; }
-	glm::ivec2 getSize()     const { return size; }
-	glm::ivec2 getFrame()    const { return tex_frame; }
+	vec2i getPosition() const { return position; }
+	vec2i getSize()     const { return size; }
+	vec2i getFrame()    const { return tex_frame; }
 
 	~Sprite();
 private:
 	SpriteBatch* batch;
-	glm::ivec2 position, size, tex_frame;
+	vec2i position, size, tex_frame;
 };
 
 #endif

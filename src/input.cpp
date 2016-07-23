@@ -3,13 +3,14 @@
 #include "config.h"
 #include "cli.h"
 #include <tuple>
+#include <float.h>
+
+using namespace std;
 
 mouse_button_tag_t mouse_button_tag;
 mouse_wheel_tag_t mouse_wheel_tag;
 pad_button_tag_t pad_button_tag;
 mouse_tag_t mouse_tag;
-
-using namespace std;
 
 InputKey::InputKey(const SDL_Keysym& k)
 : code  (k.scancode)
@@ -312,7 +313,7 @@ static bool bind_axis_fn(Input* const input, const StrRef& str){
 		float scale = 1.0f;
 		if(str_scale){
 			scale = strtof(str_scale, nullptr);
-			if(abs(scale) < FLT_EPSILON || errno == ERANGE){
+			if(fabs(scale) < FLT_EPSILON || errno == ERANGE){
 				scale = 1.0f;
 			}
 		}

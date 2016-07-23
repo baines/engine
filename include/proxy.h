@@ -7,8 +7,7 @@ template<class T>
 struct Proxy {
 	Proxy() : ptr(nullptr), type(RAW){}
 	Proxy(T*& ptr) : ptr(&ptr), type(RAW){}
-	template<class... Args>
-	Proxy(Resource<T, Args...>& res) : ptr(&res), type(RES){}
+	Proxy(ResourceBase& res) : ptr(&res), type(RES){}
 	Proxy(std::shared_ptr<T>& sptr) : ptr(&sptr), type(SHARED){}
 
 	const T& operator* () const{

@@ -1,4 +1,5 @@
 #include "texture.h"
+#include "sampler.h"
 #include "resource_system.h"
 #include "render_state.h"
 #define STB_IMAGE_IMPLEMENTATION
@@ -173,7 +174,7 @@ Texture2D& Texture2D::operator=(Texture2D&& other){
 	return *this;
 }
 
-bool Texture2D::setSwizzle(const std::array<GLint, 4>& swizzle){
+bool Texture2D::setSwizzle(const Array<GLint, 4>& swizzle){
 	if(!(gl.version >= 33
 	|| gl.hasExtension("EXT_texture_swizzle") 
 	|| gl.hasExtension("ARB_texture_swizzle"))){
@@ -220,3 +221,51 @@ Texture2D::~Texture2D(){
 	if(id && gl.initialized()) gl.DeleteTextures(1, &id);
 }
 
+Sampler::Sampler()
+: params()
+, id(0){
+	if(gl.GenSamplers) gl.GenSamplers(1, &id);
+}
+
+Sampler::Sampler(std::initializer_list<Param> params)
+: params()
+, id(0) {
+	if(gl.GenSamplers) gl.GenSamplers(1, &id);
+	
+	for(auto& p : params){
+		setParam(p);
+	}
+}
+
+void Sampler::setParam(const Param& p){
+	setParam(p.key, p.val);
+}
+
+void Sampler::setParam(GLenum key, GLint val){
+	params[key] = val;
+	if(gl.SamplerParameteri){
+		gl.SamplerParameteri(id, key, val);
+	} else {
+		//TODO: fallback if sampler_objects unsupported.
+	}
+}
+
+void Sampler::bind(size_t tex_unit, RenderState& rs) const {
+	if(gl.BindSampler && rs.samp[tex_unit] != id){
+		gl.BindSampler(tex_unit, id);
+		rs.samp[tex_unit] = id;
+	}
+}
+
+void Sampler::onGLContextRecreate(){
+	if(gl.GenSamplers) gl.GenSamplers(1, &id);
+	for(auto& p : params){
+		setParam(p.first, p.second);
+	}
+}
+
+Sampler::~Sampler(){
+	if(gl.DeleteSamplers && id){
+		gl.DeleteSamplers(1, &id);
+	}
+}

@@ -47,7 +47,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		rs.vao = id;
 	}
 	
-	std::bitset<16> new_enabled_arrays;
+	uint16_t new_enabled_arrays = 0;
 	
 	TRACEF("Need to set %td attribs.", std::distance(new_attribs.begin(), new_attribs.end()));
 
@@ -56,7 +56,7 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 
 	for(const auto& a : new_attribs){
 		if(using_vao && search_attribs.containsAttrib(a.name_hash, a.index)){
-			new_enabled_arrays[a.index] = 1;
+			new_enabled_arrays |= (1 << a.index);
 			TRACEF("Attrib %#x already active, skip.", a.name_hash);
 			continue;
 		}
@@ -82,10 +82,10 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 				
 				vb_attribs.bind(a.name_hash, a.index, vb->getStride());
 				
-				if(using_vao || !rs.enabled_attrib_arrays[a.index]){
+				if(using_vao || !(rs.enabled_attrib_arrays & (1 << a.index))){
 					gl.EnableVertexAttribArray(a.index);
 				}
-				new_enabled_arrays[a.index] = 1;
+				new_enabled_arrays |= (1 << a.index);
 				
 				break;
 			}
@@ -93,10 +93,10 @@ void VertexState::setAttribArrays(RenderState& rs, const ShaderAttribs& new_attr
 		}
 	}
 
-	auto enabled_array_diff = attrib_arrays & ~new_enabled_arrays;
+	uint16_t enabled_array_diff = attrib_arrays & ~new_enabled_arrays;
 	
-	for(size_t i = 0; i < enabled_array_diff.size(); ++i){
-		if(enabled_array_diff[i]){
+	for(size_t i = 0; i < 16; ++i){
+		if((enabled_array_diff >> i) & 1){
 			gl.DisableVertexAttribArray((GLint)i);
 		}
 	}
@@ -128,7 +128,7 @@ void VertexState::bind(RenderState& rs){
 void VertexState::onGLContextRecreate(){
 	GLuint new_id = 0;
 
-	enabled_arrays.reset();
+	enabled_arrays = 0;
 	active_attribs.clear();
 
 	if(using_vao){

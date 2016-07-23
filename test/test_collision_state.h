@@ -17,11 +17,11 @@ enum {
 };
 
 struct TestEntity : public EntityWith<Position2D, Sprite, AABB> {
-	TestEntity(Engine& e, SpriteBatch& b, glm::ivec2 pos)
+	TestEntity(Engine& e, SpriteBatch& b, vec2i pos)
 	: EntityWith(e,	
-		glm::vec2{ pos.x, pos.y },
-		{ b, pos + 32, glm::ivec2{ 64, 64 }},
-		glm::vec2{ 64.f, 64.f }
+		vec2{ float(pos.x), float(pos.y) },
+		{ b, pos + 32, vec2i { 64, 64 }},
+		vec2{ 64.f, 64.f }
 	){
 	}
 };
@@ -56,7 +56,7 @@ struct TestCollisionState : public GameState {
 		e.collision->onCollision(0, 0, [&](Entity* a, Entity* b, float t){
 			for(auto* e : { a, b }){
 				if(auto* aabb = e->get<AABB>()){
-					glm::vec2 pos = lerp(aabb->prev_pos + 32.f, aabb->pos + 32.f, t);
+					vec2 pos = lerp(aabb->prev_pos + 32.f, aabb->pos + 32.f, t);
 					canvas.addBox(pos,{ 64.f, 64.f }, 0xff0000ff);
 				}
 			}
@@ -117,11 +117,11 @@ private:
 	Material sprite_mat;
 	SpriteBatch sprite_batch;
 	
-	std::array<TestEntity, 2> entities;
+	Array<TestEntity, 2> entities;
 	int active_entity;
-	std::array<glm::vec2, 2> prev_pos;
+	Array<vec2, 2> prev_pos;
 
-	glm::vec2 move, cursor;
+	vec2 move, cursor;
 	Canvas canvas;
 };
 

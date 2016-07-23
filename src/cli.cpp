@@ -2,9 +2,9 @@
 #include "engine.h"
 #include "config.h"
 #include "font.h"
-#include "input.h"
 #include "state_system.h"
-#include <numeric>
+#include "input.h"
+#include <algorithm>
 
 enum {
 	ACT_SUBMIT,
@@ -59,7 +59,7 @@ CLI::CLI(Engine& e)
 , input_history    ()
 , history_idx      (0)
 , input_str        (PROMPT)
-, cursor_text      (e, font, input_text.getEndPos() + glm::ivec2(0, 2), CURSOR)
+, cursor_text      (e, font, input_text.getEndPos() + vec2i{0, 2}, CURSOR)
 , cursor_idx       (PROMPT_SZ)
 , autocompletions  () {
 	e.input->subscribe(this, "cli_submit",       ACT_SUBMIT);
@@ -458,8 +458,8 @@ void CLI::printVarInfo(const CVar& cvar){
 }
 
 void CLI::updateCursor(){
-	glm::ivec2 pos = cursor_text.getStartPos();
-	glm::ivec2 newpos = input_text.getPos(cursor_idx) + glm::ivec2(0, 2);
+	vec2i pos = cursor_text.getStartPos();
+	vec2i newpos = input_text.getPos(cursor_idx) + vec2i{0, 2};
 
 	if(pos != newpos){
 		cursor_text.update(CURSOR, newpos);

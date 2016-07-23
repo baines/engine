@@ -1,25 +1,27 @@
 #ifndef COLLISION_SYSTEM_H_
 #define COLLISION_SYSTEM_H_
 #include "common.h"
-#include "glm/glm.hpp"
 #include <vector>
 #include <map>
-#include <array>
 #include <functional>
 
 struct AABB {
 	AABB();
-	AABB(glm::vec2 size, uint32_t group = 0);
+	AABB(vec2 size, uint32_t group = 0);
 
-	void setPosition(glm::vec2 p);
-	void setPrevPosition(glm::vec2 p);
+	void setPosition(vec2 p);
+	void setPrevPosition(vec2 p);
 
 	void initComponent(Engine&, Entity&);
 	//TODO: offset;
-	glm::vec2 pos, prev_pos, size;
+	vec2 pos, prev_pos, size;
 
 	uint32_t collision_group;
 };
+
+//extern template class std::vector<AABB*>;
+//extern template class std::vector<Entity*>;
+//extern template struct alt::Array<uint32_t, 2>;
 
 struct CollisionSystem {
 
@@ -36,7 +38,9 @@ struct CollisionSystem {
 private:
 	std::vector<AABB*> boxes;
 	std::vector<Entity*> entities;
-	std::map<std::array<uint32_t, 2>, CollisionFunc> funcs;
+	std::map<Array<uint32_t, 2>, CollisionFunc> funcs;
 };
+
+//extern template class std::map<Array<uint32_t, 2>, CollisionSystem::CollisionFunc>;
 
 #endif

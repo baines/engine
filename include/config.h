@@ -6,7 +6,11 @@
 #include "trie.h"
 #include <vector>
 #include <map>
-#include <algorithm>
+
+//extern template class std::unique_ptr<CVar>;
+//extern template class std::vector<std::unique_ptr<CVar>>;
+//extern template struct Trie<CVar*>;
+//extern template class std::multimap<strhash_t, StrRef>;
 
 struct Config {
 
@@ -17,45 +21,28 @@ struct Config {
 		if(CVar* v = cvar_trie.find(name.str)){
 			return v->template get<Var>();
 		} else {
-			cvars.emplace_back(std::make_unique<Var>(name, std::forward<Args>(args)...));
-			cvar_trie.add(name.str, cvars.back().get());
-			
-			auto it_pair = cvar_hooks.equal_range(name.hash);
-			for(auto& i = it_pair.first, &j = it_pair.second; i != j; ++i){
-				cvars.back()->eval(i->second);
-			}
-			cvar_hooks.erase(it_pair.first, it_pair.second);
-			
-			return cvars.back()->get<Var>();
+			return addVar(new Var(name, args...));
 		}
 	}
 
-	template<class Var>
-	Var* getVar(uint32_t hash){
-		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const std::unique_ptr<CVar>& cv){
-			return cv->name.hash == hash;
-		});
-		if(it != cvars.end()){
-			return (*it)->template get<Var>();
-		} else {
-			return nullptr;
-		}
-	}
+	template<class Var>	Var* addVar(Var* v);
 
-	template<class Var>
-	Var* getVar(const StrRef& name){
-		return getVar<Var>(str_hash_len(name.data(), name.size()));
-	}
+	template<class Var>	Var* getVar(strhash_t hash);
+	template<class Var> Var* getVar(const StrRef& name);
 
 	// sets value to val or calls function with val for CVarFuncs
 	bool evalVar(uint32_t hash, const StrRef& args, bool hook = false){
-		auto it = std::find_if(cvars.begin(), cvars.end(), [&](const std::unique_ptr<CVar>& cv){
-			return cv->name.hash == hash;
-		});
-		
+		CVar* cvar = nullptr;
 		bool ret_val = false;
-		if(it != cvars.end()){
-			(*it)->eval(args);
+		
+		for(auto& up : cvars){
+			if(up->name.hash == hash){
+				cvar = up.get();
+			}
+		}
+
+		if(cvar){
+			cvar->eval(args);
 			ret_val = true; //XXX: return if setting the var to str succeeded or not instead?
 		} else if(hook){
 			cvar_hooks.emplace(hash, args);

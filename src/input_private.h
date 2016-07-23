@@ -6,7 +6,6 @@
 #include <SDL_gamecontroller.h>
 #include <map>
 #include <unordered_map>
-#include <string>
 
 struct Input : public IInput {
 	Input(Engine& e);
@@ -68,6 +67,12 @@ private:
 	std::unordered_map<GameState*, SDL_Rect> text_states;
 	GameState* current_state;
 };
+
+//extern template class std::multimap<strhash_t, Input::Binding>;
+//extern template class std::map<Input::StateBind, int>;
+//extern template class std::multimap<strhash_t, Input::StateAction>;
+//extern template class std::map<strhash_t, StrMut>;
+//extern template class std::unordered_map<GameState*, SDL_Rect>;
 
 #endif
 

@@ -1,9 +1,6 @@
 #ifndef TEST_STATE_H_
 #define TEST_STATE_H_
 #include "engine_all.h"
-#define GLM_FORCE_RADIANS
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 static const constexpr struct {
 	float x, y;
@@ -26,7 +23,6 @@ struct TestState : public GameState {
 	, tri_shader    (tri_vs, tri_fs)
 	, sprite_shader (sprite_vs, sprite_fs)
 	, tri_vstate    ()
-	, triangle      (&tri_vstate, &tri_shader, &tri_uniforms, RType{GL_TRIANGLES}, RCount{3})
 	, font          (e, {"LiberationSans-Regular.ttf"}, 64)
 	, text          (e, font, { 270, 208 }, "Testing!")
 	, samp_nearest  ({{ GL_TEXTURE_MAG_FILTER, GL_NEAREST }})
@@ -35,6 +31,13 @@ struct TestState : public GameState {
 	, sprite_batch  (sprite_mat)
 	, test_sprite   (sprite_batch, { 200, 200 }, { 64, 64 })
 	, center        ({ 320, 240 }){
+		
+		triangle.vertex_state = &tri_vstate;
+		triangle.shader = &tri_shader;
+		triangle.uniforms = &tri_uniforms;
+		triangle.prim_type = GL_TRIANGLES;
+		triangle.count = 3;
+
 		tri_vstate.setVertexBuffers({ &tri_vbo });
 	}
 
@@ -48,7 +51,7 @@ struct TestState : public GameState {
 	void onResize(Engine& e, int w, int h){
 		center = { w / 2, h / 2 };
 
-		glm::ivec2 text_sz = text.getEndPos() - text.getStartPos();
+		vec2i text_sz = text.getEndPos() - text.getStartPos();
 		text.update(
 			TXT_RED     "T"
 			TXT_YELLOW  "e"
@@ -68,7 +71,8 @@ struct TestState : public GameState {
 		float sprite_timer = sinf((timer % 1256) / 200.0f);
 
 		tri_uniforms.setUniform("timer", { 1.0f + tri_timer });
-		test_sprite.setPosition({ center.x + sprite_timer * 200.0f, (center.y + 140.0f) });
+
+		test_sprite.setPosition({ center.x + int(sprite_timer * 200), (center.y + 140) });
 	}
 
 	void draw(IRenderer& renderer){
@@ -97,7 +101,7 @@ private:
 	SpriteBatch sprite_batch;
 	Sprite test_sprite;
 
-	glm::ivec2 center;
+	vec2i center;
 };
 
 #endif

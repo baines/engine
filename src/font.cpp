@@ -2,6 +2,10 @@
 #include "engine.h"
 #include "text_system.h"
 #include <tuple>
+#include <cmath>
+#include <assert.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 #include FT_STROKER_H
 
 struct GlyphBitmapInfo {
@@ -49,7 +53,7 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 
 }
 
-Font::Font(Engine& e, MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
+Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 : glyph_info()
 , height(h)
 , utf_lo(utf_lo)
@@ -57,7 +61,8 @@ Font::Font(Engine& e, MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 , face(nullptr)
 , atlas() {
 
-	FT_Library& ft_lib = e.text->getLib();
+	FT_Library ft_lib = nullptr;
+	assert(FT_Init_FreeType(&ft_lib) == 0);
 	assert(FT_New_Memory_Face(ft_lib, mem.ptr, mem.size, 0, &face) == 0);
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	assert(FT_IS_SCALABLE(face));
@@ -148,7 +153,7 @@ Font::Font(Engine& e, MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 		FT_UInt flags = height >= 16 ? FT_LOAD_FORCE_AUTOHINT : 0;
 
 		// load and render the glyphs and outlines to their respective atlases.
-		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
+		if(render && FT_Load_Glyph(face, glyph.index, flags | FT_LOAD_TARGET_LIGHT) == 0){
 			FT_Glyph ft_glyph = nullptr, ft_outline = nullptr;
 			assert(FT_Get_Glyph(face->glyph, &ft_glyph) == 0);
 			assert(FT_Glyph_Copy(ft_glyph, &ft_outline) == 0);
@@ -254,7 +259,7 @@ const Font::GlyphInfo& Font::getGlyphInfo(char32_t c) const {
 	return glyph_info[idx];
 }
 
-glm::ivec2 Font::getKerning(char32_t a, char32_t b) const {
+vec2i Font::getKerning(char32_t a, char32_t b) const {
 	FT_Vector vec = {};
 	FT_Get_Kerning(
 		face,
@@ -263,5 +268,5 @@ glm::ivec2 Font::getKerning(char32_t a, char32_t b) const {
 		FT_KERNING_DEFAULT,
 		&vec
 	);
-	return glm::ivec2(vec.x >> 6, vec.y >> 6);
+	return vec2i {int(vec.x >> 6), int(vec.y >> 6) };
 }

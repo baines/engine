@@ -2,7 +2,6 @@
 #define INPUT_H_
 #include "common.h"
 #include <SDL_rect.h>
-#include <SDL_events.h>
 
 extern struct mouse_button_tag_t {} mouse_button_tag;
 extern struct mouse_wheel_tag_t {} mouse_wheel_tag;
@@ -10,6 +9,7 @@ extern struct pad_button_tag_t {} pad_button_tag;
 extern struct mouse_tag_t {} mouse_tag;
 
 struct SDL_Keysym;
+struct SDL_ControllerDeviceEvent; 
 
 struct InputKey {
 	InputKey() = default;

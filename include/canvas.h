@@ -10,8 +10,8 @@
 struct Canvas {
 	Canvas(Engine& e);
 	
-	void addLine(glm::vec2 from, glm::vec2 to, uint32_t color);
-	void addBox(glm::vec2 pos, glm::vec2 size, uint32_t color);
+	void addLine(vec2 from, vec2 to, uint32_t color);
+	void addBox(vec2 pos, vec2 size, uint32_t color);
 			
 	void draw(IRenderer& r);
 	void clear();
@@ -24,5 +24,9 @@ private:
 	ShaderProgram shader;
 	Renderable lines;
 };
+
+//extern template struct Resource<VertShader>;
+//extern template struct Resource<FragShader>;
+
 #endif
 

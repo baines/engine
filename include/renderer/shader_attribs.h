@@ -1,7 +1,7 @@
 #ifndef SHADER_ATTRIBS_H_
 #define SHADER_ATTRIBS_H_
 #include "common.h"
-#include "gl_context.h"
+#include <GL/gl.h>
 #include <vector>
 
 enum AttribFlags : uint32_t {
@@ -37,5 +37,7 @@ struct ShaderAttribs {
 private:
 	std::vector<Attrib> attribs;
 };
+
+//extern template class std::vector<ShaderAttribs::Attrib>;
 
 #endif

@@ -3,8 +3,8 @@
 #include "common.h"
 #include "util.h"
 #include "shader_uniforms.h"
+#include "renderable.h"
 #include "proxy.h"
-#include <array>
 
 #define TXT_COLOR(c)      "\xef\xb7" STRINGIFY(\x9 ## c)
 
@@ -25,31 +25,35 @@
 #define TXT_CYAN          TXT_COLOR(e)
 #define TXT_WHITE         TXT_COLOR(f)
 
+//extern template struct NullOnMovePtr<Engine>;
+//extern template struct Proxy<Font>;
+//extern template struct alt::Array<uint32_t, 16>;
+
 struct Text {
 	Text();
-	Text(Engine& e, Proxy<Font> f, glm::ivec2 pos, const StrRef& s);
+	Text(Engine& e, Proxy<Font> f, vec2i pos, const StrRef& s);
 	Text(Text&&) = default;
 	Text& operator=(Text&&) = default;
 	
 	int update(const StrRef& newstr);
-	int update(const StrRef& newstr, glm::ivec2 newpos);
+	int update(const StrRef& newstr, vec2i newpos);
 
 	void draw(IRenderer& r);
 
-	void setPalette(const std::array<uint32_t, 16>& colors);
+	void setPalette(const Array<uint32_t, 16>& colors);
 	void resetPalette();
 
-	static std::array<uint32_t, 16> getDefaultPalette();
+	static Array<uint32_t, 16> getDefaultPalette();
 
 	void setOutlineColor(uint32_t col);
 
-	glm::ivec2 getStartPos() const {
+	vec2i getStartPos() const {
 		return start_pos;
 	}
-	glm::ivec2 getEndPos() const {
+	vec2i getEndPos() const {
 		return end_pos;
 	}
-	glm::ivec2 getPos(size_t index) const;
+	vec2i getPos(size_t index) const;
 
 	size_t size() const {
 		return str.size();
@@ -63,11 +67,11 @@ private:
 
 	NullOnMovePtr<Engine> engine;
 	Proxy<Font> font;
-	std::array<uint32_t, 16> palette;
-	glm::ivec2 start_pos, end_pos;
+	Array<uint32_t, 16> palette;
+	vec2i start_pos, end_pos;
 	StrMut32 str;
 	ShaderUniforms uniforms;
-	NullOnMovePtr<Renderable> renderable;
+	Renderable renderable;
 };
 
 #endif

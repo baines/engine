@@ -10,7 +10,7 @@ unsigned getNextComponentID(){
 	return id++;
 }
 
-Position2D::Position2D(glm::vec2 p)
+Position2D::Position2D(vec2 p)
 : pos(p)
 , entity(nullptr) {
 
@@ -26,15 +26,15 @@ void Position2D::initComponent(Engine& e, Entity& ent){
 	}
 }
 
-glm::vec2 Position2D::get() const {
+vec2 Position2D::get() const {
 	return pos;
 }
 
-void Position2D::set(glm::vec2 p){
+void Position2D::set(vec2 p){
 	pos = p;
 
 	if(auto* s = entity->get<Sprite>()){
-		s->setPosition({ pos.x, pos.y });
+		s->setPosition({ (int)pos.x, (int)pos.y });
 	}
 
 	if(auto* a = entity->get<AABB>()){
@@ -42,7 +42,7 @@ void Position2D::set(glm::vec2 p){
 	}
 }
 
-void Position2D::add(glm::vec2 p){
+void Position2D::add(vec2 p){
 	set(pos + p);
 }
 

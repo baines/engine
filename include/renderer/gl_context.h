@@ -1,9 +1,6 @@
 #ifndef GL_CONTEXT_H
 #define GL_CONTEXT_H
 #include <GL/gl.h>
-#include <GL/glext.h>
-#include <map>
-#include <unordered_set>
 #include "common.h"
 #include "gl_functions.h"
 
@@ -37,9 +34,6 @@ struct GLContext {
 private:
 	bool loadAllFuncs(void);
 	void loadExtensions(void);
-	std::unordered_set<uint32_t> extensions;
-	enum GLObjStatus { VALID, INVALID, DELETED };
-	std::map<GLObject*, GLObjStatus> objects;
 	void* sdl_context;
 };
 

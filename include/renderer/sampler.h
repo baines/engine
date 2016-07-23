@@ -1,9 +1,11 @@
 #ifndef SAMPLER_H_
 #define SAMPLER_H_
 #include "common.h"
-#include "gl_context.h"
+#include <GL/gl.h>
 #include <initializer_list>
 #include <map>
+
+//extern template class std::map<GLenum, GLint>;
 
 struct Sampler : public GLObject {
 	struct Param {

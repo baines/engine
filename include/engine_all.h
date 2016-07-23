@@ -35,7 +35,6 @@
 #include "canvas.h"
 #include "root_state.h"
 #include "input.h"
-#include "camera.h"
 #include "renderer.h"
 #include "component.h"
 #include "cli.h"

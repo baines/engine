@@ -26,9 +26,9 @@ void test_shader_uniforms(int, char**){
 	//su.setUniform(0, { m1, m2 });
 	//su.setUniform(0, { m3, m4 });
 	
-	glm::mat2 m(0.0, 1.0, 2.0, 3.0);
-	glm::vec2 v(4.0, 5.0);
-	float f = 6.0;
+	//m2 m(0.0, 1.0, 2.0, 3.0);
+	vec2 v { 4.0f, 5.0f };
+	float f = 6.0f;
 	
 	constexpr str_const test1("test1"), test2("test2"), test3("test3");
 	
@@ -37,7 +37,7 @@ void test_shader_uniforms(int, char**){
 	//su.initUniform(test2.hash, 1, 1);
 	//su.initUniform(test3.hash, 1, 2);
 	
-	su.setUniform("test1", { m });
+	//su.setUniform("test1", { m });
 	su.setUniform("test2", { v });
 	su.setUniform("test3", { f });
 	

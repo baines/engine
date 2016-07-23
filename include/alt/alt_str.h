@@ -1,12 +1,32 @@
+/********************************************************************
+ Define ALT_STR_IMPL in one source file to define the implementation
+********************************************************************/
+
+#ifdef ALT_STR_IMPL
+
+template size_t alt::detail::StrLen<char>(const char* ptr);
+template size_t alt::detail::StrLen<char16_t>(const char16_t* ptr);
+template size_t alt::detail::StrLen<char32_t>(const char32_t* ptr);
+
+template class alt::TStrRef<char>;
+template class alt::TStrRef<char16_t>;
+template class alt::TStrRef<char32_t>;
+
+template class alt::TStrMut<char>;
+template class alt::TStrMut<char16_t>;
+template class alt::TStrMut<char32_t>;
+
+#endif
+
 #ifndef ALT_STR_H_
 #define ALT_STR_H_
 #include <cstdint>
 #include <alloca.h>
 #include <initializer_list>
 
-/********************************************************
-  Define these to use your own memory-related functions
-********************************************************/
+/******************************************************************
+  Optionally define these to use your own memory-related functions
+******************************************************************/
 
 #if !defined(ALT_STR_ALLOC) || !defined(ALT_STR_FREE)
 	#include <cstdlib>
@@ -37,15 +57,19 @@ namespace alt {
 
 namespace detail {
 
-	template<class T> constexpr T min(const T& a, const T& b){ return a <  b ? a : b; }
-	template<class T> constexpr T max(const T& a, const T& b){ return a >= b ? a : b; }
+	template<class T> constexpr inline T min(const T& a, const T& b){ return a <  b ? a : b; }
+	template<class T> constexpr inline T max(const T& a, const T& b){ return a >= b ? a : b; }
 
 	template<class T>
-	size_t StrLen(const T* ptr){
+	inline size_t StrLen(const T* ptr){
 		const T* p = ptr;
 		while(*p) ++p;
 		return p - ptr;
 	}
+
+	//extern template size_t StrLen<char>(const char* ptr);
+	//extern template size_t StrLen<char16_t>(const char16_t* ptr);
+	//extern template size_t StrLen<char32_t>(const char32_t* ptr);
 
 	inline size_t get_next_size(size_t current, size_t required){
 		current = max<size_t>(current, 32);
@@ -68,8 +92,8 @@ template<class T> class TStrMut;
 ********************************************************/
 
 template<class T>
-struct TStrRef {
-
+class TStrRef {
+public:
 	typedef T* iterator;
 	typedef const T* const_iterator;
 
@@ -151,7 +175,7 @@ struct TStrRef {
 		const size_t max_sz = detail::min<uint32_t>(e, sz);
 
 		for(const T* p = ptr + b; p < ptr + max_sz; ++p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c == *p) return p - ptr;
 			}
 		}
@@ -164,7 +188,7 @@ struct TStrRef {
 		const size_t limit  = detail::max<ssize_t>(0, max_sz - 1);
 
 		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c == *p) return p - ptr;
 			}
 		}
@@ -176,7 +200,7 @@ struct TStrRef {
 		const size_t max_sz = detail::min<uint32_t>(e, sz);
 
 		for(const T* p = ptr + b; p < ptr + max_sz; ++p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c != *p) return p - ptr;
 			}
 		}
@@ -189,7 +213,7 @@ struct TStrRef {
 		const size_t limit  = detail::max<ssize_t>(0, max_sz - 1);
 
 		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c != *p) return p - ptr;
 			}
 		}
@@ -232,6 +256,10 @@ private:
 	const T* ptr;
 	size_t sz;
 };
+
+//extern template class TStrRef<char>;
+//extern template class TStrRef<char16_t>;
+//extern template class TStrRef<char32_t>;
 
 using StrRef   = TStrRef<char>;
 using StrRef16 = TStrRef<char16_t>;
@@ -467,7 +495,7 @@ public:
 		const size_t max_used_size = detail::min<uint32_t>(e, used_size);
 
 		for(const T* p = ptr + b; p < ptr + max_used_size; ++p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c == *p) return p - ptr;
 			}
 		}
@@ -480,7 +508,7 @@ public:
 		const size_t limit  = detail::max<ssize_t>(0, max_used_size - 1);
 
 		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c == *p) return p - ptr;
 			}
 		}
@@ -492,7 +520,7 @@ public:
 		const size_t max_used_size = detail::min<uint32_t>(e, used_size);
 
 		for(const T* p = ptr + b; p < ptr + max_used_size; ++p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c != *p) return p - ptr;
 			}
 		}
@@ -505,7 +533,7 @@ public:
 		const size_t limit  = detail::max<ssize_t>(0, max_used_size - 1);
 
 		for(const T* p = ptr + limit; p >= ptr + (e+1); --p){
-			for(char c : chars){
+			for(unsigned char c : chars){
 				if(c != *p) return p - ptr;
 			}
 		}
@@ -539,7 +567,8 @@ public:
 	
 	constexpr size_t size() const { return used_size; }
 	
-	constexpr T& operator[](size_t index){ return ptr[index]; }
+	T& operator[](size_t index){ return ptr[index]; }
+	constexpr const T& operator[](size_t index) const { return ptr[index]; }
 
 	constexpr T& front(){ return *ptr; }
 	constexpr T& back(){ return ptr[used_size-1]; }
@@ -556,6 +585,9 @@ private:
 	};
 };
 
+//extern template class TStrMut<char>;
+//extern template class TStrMut<char16_t>;
+//extern template class TStrMut<char32_t>;
 
 using StrMut   = TStrMut<char>;
 using StrMut16 = TStrMut<char16_t>;
@@ -565,6 +597,7 @@ template<class T>
 constexpr TStrRef<T>::TStrRef(const TStrMut<T>& str) : ptr(str.data()), sz(str.size()){}
 
 }
+
 
 /********************************************************************
    Iostream << compat stuff, define ALT_STR_IOSTREAM if you want it

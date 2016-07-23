@@ -1,13 +1,19 @@
 #ifndef COMMON_H_
 #define COMMON_H_
-#include <cstdint>
-#include <cstdlib>
+#include <stdint.h>
+#include <stdlib.h>
 #include "alt/alt_str.h"
+#include "alt/alt_array.h"
+#include "alt/alt_math.h"
 
 using alt::StrRef;
 using alt::StrRef32;
 using alt::StrMut;
 using alt::StrMut32;
+using alt::vec2;
+using alt::vec2i;
+using alt::vec4;
+using alt::Array;
 
 #if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"

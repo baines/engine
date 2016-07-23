@@ -35,14 +35,14 @@ private:
 	GLuint id;
 };
 
+//extern template class std::vector<uint8_t>;
+
 struct DynamicVertexBuffer : VertexBuffer {
 	DynamicVertexBuffer();
 	DynamicVertexBuffer(const char* fmt, size_t initial_capacity);
 	
 	template<class T>
 	void push(const T& vertex_data){
-		assert(sizeof(T) == stride);
-		
 		const char* p = reinterpret_cast<const char*>(&vertex_data);
 		
 		for(size_t i = 0; i < sizeof(T); ++i){

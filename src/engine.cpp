@@ -11,6 +11,15 @@
 #include <locale.h>
 #include <SDL.h>
 
+template class alt::TStrRef<char>;
+template class alt::TStrRef<char32_t>;
+template class alt::TStrMut<char>;
+template class alt::TStrMut<char32_t>;
+
+template class alt::vec2t<float>;
+template class alt::vec2t<int>;
+template class alt::vec4t<float>;
+
 namespace {
 	static int get_ticks(){
 #ifdef __EMSCRIPTEN__
@@ -21,27 +30,24 @@ namespace {
 	}
 }
 
-using std::make_unique;
-using std::unique_ptr;
-
 Engine::Engine(int argc, char** argv, const char* name){
 
 	setlocale(LC_ALL, "");
 
 	SDL_Init(0);
 
-	res        = make_unique<ResourceSystem>(argv[0]);
-	cfg        = make_unique<Config>(*this, argc, argv);
-	input      = unique_ptr<IInput>(new Input(*this));
-	renderer   = unique_ptr<IRenderer>(new Renderer(*this, name));
-	text       = unique_ptr<ITextSystem>(new TextSystem(*this));
-	collision  = make_unique<CollisionSystem>();
-	state      = make_unique<StateSystem>();
-	cli        = unique_ptr<ICLI>(new CLI(*this));
+	res        = UniquePtr<ResourceSystem>  (new ResourceSystem(argv[0]));
+	cfg        = UniquePtr<Config>          (new Config(*this, argc, argv));
+	input      = UniquePtr<IInput>          (new Input(*this));
+	renderer   = UniquePtr<IRenderer>       (new Renderer(*this, name));
+	text       = UniquePtr<ITextSystem>     (new TextSystem(*this));
+	collision  = UniquePtr<CollisionSystem> (new CollisionSystem());
+	state      = UniquePtr<StateSystem>     (new StateSystem());
+	cli        = UniquePtr<ICLI>            (new CLI(*this));
 	max_fps    = cfg->addVar<CVarInt>("max_fps", 200, 1, 1000);
 	running    = true;
 	prev_ticks = 0;
-	root_state = make_unique<RootState>(*this);
+	root_state = UniquePtr<RootState>(new RootState(*this));
 
 	addState(root_state.get());
 }
@@ -253,16 +259,3 @@ StrMut32 to_utf32(const StrRef& s){
 	return ret;
 }
 
-#define ALT_STR_IMPL
-#include "alt/alt_str.h"
-
-template class std::unique_ptr<ResourceSystem>;
-template class std::unique_ptr<Config>;
-template class std::unique_ptr<IInput>;
-template class std::unique_ptr<IRenderer>;
-template class std::unique_ptr<ITextSystem>;
-template class std::unique_ptr<CollisionSystem>;
-template class std::unique_ptr<StateSystem>;
-template class std::unique_ptr<ICLI>;
-template class std::vector<GameState*>;
-template class std::unique_ptr<RootState>;

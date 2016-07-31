@@ -38,6 +38,4 @@ private:
 	std::vector<Attrib> attribs;
 };
 
-//extern template class std::vector<ShaderAttribs::Attrib>;
-
 #endif

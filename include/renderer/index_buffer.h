@@ -16,7 +16,7 @@ struct IndexBuffer : public GLObject {
 
 struct StaticIndexBuffer : public IndexBuffer {
 	StaticIndexBuffer();
-	StaticIndexBuffer(const ResourceHandle& data, GLenum type);
+	StaticIndexBuffer(const MemBlock& data, GLenum type);
 	void bind(RenderState&);
 	GLenum getType() const;
 	GLuint getID() const;
@@ -24,12 +24,10 @@ struct StaticIndexBuffer : public IndexBuffer {
 	void onGLContextRecreate();
 	~StaticIndexBuffer();
 private:
-	ResourceHandle data;
+	MemBlock data;
 	GLenum type;
 	GLuint id;
 };
-
-//extern template class std::vector<uint8_t>;
 
 template<class T>
 struct DynamicIndexBuffer : public IndexBuffer {
@@ -37,6 +35,10 @@ struct DynamicIndexBuffer : public IndexBuffer {
 	void replace(size_t index, T val);
 	void push(T val);
 	void clear();
+
+	uint8_t* beginWrite (size_t upper_bound);
+	void     endWrite   (size_t bytes_written);
+
 	GLenum getType() const ;
 	GLuint getID() const ;
 	size_t getSize() const ;

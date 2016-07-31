@@ -5,10 +5,9 @@ sources := $(foreach dir,$(dirs),$(wildcard $(dir)/*.cpp))
 depends := $(foreach dir,$(dirs),$(wildcard $(builddir)/$(dir)/*.d))
 objects := $(patsubst %.cpp,$(builddir)/%.o,$(sources)) $(builddir)/zip.o
 includes := $(foreach dir,$(dirs),-I../include/$(dir)) -I/usr/$(PREFIX)/include/freetype2
-CXXFLAGS := -std=c++1y -Wall -pipe -ffast-math -fno-rtti -fno-exceptions\
- $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags) -Wno-missing-braces
+CXXFLAGS := -std=c++1y -Wall -pipe -ffast-math -fno-rtti -fno-exceptions -fno-weak\
+ $(shell /usr/$(PREFIX)/bin/sdl2-config --cflags) -Wno-missing-braces -Wno-unused-function
 
-#CXX := clang++-3.5
 #CXX := include-what-you-use
 
 ifdef PREFIX

@@ -5,12 +5,7 @@
 #include "resource_system.h"
 #include "trie.h"
 #include <vector>
-#include <map>
-
-//extern template class std::unique_ptr<CVar>;
-//extern template class std::vector<std::unique_ptr<CVar>>;
-//extern template struct Trie<CVar*>;
-//extern template class std::multimap<strhash_t, StrRef>;
+#include <unordered_map>
 
 struct Config {
 
@@ -63,11 +58,11 @@ struct Config {
 		cvar_trie.prefixSearch(prefix, output);
 	}
 private:
-	std::vector<std::unique_ptr<CVar>> cvars;
+	std::vector<UniquePtr<CVar>> cvars;
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;
-	std::multimap<strhash_t, StrRef> cvar_hooks;
+	std::unordered_multimap<strhash_t, StrRef> cvar_hooks;
 };
 
 #endif

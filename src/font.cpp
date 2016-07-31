@@ -79,13 +79,10 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 	);
 	
 	// scale the font so the requested height fits the outlined glyphs' total line height.
-	double scale = (double)face->units_per_EM / (double)(face->height + 4 * height);
-	assert(FT_Set_Pixel_Sizes(face, 0, height * scale) == 0);
-	
-	DEBUGF(
-		"Font info: [glyphs: %li, max_adv: %ld, scale: %.2f]",
-		face->num_glyphs, face->size->metrics.max_advance >> 6, scale
-	);
+	FT_Size_RequestRec_ size = {};
+	size.type   = FT_SIZE_REQUEST_TYPE_BBOX;
+	size.height = height << 6;
+	FT_Request_Size(face, &size);
 	
 	int init_w = 0, max_w = 0;
 
@@ -149,11 +146,10 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 			--i;
 		}
 
-		// The FT autohinter looks better at large font sizes imo.
-		FT_UInt flags = height >= 16 ? FT_LOAD_FORCE_AUTOHINT : 0;
+		FT_UInt flags = FT_LOAD_FORCE_AUTOHINT;
 
 		// load and render the glyphs and outlines to their respective atlases.
-		if(render && FT_Load_Glyph(face, glyph.index, flags | FT_LOAD_TARGET_LIGHT) == 0){
+		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
 			FT_Glyph ft_glyph = nullptr, ft_outline = nullptr;
 			assert(FT_Get_Glyph(face->glyph, &ft_glyph) == 0);
 			assert(FT_Glyph_Copy(ft_glyph, &ft_outline) == 0);

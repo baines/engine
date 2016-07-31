@@ -1,10 +1,7 @@
 #ifndef BLEND_MODE_H_
 #define BLEND_MODE_H_
+#include "common.h"
 #include "gl_context.h"
-
-struct RenderState;
-
-//extern template struct alt::Array<GLenum, 2>;
 
 struct BlendMode {
 	BlendMode();

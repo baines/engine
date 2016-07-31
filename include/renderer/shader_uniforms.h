@@ -74,8 +74,5 @@ private:
 	std::vector<uinfo> uniform_info;
 };
 
-//extern template class std::vector<ShaderUniforms::ustorage>;
-//extern template class std::vector<ShaderUniforms::uinfo>;
-
 #endif
 

@@ -4,10 +4,10 @@
 #include "gl_context.h"
 #include "shader_attribs.h"
 
-//extern template class std::vector<VertexBuffer*>;
-
 struct VertexState : public GLObject {
 	VertexState();
+	VertexState(std::initializer_list<VertexBuffer*> vbs, IndexBuffer* ib);
+
 	void setVertexBuffers(std::initializer_list<VertexBuffer*> buffers);
 	void setIndexBuffer(IndexBuffer* buff);
 	IndexBuffer* getIndexBuffer(void);

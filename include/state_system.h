@@ -4,8 +4,6 @@
 #include <SDL_events.h>
 #include <vector>
 
-//extern template class std::vector<GameState*>;
-
 struct StateSystem {
 	StateSystem();
 	

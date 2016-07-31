@@ -398,6 +398,17 @@ void DynamicVertexBuffer::clear(){
 	stream_buf.mark();
 }
 
+uint8_t* DynamicVertexBuffer::beginWrite(size_t upper_bound){
+	stream_buf.invalidateAll();
+	data.clear();
+	data.resize(upper_bound);
+	return data.data();
+}
+
+void DynamicVertexBuffer::endWrite(size_t bytes_written){
+	data.resize(bytes_written);
+}
+
 void DynamicVertexBuffer::invalidate(BufferRange&& range){
 	stream_buf.invalidate(std::move(range));
 }
@@ -433,13 +444,13 @@ StaticIndexBuffer::StaticIndexBuffer()
 
 }
 
-StaticIndexBuffer::StaticIndexBuffer(const ResourceHandle& data, GLenum type)
+StaticIndexBuffer::StaticIndexBuffer(const MemBlock& data, GLenum type)
 : data(data)
 , type(type)
 , id(0) {
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.data, GL_STATIC_DRAW);
+	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 }
 
 void StaticIndexBuffer::bind(RenderState& rs){
@@ -460,7 +471,7 @@ GLenum StaticIndexBuffer::getID() const {
 void StaticIndexBuffer::onGLContextRecreate(){
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.data, GL_STATIC_DRAW);
+	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 
 }
 
@@ -503,6 +514,19 @@ template<class T>
 void DynamicIndexBuffer<T>::clear(){
 	indices.clear();
 	stream_buf.mark();
+}
+
+template<class T>
+uint8_t* DynamicIndexBuffer<T>::beginWrite(size_t upper_bound){
+	stream_buf.invalidateAll();
+	indices.clear();
+	indices.resize(upper_bound);
+	return indices.data();
+}
+
+template<class T>
+void DynamicIndexBuffer<T>::endWrite(size_t bytes_written){
+	indices.resize(bytes_written);
 }
 
 template<class T>

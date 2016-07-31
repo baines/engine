@@ -3,9 +3,7 @@
 #include "common.h"
 #include <GL/gl.h>
 #include <initializer_list>
-#include <map>
-
-//extern template class std::map<GLenum, GLint>;
+#include <unordered_map>
 
 struct Sampler : public GLObject {
 	struct Param {
@@ -25,7 +23,7 @@ struct Sampler : public GLObject {
 
 	~Sampler();
 private:
-	std::map<GLenum, GLint> params;
+	std::unordered_map<GLenum, GLint> params;
 	GLuint id;
 };
 

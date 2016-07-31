@@ -9,9 +9,6 @@ struct RCount { GLsizei value; };
 struct RType  { GLenum  value; };
 struct ROff   { GLint   value; };
 
-//extern template struct alt::Array<const Texture*, 8>;
-//extern template struct alt::Array<const Sampler*, 8>;
-
 struct Renderable {
 
 	Renderable()

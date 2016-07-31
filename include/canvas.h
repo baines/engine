@@ -25,8 +25,5 @@ private:
 	Renderable lines;
 };
 
-//extern template struct Resource<VertShader>;
-//extern template struct Resource<FragShader>;
-
 #endif
 

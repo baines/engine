@@ -25,10 +25,6 @@
 #define TXT_CYAN          TXT_COLOR(e)
 #define TXT_WHITE         TXT_COLOR(f)
 
-//extern template struct NullOnMovePtr<Engine>;
-//extern template struct Proxy<Font>;
-//extern template struct alt::Array<uint32_t, 16>;
-
 struct Text {
 	Text();
 	Text(Engine& e, Proxy<Font> f, vec2i pos, const StrRef& s);

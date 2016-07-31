@@ -5,8 +5,6 @@
 #include "blend_mode.h"
 #include "shader_attribs.h"
 
-//extern template struct alt::Array<GLuint, 8>;
-
 struct RenderState {
 	GLuint program;
 	GLuint active_tex;

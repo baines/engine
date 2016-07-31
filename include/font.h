@@ -30,7 +30,5 @@ private:
 	Texture2D atlas;
 };
 
-//extern template class std::vector<Font::GlyphInfo>;
-
 #endif
 

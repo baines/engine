@@ -2,6 +2,7 @@
 *.d
 *.a
 *~
+*.pbf
 test/test
 test/emscripten/test.html*
 test/emscripten/test.data
@@ -16,4 +17,7 @@ build/internal.zip
 *.trace
 engine.vim
 engine.bc
+
+# put this here yourself
+include/nuklear.h
 

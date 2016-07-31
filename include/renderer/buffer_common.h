@@ -13,9 +13,6 @@ struct BufferRange {
 	BufferInvalidateListener* callback;
 };
 
-//extern template class std::vector<uint8_t>;
-//extern template class std::vector<BufferRange>;
-
 struct StreamingBuffer : public GLObject {
 
 	StreamingBuffer();

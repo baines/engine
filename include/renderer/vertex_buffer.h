@@ -35,8 +35,6 @@ private:
 	GLuint id;
 };
 
-//extern template class std::vector<uint8_t>;
-
 struct DynamicVertexBuffer : VertexBuffer {
 	DynamicVertexBuffer();
 	DynamicVertexBuffer(const char* fmt, size_t initial_capacity);
@@ -51,6 +49,9 @@ struct DynamicVertexBuffer : VertexBuffer {
 		
 		stream_buf.mark();	
 	}
+
+	uint8_t* beginWrite (size_t upper_bound);
+	void     endWrite   (size_t bytes_written);
 
 	void invalidate(BufferRange&& range);
 	

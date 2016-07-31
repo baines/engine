@@ -30,7 +30,7 @@ private:
 		bool dirty, hide;
 	};
 
-	std::map<const Sprite*, SpriteInfo> sprites;
+	std::unordered_map<const Sprite*, SpriteInfo> sprites;
 	VertexState vao;
 	DynamicVertexBuffer vertices;
 	DynamicIndexBuffer<uint16_t> indices;
@@ -38,9 +38,6 @@ private:
 	Renderable renderable;
 	vec2i tex_cells;
 };
-
-//extern template class std::map<const Sprite*, SpriteBatch::SpriteInfo>;
-//extern template struct DynamicIndexBuffer<uint16_t>;
 
 #endif
 

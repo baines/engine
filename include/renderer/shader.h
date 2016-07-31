@@ -25,9 +25,6 @@ struct FragShader : ShaderBase {
 	FragShader(MemBlock mem) : ShaderBase(GL_FRAGMENT_SHADER, mem){}
 };
 
-//extern template struct Proxy<VertShader>;
-//extern template struct Proxy<FragShader>;
-
 struct ShaderProgram : public GLObject {
 	ShaderProgram(Proxy<VertShader> v, Proxy<FragShader> f);
 	bool link(void);

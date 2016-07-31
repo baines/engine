@@ -1,7 +1,6 @@
 #ifndef ALT_MATH_H_
 #define ALT_MATH_H_
 #include <cstddef>
-#include <cmath>
 
 namespace alt {
 
@@ -111,7 +110,7 @@ inline typename V::value_type length(const V& v){
 	for(size_t i = 0; i < V::size; ++i){
 		ret += (v[i] * v[i]);
 	}
-	return sqrt(ret);
+	return __builtin_sqrt(ret);
 }
 
 template<class V>

@@ -1,10 +1,11 @@
 #ifndef COMMON_H_
 #define COMMON_H_
-#include <stdint.h>
-#include <stdlib.h>
+#include <cstdint>
+#include <cstdlib>
 #include "alt/alt_str.h"
 #include "alt/alt_array.h"
 #include "alt/alt_math.h"
+#include "alt/alt_util.h"
 
 using alt::StrRef;
 using alt::StrRef32;
@@ -14,6 +15,17 @@ using alt::vec2;
 using alt::vec2i;
 using alt::vec4;
 using alt::Array;
+using alt::UniquePtr;
+using alt::Closure;
+
+extern template struct alt::TStrRef<char>;
+extern template struct alt::TStrRef<char32_t>;
+extern template struct alt::TStrMut<char>;
+extern template struct alt::TStrMut<char32_t>;
+
+extern template struct alt::vec2t<float>;
+extern template struct alt::vec2t<int>;
+extern template struct alt::vec4t<float>;
 
 #if defined(_WIN32) && defined(__GNUC__) && __GNUC_MINOR__ < 9
 	#include "compat.h"

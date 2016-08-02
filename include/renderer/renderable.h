@@ -16,6 +16,7 @@ struct Renderable {
 	, samplers({})
 	, vertex_state(nullptr)
 	, shader(nullptr)
+	, uniforms(nullptr)
 	, blend_mode()
 	, prim_type(GL_TRIANGLES)
 	, count(0)

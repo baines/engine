@@ -225,8 +225,9 @@ void Renderer::drawFrame(){
 			gl.DrawArrays(r.prim_type, r.offset, r.count);
 		}
 	}
-	
+
 	SDL_GL_SwapWindow(window);
+
 	renderables.clear();
 }
 

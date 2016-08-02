@@ -62,6 +62,7 @@ CLI::CLI(Engine& e)
 , cursor_text      (e, font, input_text.getEndPos() + vec2i{0, 2}, CURSOR)
 , cursor_idx       (PROMPT_SZ)
 , autocompletions  () {
+
 	e.input->subscribe(this, "cli_submit",       ACT_SUBMIT);
 	e.input->subscribe(this, "cli_backspace",    ACT_BACKSPACE);
 	e.input->subscribe(this, "cli_delete",       ACT_DELETE);

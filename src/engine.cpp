@@ -63,6 +63,11 @@ bool Engine::run(void){
 	const int min_delta = 1000 / std::max(1, max_fps->val);
 	int delta = std::max<int>(0, get_ticks() - prev_ticks);
 
+	if(delta > 400){
+		puts("wtf big ass delta");
+		exit(1);
+	}
+
 	if(delta < min_delta){
 		SDL_Delay(min_delta - delta);
 		delta = min_delta;

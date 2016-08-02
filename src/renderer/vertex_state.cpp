@@ -10,8 +10,19 @@ VertexState::VertexState()
 , index_buffer(nullptr)
 , id(0)
 , using_vao(gl.GenVertexArrays != nullptr) {
-	
 	if(using_vao) gl.GenVertexArrays(1, &id);
+}
+
+VertexState::VertexState(std::initializer_list<VertexBuffer*> bufs, IndexBuffer* idx)
+: enabled_arrays()
+, active_attribs()
+, vertex_buffers()
+, index_buffer(nullptr)
+, id(0)
+, using_vao(gl.GenVertexArrays != nullptr) {
+	if(using_vao) gl.GenVertexArrays(1, &id);
+	setVertexBuffers(bufs);
+	setIndexBuffer(idx);
 }
 
 void VertexState::setVertexBuffers(std::initializer_list<VertexBuffer*> buffers){

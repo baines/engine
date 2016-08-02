@@ -10,11 +10,15 @@
 struct nk_context;
 
 struct GUI {
-	GUI(Engine& e);
-	void draw(IRenderer&);
+	GUI  (Engine& e);
+	~GUI ();
+
+	int  initInput (Engine& e, GameState* state, int max_id);
+	void onInput   (int key, bool pressed);
+	void onMotion  (int axis, int val);
+	void draw      (IRenderer&);
 
 	nk_context* ctx;
-
 private:
 	DynamicVertexBuffer verts;
 	DynamicIndexBuffer<uint16_t> indices;
@@ -26,6 +30,11 @@ private:
 	ShaderProgram shader;
 
 	Texture2D null_tex;
+
+	Resource<Font, uint16_t> font;
+
+	vec2i cursor;
+	int input_id;
 };
 
 #endif

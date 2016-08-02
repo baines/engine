@@ -407,6 +407,7 @@ uint8_t* DynamicVertexBuffer::beginWrite(size_t upper_bound){
 
 void DynamicVertexBuffer::endWrite(size_t bytes_written){
 	data.resize(bytes_written);
+	data.shrink_to_fit();
 }
 
 void DynamicVertexBuffer::invalidate(BufferRange&& range){
@@ -527,6 +528,7 @@ uint8_t* DynamicIndexBuffer<T>::beginWrite(size_t upper_bound){
 template<class T>
 void DynamicIndexBuffer<T>::endWrite(size_t bytes_written){
 	indices.resize(bytes_written);
+	indices.shrink_to_fit();
 }
 
 template<class T>

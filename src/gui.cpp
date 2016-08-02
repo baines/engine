@@ -2,11 +2,15 @@
 #include "blend_mode.h"
 #include "renderable.h"
 #include "renderer.h"
+#include "font.h"
+#include "input.h"
 #include <cmath>
+#include <climits>
 
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
-#define NK_BUTTON_TRIGGER_ON_RELEASE
+//#define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_MEMSET memset
 #define NK_MEMCOPY memcpy
 #define NK_SQRT sqrt
@@ -15,31 +19,171 @@
 #define NK_IMPLEMENTATION
 #include "nuklear.h"
 
-#define MAX_VERT_SIZE (1024 * 1024)
+#define MAX_VERT_SIZE (1024 * 10)
 #define MAX_INDX_SIZE MAX_VERT_SIZE
+
+enum {
+	GUI_BUTTON_LEFT = NK_KEY_MAX,
+	GUI_BUTTON_MIDDLE,
+	GUI_BUTTON_RIGHT,
+	GUI_DIGITAL_MAX,
+
+	GUI_CURSOR_X = GUI_DIGITAL_MAX,
+	GUI_CURSOR_Y,
+
+	GUI_INPUT_MAX,
+};
+
+static float gui_font_width_fn(nk_handle handle, float h, const char* text, int len){
+	Font* font = (Font*)handle.ptr;
+
+	float result = 0.0f;
+	StrMut32 str32 = to_utf32(StrRef(text, len));
+	for(const char32_t& c : str32){
+		const Font::GlyphInfo& glyph = font->getGlyphInfo(c);
+		result += glyph.advance;
+	}
+
+	return result;
+}
+
+static void gui_font_glyph_fn(nk_handle handle, float h, struct nk_user_font_glyph* out, nk_rune cp, nk_rune next_cp){
+	Font* font = (Font*)handle.ptr;
+	const Font::GlyphInfo& glyph = font->getGlyphInfo(cp);
+
+	int _tw, _th;
+	std::tie(_tw, _th) = font->getTexture()->getSize();
+	float tw = (float)_tw, th = (float)_th;
+
+	out->uv[0]    = nk_vec2(glyph.x / tw, glyph.y / th);
+	out->uv[1]    = nk_vec2((glyph.x + glyph.width) / tw, (glyph.y + h) / th);
+	out->offset   = nk_vec2(glyph.bearing_x, 0);
+	out->width    = glyph.width;
+	out->height   = h;
+	out->xadvance = glyph.advance + font->getKerning(cp, next_cp).x;
+}
 
 // FIXME should be cached
 static const uint32_t white_rgba = UINT32_C(0xffffffff);
 
 GUI::GUI(Engine& e)
-: verts    ("pos:2f|tex:2f|col:4BN", MAX_VERT_SIZE)
+: ctx      (nullptr)
+, verts    ("a_pos:2f|a_tex:2f|a_col:4BN", MAX_VERT_SIZE)
 , indices  ()
 , state    ({ &verts }, &indices)
 , vs       (e, {"gui.glslv"})
 , fs       (e, {"gui.glslf"})
 , shader   (vs, fs)
-, null_tex (GL_RGBA, GL_RGBA, 1, 1, &white_rgba) {
+, null_tex (GL_UNSIGNED_BYTE, GL_RGBA8, 1, 1, &white_rgba)
+, font     (e, {"DejaVuSansMono.ttf"}, 16)
+, cursor   ({ 0, 0 })
+, input_id (-1) {
 
+	struct nk_user_font nk_font = {
+		nk_handle_ptr((void*)font.getRawPtr()),
+		16.0f,
+		&gui_font_width_fn,
+		&gui_font_glyph_fn,
+		nk_handle_ptr((void*)font->getTexture())
+	};
+
+	ctx = new nk_context();
+	nk_init_default(ctx, &nk_font);
+
+	shader.link();
+}
+
+GUI::~GUI(){
+	delete ctx;
+}
+
+int GUI::initInput(Engine& e, GameState* state, int id){
+
+	input_id = id;
+
+	e.input->subscribe(state, "gui_shift"      , id + NK_KEY_SHIFT);
+	e.input->subscribe(state, "gui_ctrl"       , id + NK_KEY_CTRL);
+	e.input->subscribe(state, "gui_delete"     , id + NK_KEY_DEL);
+	e.input->subscribe(state, "gui_enter"      , id + NK_KEY_ENTER);
+	e.input->subscribe(state, "gui_tab"        , id + NK_KEY_TAB);
+	e.input->subscribe(state, "gui_backspace"  , id + NK_KEY_BACKSPACE);
+	e.input->subscribe(state, "gui_copy"       , id + NK_KEY_COPY);
+	e.input->subscribe(state, "gui_cut"        , id + NK_KEY_CUT);
+	e.input->subscribe(state, "gui_paste"      , id + NK_KEY_PASTE);
+	e.input->subscribe(state, "gui_up"         , id + NK_KEY_UP);
+	e.input->subscribe(state, "gui_down"       , id + NK_KEY_DOWN);
+	e.input->subscribe(state, "gui_left"       , id + NK_KEY_LEFT);
+	e.input->subscribe(state, "gui_right"      , id + NK_KEY_RIGHT);
+
+	e.input->subscribe(state, "gui_insert"     , id + NK_KEY_TEXT_INSERT_MODE);
+	e.input->subscribe(state, "gui_replace"    , id + NK_KEY_TEXT_REPLACE_MODE);
+	e.input->subscribe(state, "gui_reset"      , id + NK_KEY_TEXT_RESET_MODE);
+	e.input->subscribe(state, "gui_sol"        , id + NK_KEY_TEXT_LINE_START);
+	e.input->subscribe(state, "gui_eol"        , id + NK_KEY_TEXT_LINE_END);
+	e.input->subscribe(state, "gui_start"      , id + NK_KEY_TEXT_START);
+	e.input->subscribe(state, "gui_end"        , id + NK_KEY_TEXT_END);
+	e.input->subscribe(state, "gui_undo"       , id + NK_KEY_TEXT_UNDO);
+	e.input->subscribe(state, "gui_redo"       , id + NK_KEY_TEXT_REDO);
+	e.input->subscribe(state, "gui_word_left"  , id + NK_KEY_TEXT_WORD_LEFT);
+	e.input->subscribe(state, "gui_word_right" , id + NK_KEY_TEXT_WORD_RIGHT);
+
+//	e.input->subscribe(state, "gui_"       , id + NK_KEY_TEXT_END);
+
+	e.input->subscribe(state, "cursor_x", id + GUI_CURSOR_X); 
+	e.input->subscribe(state, "cursor_y", id + GUI_CURSOR_Y);
+
+	e.input->subscribe(state, "lmb", id + GUI_BUTTON_LEFT);
+	e.input->subscribe(state, "mmb", id + GUI_BUTTON_MIDDLE);
+	e.input->subscribe(state, "rmb", id + GUI_BUTTON_RIGHT);
+
+	return id + GUI_INPUT_MAX;
+}
+
+void GUI::onInput(int key, bool pressed){
+
+	if(input_id == -1){
+		log(logging::error, "GUI::initInput not called");
+		return;
+	}
+
+	if(key >= input_id){
+		if(key < input_id + NK_KEY_MAX){
+			auto k = (enum nk_keys)key;
+			nk_input_key(ctx, k, pressed);
+		} else if(key < input_id + GUI_DIGITAL_MAX){
+
+			printf("BUTTON %d %d\n", key - NK_KEY_MAX, pressed);
+
+			auto b = (enum nk_buttons)(key - NK_KEY_MAX);
+			nk_input_button(ctx, b, cursor.x, cursor.y, pressed);
+		}
+	}
+}
+
+void GUI::onMotion(int axis, int val){
+
+	if(input_id == -1){
+		log(logging::error, "GUI::initInput not called");
+		return;
+	}
+
+	if(axis == input_id + GUI_CURSOR_X){
+		printf("X: %d\n", val);
+		cursor.x = val;
+		nk_input_motion(ctx, cursor.x, cursor.y);
+	} else if(axis == input_id + GUI_CURSOR_Y){
+		printf("Y: %d\n", val);
+		cursor.y = val;
+		nk_input_motion(ctx, cursor.x, cursor.y);
+	}
 }
 
 void GUI::draw(IRenderer& r){
 	struct nk_convert_config cfg = {};
 	cfg.global_alpha = 1.0f;
 	cfg.circle_segment_count = cfg.arc_segment_count = cfg.curve_segment_count = 22;
-	cfg.null.texture.ptr = &null_tex;
-	cfg.null.uv = nk_vec2(0.5f, 0.5f);
-
-	//TODO: fonts?
+	cfg.null.texture.ptr = (void*)font->getTexture();
+	cfg.null.uv = nk_vec2(0.5f, 0.9f);
 
 	char cmd_buffer[4096];
 
@@ -53,8 +197,8 @@ void GUI::draw(IRenderer& r){
 
 	nk_convert(ctx, &cmds, &vb, &ib, &cfg);
 
-	verts.endWrite(vb.size);
-	indices.endWrite(ib.size);
+	verts.endWrite(vb.needed);
+	indices.endWrite(ib.needed);
 
 	Renderable obj = {};
 	obj.prim_type = GL_TRIANGLES;

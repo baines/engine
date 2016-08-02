@@ -1,6 +1,10 @@
 #ifndef TEST_STATE_H_
 #define TEST_STATE_H_
 #include "engine_all.h"
+#include "gui.h"
+
+#define NK_INCLUDE_FIXED_TYPES
+#include "nuklear.h"
 
 static const constexpr struct {
 	float x, y;
@@ -30,7 +34,8 @@ struct TestState : public GameState {
 	, sprite_mat    (sprite_shader, *sprite_tex, samp_nearest)
 	, sprite_batch  (sprite_mat)
 	, test_sprite   (sprite_batch, { 200, 200 }, { 64, 64 })
-	, center        ({ 320, 240 }){
+	, center        ({ 320, 240 })
+	, gui           (e) {
 		
 		triangle.vertex_state = &tri_vstate;
 		triangle.shader = &tri_shader;
@@ -39,6 +44,8 @@ struct TestState : public GameState {
 		triangle.count = 3;
 
 		tri_vstate.setVertexBuffers({ &tri_vbo });
+
+		gui.initInput(e, this, 0);
 	}
 
 	bool onInit(Engine& e){
@@ -46,6 +53,16 @@ struct TestState : public GameState {
 		sprite_shader.link();
 
 		return true;
+	}
+
+	bool onInput(Engine& e, int act, bool pressed){
+		gui.onInput(act, pressed);
+		return false;
+	}
+
+	bool onMotion(Engine& e, int act, int val, bool rel){
+		gui.onMotion(act, val);
+		return false;
 	}
 
 	void onResize(Engine& e, int w, int h){
@@ -79,6 +96,51 @@ struct TestState : public GameState {
 		renderer.addRenderable(triangle);
 		text.draw(renderer);
 		sprite_batch.draw(renderer);
+	
+		nk_context* ctx = gui.ctx;
+		nk_color background = {};
+		{
+			struct nk_panel layout;
+			if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 230, 250),
+					NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
+					NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
+			{
+				enum {EASY, HARD};
+				static int op = EASY;
+				static int property = 20;
+				nk_layout_row_static(ctx, 30, 80, 1);
+				if (nk_button_label(ctx, "button"))
+					fprintf(stdout, "button pressed\n");
+
+				nk_layout_row_dynamic(ctx, 30, 2);
+				if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
+				if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
+
+				nk_layout_row_dynamic(ctx, 25, 1);
+				nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+
+				{
+					struct nk_panel combo;
+					nk_layout_row_dynamic(ctx, 20, 1);
+					nk_label(ctx, "background:", NK_TEXT_LEFT);
+					nk_layout_row_dynamic(ctx, 25, 1);
+					if (nk_combo_begin_color(ctx, &combo, background, 400)) {
+						nk_layout_row_dynamic(ctx, 120, 1);
+						background = nk_color_picker(ctx, background, NK_RGBA);
+						nk_layout_row_dynamic(ctx, 25, 1);
+						background.r = (nk_byte)nk_propertyi(ctx, "#R:", 0, background.r, 255, 1,1);
+						background.g = (nk_byte)nk_propertyi(ctx, "#G:", 0, background.g, 255, 1,1);
+						background.b = (nk_byte)nk_propertyi(ctx, "#B:", 0, background.b, 255, 1,1);
+						background.a = (nk_byte)nk_propertyi(ctx, "#A:", 0, background.a, 255, 1,1);
+						nk_combo_end(ctx);
+					}
+				}
+			}
+			nk_end(ctx);
+		}
+
+		gui.draw(renderer);
+		
 	}
 private:
 	unsigned int timer;
@@ -102,6 +164,8 @@ private:
 	Sprite test_sprite;
 
 	vec2i center;
+
+	GUI gui;
 };
 
 #endif

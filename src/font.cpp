@@ -213,7 +213,9 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 	for(size_t i = 0; i < sz * 2; ++i){
 		combined[i] = (i % 2) ? outline_tex.mem[i/2] : glyph_tex.mem[i/2];
 	}
-	
+
+	memset(combined + (sz*2), 0xff, (combined_w*combined_h*2)-(sz*2));
+
 	// figure out the apropriate opengl texture format for a two channel texture.
 	GLenum int_fmt = GL_LUMINANCE8_ALPHA8;
 	

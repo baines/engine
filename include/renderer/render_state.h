@@ -4,6 +4,7 @@
 #include "gl_context.h"
 #include "blend_mode.h"
 #include "shader_attribs.h"
+#include <SDL2/SDL_rect.h>
 
 struct RenderState {
 	GLuint program;
@@ -19,6 +20,8 @@ struct RenderState {
 	ShaderAttribs active_attribs;          // used when VAOs aren't supported.
 
 	BlendMode blend_mode{{{ GL_ONE, GL_ZERO, GL_ONE, GL_ZERO }}};
+
+	SDL_Rect clip;
 };
 
 #endif

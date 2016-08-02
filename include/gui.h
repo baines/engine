@@ -6,6 +6,7 @@
 #include "vertex_state.h"
 #include "shader.h"
 #include "texture.h"
+#include <list>
 
 struct nk_context;
 
@@ -35,6 +36,8 @@ private:
 
 	vec2i cursor;
 	int input_id;
+
+	std::list<Renderable> renderables;
 };
 
 #endif

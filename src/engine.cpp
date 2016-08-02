@@ -119,8 +119,9 @@ bool Engine::run(void){
 	
 	state->update(*this, delta);
 	collision->update(delta);
-	state->draw(*renderer);
-		
+	
+//	renderer->beginFrame();
+	state->draw(*renderer);	
 	renderer->drawFrame();
 
 	TRACEF("---------- Frame End ----------");

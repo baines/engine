@@ -46,6 +46,7 @@ struct TestState : public GameState {
 		tri_vstate.setVertexBuffers({ &tri_vbo });
 
 		gui.initInput(e, this, 0);
+		nk_input_begin(gui.ctx);
 	}
 
 	bool onInit(Engine& e){
@@ -96,9 +97,12 @@ struct TestState : public GameState {
 		renderer.addRenderable(triangle);
 		text.draw(renderer);
 		sprite_batch.draw(renderer);
-	
+
 		nk_context* ctx = gui.ctx;
-		nk_color background = {};
+
+		nk_input_end(ctx);
+
+		static nk_color background = { 255, 255, 255, 255 };
 		{
 			struct nk_panel layout;
 			if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 230, 250),
@@ -140,7 +144,8 @@ struct TestState : public GameState {
 		}
 
 		gui.draw(renderer);
-		
+	
+		nk_input_begin(ctx);
 	}
 private:
 	unsigned int timer;

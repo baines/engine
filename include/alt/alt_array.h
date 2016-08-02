@@ -41,7 +41,7 @@ struct Array {
 		return memcmp(_data, other._data, sizeof(_data)) > 0;
 	}
 	
-	constexpr size_t size(){ return N; }
+	constexpr size_t size() const { return N; }
 
 	T* data(){ return _data; }
 	const T* data() const { return _data; }

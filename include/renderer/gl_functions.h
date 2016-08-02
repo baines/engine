@@ -9,6 +9,7 @@ GLFUNC(void, Viewport, (GLint, GLint, GLsizei, GLsizei))
 GLFUNC(void, Enable, (GLenum))
 GLFUNC(void, Disable, (GLenum))
 GLFUNC(void, PixelStorei, (GLenum, GLint))
+GLFUNC(void, Scissor, (GLint, GLint, GLsizei, GLsizei))
 
 GLFUNC(void, DrawArrays, (GLenum, GLint, GLsizei))
 GLFUNC(void, DrawElements, (GLenum, GLsizei, GLenum, const GLvoid*))

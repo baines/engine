@@ -8,7 +8,7 @@ struct BlendMode {
 	BlendMode(const Array<GLenum, 4>& fns, 
 	          const Array<GLenum, 2>& eqs = {{ GL_FUNC_ADD, GL_FUNC_ADD }});
 	          	
-	void bind(RenderState& state);
+	void bind(RenderState& state) const;
 	
 	bool operator==(const BlendMode& other) const {
 		return funcs == other.funcs && equations == other.equations;

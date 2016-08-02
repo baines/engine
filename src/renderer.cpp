@@ -192,27 +192,34 @@ void Renderer::drawFrame(){
 
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	for(auto& r : renderables){
-		VertexState* v = r.vertex_state;
+	for(auto* r : renderables){
+		VertexState* v = r->vertex_state;
 		if(!v) continue;
+	
+		if(r->clip.x > 0 && r->clip.y > 0 && r->clip.w > 0 && r->clip.h > 0){
+			//printf("scissor %d %d %d %d\n", r->clip.x, r->clip.y, r->clip.w, r->clip.h);
+			gl.Scissor(r->clip.x, window_height->val - (r->clip.y+r->clip.h), r->clip.w, r->clip.h);
+		} else {
+			gl.Scissor(0, 0, window_width->val, window_height->val);
+		}
+
+		r->blend_mode.bind(render_state);
 		
-		r.blend_mode.bind(render_state);
-		
-		if(ShaderProgram* s = r.shader){
+		if(ShaderProgram* s = r->shader){
 			s->bind(render_state);
 			s->setAttribs(render_state, *v);
 			s->setUniforms(main_uniforms);
 			
-			if(ShaderUniforms* u = r.uniforms){
+			if(ShaderUniforms* u = r->uniforms){
 				s->setUniforms(*u);
 			}
 		}
 		
-		for(size_t i = 0; i < r.textures.size(); ++i){
-			if(const Texture* t = r.textures[i]){
+		for(size_t i = 0; i < r->textures.size(); ++i){
+			if(const Texture* t = r->textures[i]){
 				t->bind(i, render_state);
 			}
-			if(const Sampler* s = r.samplers[i]){
+			if(const Sampler* s = r->samplers[i]){
 				s->bind(i, render_state);
 			}
 		}
@@ -220,9 +227,9 @@ void Renderer::drawFrame(){
 		v->bind(render_state);
 				
 		if(IndexBuffer* ib = v->getIndexBuffer()){
-			gl.DrawElements(r.prim_type, r.count, ib->getType(), reinterpret_cast<GLvoid*>(r.offset));
+			gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
 		} else {
-			gl.DrawArrays(r.prim_type, r.offset, r.count);
+			gl.DrawArrays(r->prim_type, r->offset, r->count);
 		}
 	}
 
@@ -232,7 +239,7 @@ void Renderer::drawFrame(){
 }
 
 void Renderer::addRenderable(Renderable& r){
-	renderables.push_back(r);
+	renderables.push_back(&r);
 }
 
 Renderer::~Renderer(){

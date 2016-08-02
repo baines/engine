@@ -1,6 +1,7 @@
 #ifndef RENDERABLE_H_
 #define RENDERABLE_H_
 #include "common.h"
+#include <SDL2/SDL_rect.h>
 #include <GL/gl.h>
 #include "blend_mode.h"
 #include "shader_uniforms.h"
@@ -24,6 +25,8 @@ struct Renderable {
 
 	}
 
+	Renderable(const Renderable&) = default;
+
 	bool usesSameState(const Renderable& o);/*{
 
 		bool uniforms_compat = uniforms && o.uniforms
@@ -45,7 +48,9 @@ struct Renderable {
 	VertexState*    vertex_state;
 	ShaderProgram*  shader;
 	ShaderUniforms* uniforms;
-	
+
+	SDL_Rect clip;
+
 	BlendMode blend_mode;
 	GLenum    prim_type;
 	GLsizei   count;

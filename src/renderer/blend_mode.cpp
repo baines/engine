@@ -19,7 +19,7 @@ BlendMode::BlendMode(const Array<GLenum, 4>& fns, const Array<GLenum, 2>& eqs)
 	}
 }
 	
-void BlendMode::bind(RenderState& state){
+void BlendMode::bind(RenderState& state) const {
 	if(funcs != state.blend_mode.funcs){
 		gl.BlendFuncSeparate(funcs[0], funcs[1], funcs[2], funcs[3]);
 	}

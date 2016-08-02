@@ -201,6 +201,8 @@ bool GLContext::createContext(Engine& e, SDL_Window* w){
 			}
 		}
 
+		Enable(GL_SCISSOR_TEST);
+
 #if defined(DEBUG) && !defined(_WIN32)
 // this is bugged on WINE: https://bugs.winehq.org/show_bug.cgi?id=38402
 		if(DebugMessageCallback){

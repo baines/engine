@@ -20,7 +20,7 @@ struct Renderer : public IRenderer {
 		
 	~Renderer();
 private:
-	std::vector<Renderable> renderables;
+	std::vector<Renderable*> renderables;
 	
 	RenderState render_state;
 		

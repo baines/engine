@@ -2,9 +2,18 @@
 #define TEST_STATE_H_
 #include "engine_all.h"
 #include "gui.h"
+#include <climits>
 
+#define UNUSED(a) (void)a
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+#define MAX(a,b) ((a) < (b) ? (b) : (a))
+#define LEN(a) (sizeof(a)/sizeof(a)[0])
+
+#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_FIXED_TYPES
 #include "nuklear.h"
+
+#include "../../nuklear/demo/overview.c"
 
 static const constexpr struct {
 	float x, y;
@@ -47,6 +56,9 @@ struct TestState : public GameState {
 
 		gui.initInput(e, this, 0);
 		nk_input_begin(gui.ctx);
+
+		e.input->enableText(this, true);
+
 	}
 
 	bool onInit(Engine& e){
@@ -64,6 +76,10 @@ struct TestState : public GameState {
 	bool onMotion(Engine& e, int act, int val, bool rel){
 		gui.onMotion(act, val);
 		return false;
+	}
+
+	void onText(Engine& e, const char* txt){
+		gui.onText(txt);
 	}
 
 	void onResize(Engine& e, int w, int h){
@@ -91,61 +107,55 @@ struct TestState : public GameState {
 		tri_uniforms.setUniform("timer", { 1.0f + tri_timer });
 
 		test_sprite.setPosition({ center.x + int(sprite_timer * 200), (center.y + 140) });
+
+		nk_context* ctx = gui.begin();
+		overview(ctx);
+/*
+#define WIN_FLAGS (NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE)
+
+		struct nk_panel layout;
+		struct nk_color background = { 0xff, 0xff, 0xff, 0xff };
+
+		if (nk_begin(ctx, &layout, "Test Window", nk_rect(50, 50, 230, 250), WIN_FLAGS)){
+			enum {EASY, HARD};
+			static int op = EASY;
+			static int property = 20;
+
+			nk_layout_row_static(ctx, 30, 80, 1);
+			if (nk_button_label(ctx, "button"))
+				fprintf(stdout, "button pressed\n");
+			nk_layout_row_dynamic(ctx, 30, 2);
+			if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
+			if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
+			nk_layout_row_dynamic(ctx, 25, 1);
+			nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
+
+			{
+				struct nk_panel combo;
+				nk_layout_row_dynamic(ctx, 20, 1);
+				nk_label(ctx, "background:", NK_TEXT_LEFT);
+				nk_layout_row_dynamic(ctx, 25, 1);
+				if (nk_combo_begin_color(ctx, &combo, background, 400)) {
+					nk_layout_row_dynamic(ctx, 120, 1);
+					background = nk_color_picker(ctx, background, NK_RGBA);
+					nk_layout_row_dynamic(ctx, 25, 1);
+					background.r = (nk_byte)nk_propertyi(ctx, "#R:", 0, background.r, 255, 1,1);
+					background.g = (nk_byte)nk_propertyi(ctx, "#G:", 0, background.g, 255, 1,1);
+					background.b = (nk_byte)nk_propertyi(ctx, "#B:", 0, background.b, 255, 1,1);
+					background.a = (nk_byte)nk_propertyi(ctx, "#A:", 0, background.a, 255, 1,1);
+					nk_combo_end(ctx);
+				}
+			}
+		}
+		nk_end(ctx);*/
+		gui.end();
 	}
 
 	void draw(IRenderer& renderer){
 		renderer.addRenderable(triangle);
 		text.draw(renderer);
 		sprite_batch.draw(renderer);
-
-		nk_context* ctx = gui.ctx;
-
-		nk_input_end(ctx);
-
-		static nk_color background = { 255, 255, 255, 255 };
-		{
-			struct nk_panel layout;
-			if (nk_begin(ctx, &layout, "Demo", nk_rect(50, 50, 230, 250),
-					NK_WINDOW_BORDER|NK_WINDOW_MOVABLE|NK_WINDOW_SCALABLE|
-					NK_WINDOW_MINIMIZABLE|NK_WINDOW_TITLE))
-			{
-				enum {EASY, HARD};
-				static int op = EASY;
-				static int property = 20;
-				nk_layout_row_static(ctx, 30, 80, 1);
-				if (nk_button_label(ctx, "button"))
-					fprintf(stdout, "button pressed\n");
-
-				nk_layout_row_dynamic(ctx, 30, 2);
-				if (nk_option_label(ctx, "easy", op == EASY)) op = EASY;
-				if (nk_option_label(ctx, "hard", op == HARD)) op = HARD;
-
-				nk_layout_row_dynamic(ctx, 25, 1);
-				nk_property_int(ctx, "Compression:", 0, &property, 100, 10, 1);
-
-				{
-					struct nk_panel combo;
-					nk_layout_row_dynamic(ctx, 20, 1);
-					nk_label(ctx, "background:", NK_TEXT_LEFT);
-					nk_layout_row_dynamic(ctx, 25, 1);
-					if (nk_combo_begin_color(ctx, &combo, background, 400)) {
-						nk_layout_row_dynamic(ctx, 120, 1);
-						background = nk_color_picker(ctx, background, NK_RGBA);
-						nk_layout_row_dynamic(ctx, 25, 1);
-						background.r = (nk_byte)nk_propertyi(ctx, "#R:", 0, background.r, 255, 1,1);
-						background.g = (nk_byte)nk_propertyi(ctx, "#G:", 0, background.g, 255, 1,1);
-						background.b = (nk_byte)nk_propertyi(ctx, "#B:", 0, background.b, 255, 1,1);
-						background.a = (nk_byte)nk_propertyi(ctx, "#A:", 0, background.a, 255, 1,1);
-						nk_combo_end(ctx);
-					}
-				}
-			}
-			nk_end(ctx);
-		}
-
 		gui.draw(renderer);
-	
-		nk_input_begin(ctx);
 	}
 private:
 	unsigned int timer;

@@ -63,7 +63,7 @@ bool Engine::run(void){
 	const int min_delta = 1000 / std::max(1, max_fps->val);
 	int delta = std::max<int>(0, get_ticks() - prev_ticks);
 
-	if(delta > 400){
+	if(delta > 3000){
 		puts("wtf big ass delta");
 		exit(1);
 	}

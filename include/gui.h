@@ -15,12 +15,22 @@ struct GUI {
 	~GUI ();
 
 	int  initInput (Engine& e, GameState* state, int max_id);
+
+	// this class should probably be a GameState somehow so all this stuff
+	// doesn't need to be forwarded...
+
 	void onInput   (int key, bool pressed);
 	void onMotion  (int axis, int val);
+	void onText    (const char* txt);
+
 	void draw      (IRenderer&);
 
-	nk_context* ctx;
+	nk_context* begin();
+	void end();
+
 private:
+	nk_context* ctx;
+
 	DynamicVertexBuffer verts;
 	DynamicIndexBuffer<uint16_t> indices;
 	VertexState state;
@@ -30,12 +40,12 @@ private:
 
 	ShaderProgram shader;
 
-	Texture2D null_tex;
-
 	Resource<Font, uint16_t> font;
 
 	vec2i cursor;
 	int input_id;
+
+	bool dirty;
 
 	std::list<Renderable> renderables;
 };

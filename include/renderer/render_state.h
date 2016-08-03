@@ -17,7 +17,7 @@ struct RenderState {
 	GLuint ibo;
 
 	uint16_t enabled_attrib_arrays; // used when VAOs aren't supported.
-	ShaderAttribs active_attribs;          // used when VAOs aren't supported.
+	ShaderAttribs active_attribs;   // used when VAOs aren't supported.
 
 	BlendMode blend_mode{{{ GL_ONE, GL_ZERO, GL_ONE, GL_ZERO }}};
 

@@ -9,6 +9,7 @@
 
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_MEMSET memset
@@ -22,44 +23,57 @@
 #define MAX_VERT_SIZE (1024 * 512)
 #define MAX_INDX_SIZE (1024 * 128)
 
-static struct nk_color gui_style[NK_COLOR_COUNT] = {
-	{ 255, 255, 255, 255 }, // text
-	{ 26 , 23 , 36 , 255 }, // window
-	{ 255, 255, 255, 255 }, // header
-	{ 255, 255, 255, 255 }, // border
-	{ 26 , 23 , 36 , 255 }, // button
-	{ 52 , 46 , 71 , 255 }, // button hover
-	{ 79 , 70 , 110, 255 }, // button active
-	{ 26 , 23 , 36 , 255 }, // toggle
-	{ 52 , 46 , 71 , 255 }, // toggle hover
-	{ 79 , 70 , 110, 255 }, // toggle cursor ??
-	{ 26 , 23 , 36 , 255 }, // select
-	{ 79 , 70 , 110, 255 }, // select active
-	{ 26 , 23 , 36 , 255 }, // slider
-	{ 26 , 23 , 36 , 255 }, // slider cursor ??
-	{ 52 , 46 , 71 , 255 }, // slider hover
-	{ 79 , 70 , 110, 255 }, // slider active
-	{ 26 , 23 , 36 , 255 }, // property
-	{ 26 , 23 , 36 , 255 }, // edit
-	{ 26 , 23 , 36 , 255 }, // edit cursor ??
-	{ 26 , 23 , 36 , 255 }, // combo
-	{ 26 , 23 , 36 , 255 }, // chart
-	{ 255, 255, 255, 255 }, // chart color
-	{ 79 , 70 , 110, 255 }, // chart color highlight
-	{ 255, 255, 255, 255 }, // scrollbar
-	{ 255, 255, 255, 255 }, // scrollbar cursor ??
-	{ 26 , 23 , 36 , 255 }, // scrollbar hover
-	{ 79 , 70 , 110, 255 }, // scrollbar active
-	{ 255, 255, 255, 255 }, // tab header
+static const struct nk_color col_darker  = nk_rgb(0x0C, 0x08, 0x18);
+static const struct nk_color col_dark    = nk_rgb(0x13, 0x10, 0x20);
+static const struct nk_color col_base    = nk_rgb(0x1b, 0x18, 0x25);
+static const struct nk_color col_light   = nk_rgb(0x31, 0x2E, 0x3A);
+//static const struct nk_color col_lighter = nk_rgb(0x54, 0x4F, 0x64);
+static const struct nk_color col_lighter = nk_rgb(0x92, 0x8E, 0x9E);
+
+static const struct nk_color col_white   = nk_rgba_u32(0xffffffff);
+
+static const struct nk_color gui_style[NK_COLOR_COUNT] = {
+	col_white   , // text
+	col_darker  , // window
+	col_light   , // header
+	col_white   , // border
+	col_base    , // button
+	col_light   , // button hover
+	col_lighter , // button active
+	col_light   , // toggle
+	col_lighter , // toggle hover
+	col_white   , // toggle cursor
+	col_base    , // select
+	col_light   , // select active
+	col_base    , // slider
+	col_white   , // slider cursor
+	col_light   , // slider hover
+	col_lighter , // slider active
+	col_base    , // property
+	col_base    , // edit
+	col_white   , // edit cursor
+	col_base    , // combo
+	col_base    , // chart
+	col_white   , // chart color
+	col_lighter , // chart color highlight
+	col_light   , // scrollbar
+	col_white   , // scrollbar cursor
+	col_light   , // scrollbar hover
+	col_lighter , // scrollbar active
+	col_base    , // tab header
 };
 
 enum {
 	GUI_BUTTON_LEFT = NK_KEY_MAX,
-	GUI_BUTTON_MIDDLE,
 	GUI_BUTTON_RIGHT,
-	GUI_DIGITAL_MAX,
+	GUI_BUTTON_MIDDLE,
+	GUI_BUTTON_MAX,
 
-	GUI_CURSOR_X = GUI_DIGITAL_MAX,
+	GUI_SCROLL_UP   = GUI_BUTTON_MAX,
+	GUI_SCROLL_DOWN,
+	GUI_SCROLL_MAX,
+
+	GUI_CURSOR_X    = GUI_SCROLL_MAX,
 	GUI_CURSOR_Y,
 
 	GUI_INPUT_MAX,
@@ -94,9 +108,6 @@ static void gui_font_glyph_fn(nk_handle handle, float h, struct nk_user_font_gly
 	out->xadvance = glyph.advance + font->getKerning(cp, next_cp).x;
 }
 
-// FIXME should be cached
-static const uint32_t white_rgba = UINT32_C(0xffffffff);
-
 GUI::GUI(Engine& e)
 : ctx         (nullptr)
 , verts       ("a_pos:2f|a_tex:2f|a_col:4BN", MAX_VERT_SIZE)
@@ -105,7 +116,6 @@ GUI::GUI(Engine& e)
 , vs          (e, {"gui.glslv"})
 , fs          (e, {"gui.glslf"})
 , shader      (vs, fs)
-, null_tex    (GL_UNSIGNED_BYTE, GL_RGBA8, 1, 1, &white_rgba)
 , font        (e, {"DejaVuSansMono.ttf"}, 16)
 , cursor      ({ 0, 0 })
 , input_id    (-1)
@@ -127,13 +137,28 @@ GUI::GUI(Engine& e)
 	ctx->style.button.rounding = 0;
 	ctx->style.window.rounding = 0;
 	ctx->style.property.rounding = 0;
+	ctx->style.slider.rounding = 0;
+	ctx->style.slider.cursor_size = nk_vec2(10, 10);
 
-	ctx->style.window.header.label_normal = { 26, 23, 36, 255 };
-	ctx->style.window.header.label_hover  = { 26, 23, 36, 255 };
-	ctx->style.window.header.label_active = { 26, 23, 36, 255 };
-	
-	ctx->style.window.header.padding = nk_vec2(0, 0);
-	ctx->style.window.header.label_padding = nk_vec2(10, 0);
+	ctx->style.window.border = 1;
+	ctx->style.window.menu_border = 1;
+	ctx->style.window.background = col_base;
+
+	ctx->style.window.header.minimize_symbol = NK_SYMBOL_UNDERSCORE;
+
+	ctx->style.window.header.close_button.normal = nk_style_item_color(col_base);
+	//	ctx->style.window.header.close_button.border = 1;
+	//	ctx->style.window.header.close_button.border_color = col_white;
+
+	ctx->style.window.header.minimize_button.normal = nk_style_item_color(col_base);
+	//	ctx->style.window.header.minimize_button.border = 1;
+	//	ctx->style.window.header.minimize_button.border_color = col_white;
+
+	ctx->style.window.header.padding = nk_vec2(2, 2);
+	ctx->style.window.header.label_padding = nk_vec2(1, 1);
+	ctx->style.window.header.spacing = nk_vec2(2, 0);
+
+	ctx->style.menu_button.normal = nk_style_item_color(col_base);
 
 	shader.link();
 }
@@ -172,14 +197,15 @@ int GUI::initInput(Engine& e, GameState* state, int id){
 	e.input->subscribe(state, "gui_word_left"  , id + NK_KEY_TEXT_WORD_LEFT);
 	e.input->subscribe(state, "gui_word_right" , id + NK_KEY_TEXT_WORD_RIGHT);
 
-//	e.input->subscribe(state, "gui_"       , id + NK_KEY_TEXT_END);
-
-	e.input->subscribe(state, "cursor_x", id + GUI_CURSOR_X); 
-	e.input->subscribe(state, "cursor_y", id + GUI_CURSOR_Y);
-
 	e.input->subscribe(state, "lmb", id + GUI_BUTTON_LEFT);
 	e.input->subscribe(state, "mmb", id + GUI_BUTTON_MIDDLE);
 	e.input->subscribe(state, "rmb", id + GUI_BUTTON_RIGHT);
+
+	e.input->subscribe(state, "gui_scroll_up"  , id + GUI_SCROLL_UP);
+	e.input->subscribe(state, "gui_scroll_down", id + GUI_SCROLL_DOWN);
+
+	e.input->subscribe(state, "cursor_x", id + GUI_CURSOR_X); 
+	e.input->subscribe(state, "cursor_y", id + GUI_CURSOR_Y);
 
 	return id + GUI_INPUT_MAX;
 }
@@ -195,9 +221,11 @@ void GUI::onInput(int key, bool pressed){
 		if(key < input_id + NK_KEY_MAX){
 			auto k = (enum nk_keys)key;
 			nk_input_key(ctx, k, pressed);
-		} else if(key < input_id + GUI_DIGITAL_MAX){
+		} else if(key < input_id + GUI_BUTTON_MAX){
 			auto b = (enum nk_buttons)(key - NK_KEY_MAX);
 			nk_input_button(ctx, b, cursor.x, cursor.y, pressed);
+		} else if(key < input_id + GUI_SCROLL_MAX){
+			nk_input_scroll(ctx, key == GUI_SCROLL_UP ? 1.5f : -1.5f);
 		}
 	}
 }
@@ -218,7 +246,30 @@ void GUI::onMotion(int axis, int val){
 	}
 }
 
+void GUI::onText(const char* txt){
+	StrMut32 str = to_utf32(txt);
+	for(auto& c : str){
+		nk_input_unicode(ctx, c);
+	}
+}
+
+nk_context* GUI::begin(){
+	nk_input_end(ctx);
+	nk_clear(ctx);
+	dirty = true;
+	return ctx;
+}
+
+void GUI::end(){
+	nk_input_begin(ctx);
+}
+
 void GUI::draw(IRenderer& r){
+
+	if(!dirty){
+		for(auto& i : renderables) r.addRenderable(i);
+		return;
+	}
 
 	struct nk_convert_config cfg = {};
 	cfg.global_alpha = 1.0f;
@@ -267,6 +318,7 @@ void GUI::draw(IRenderer& r){
 
 		obj.offset += obj.count * 2;
 	}
-	nk_clear(ctx);
+
+	dirty = false;
 }
 

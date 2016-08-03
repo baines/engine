@@ -195,12 +195,19 @@ void Renderer::drawFrame(){
 	for(auto* r : renderables){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
-	
-		if(r->clip.x > 0 && r->clip.y > 0 && r->clip.w > 0 && r->clip.h > 0){
-			//printf("scissor %d %d %d %d\n", r->clip.x, r->clip.y, r->clip.w, r->clip.h);
-			gl.Scissor(r->clip.x, window_height->val - (r->clip.y+r->clip.h), r->clip.w, r->clip.h);
-		} else {
-			gl.Scissor(0, 0, window_width->val, window_height->val);
+
+		SDL_Rect clip = r->clip;
+		if(clip.x < 0) clip.x = 0;
+		if(clip.y < 0) clip.y = 0;
+
+		if(clip.w <= 0 || clip.w > window_width->val) clip.w = window_width->val;
+		if(clip.h <= 0 || clip.h > window_height->val) clip.h = window_height->val;
+
+		clip.y = window_height->val - (clip.y + clip.h);
+
+		if(memcmp(&render_state.clip, &clip, sizeof(clip)) != 0){
+			gl.Scissor(clip.x, clip.y, clip.w, clip.h);
+			render_state.clip = clip;
 		}
 
 		r->blend_mode.bind(render_state);

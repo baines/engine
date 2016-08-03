@@ -72,7 +72,7 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 	FT_Stroker_New(ft_lib, &ft_stroker);
 	FT_Stroker_Set(
 		ft_stroker,
-	 	2 * height, //TODO: custom outline width / none at all?
+	 	48 + height, //TODO: custom outline width / none at all?
 		FT_STROKER_LINECAP_SQUARE,
 		FT_STROKER_LINEJOIN_MITER_FIXED,
 		4 << 16
@@ -146,7 +146,7 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 			--i;
 		}
 
-		FT_UInt flags = FT_LOAD_FORCE_AUTOHINT;
+		FT_UInt flags = 0;
 
 		// load and render the glyphs and outlines to their respective atlases.
 		if(render && FT_Load_Glyph(face, glyph.index, flags) == 0){
@@ -183,7 +183,7 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 			
 			// store info required for rendering text using this font.
 			glyph.bearing_x = ft_glyph_bmp->left; 
-			glyph.advance = (ft_glyph->advance.x >> 16);
+			glyph.advance = ceilf(face->glyph->advance.x / 64.0f);
 			glyph.width = width;
 			glyph.x = std::min(outline_tex.pen_x, glyph_tex.pen_x);
 			glyph.y = outline_tex.pen_y - outline_tex.line_height;

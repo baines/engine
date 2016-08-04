@@ -142,7 +142,12 @@ void ArgContext::parse(Config& c){
 
 }
 
-Config::Config(Engine& e, int argc, char** argv){
+Config::Config(Engine& e, int argc, char** argv)
+: cvar_head(nullptr)
+, cvar_trie()
+, cfg_file()
+, cvar_hooks() {
+
 	/* TODO:
 		if -c, SDL_RWFromFile config file + copy it to physfs write dir
 	*/
@@ -213,11 +218,9 @@ Config::Config(Engine& e, int argc, char** argv){
 
 template<class Var>
 Var* Config::getVar(strhash_t hash){
-	CVar* cvar = nullptr;
-	for(auto& up : cvars){
-		if(up->name.hash == hash){
-			cvar = up.get();
-		}
+	CVar* cvar;
+	for(cvar = cvar_head; cvar; cvar = cvar->next){
+		if(cvar->name.hash == hash) break;
 	}
 
 	return cvar ? cvar->template get<Var>() : nullptr;
@@ -246,16 +249,19 @@ template CVarFunc* Config::getVar<CVarFunc>(const StrRef&);
 
 template<class Var>
 Var* Config::addVar(Var* v){
-	cvars.emplace_back(v);
-	cvar_trie.add(v->name.str, cvars.back().get());
+	CVar** list = &cvar_head;
+	while(*list != nullptr) list = &(*list)->next;
+	*list = v;
+
+	cvar_trie.add(v->name.str, v);
 
 	auto it_pair = cvar_hooks.equal_range(v->name.hash);
 	for(auto& i = it_pair.first, &j = it_pair.second; i != j; ++i){
-		cvars.back()->eval(i->second);
+		v->eval(i->second);
 	}
 	cvar_hooks.erase(it_pair.first, it_pair.second);
 
-	return cvars.back()->get<Var>();
+	return v;
 }
 
 template CVarInt* Config::addVar<CVarInt>(CVarInt*);
@@ -279,7 +285,8 @@ template<class Var>
 CVar::CVar(const str_const& name, const Var* v)
 : type(cvar_id<Var>::value)
 , name(name)
-, reload_var(nullptr) {
+, reload_var(nullptr)
+, next(nullptr) {
 
 }
 

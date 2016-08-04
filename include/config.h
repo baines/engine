@@ -4,7 +4,6 @@
 #include "cvar.h"
 #include "resource_system.h"
 #include "trie.h"
-#include <vector>
 #include <unordered_map>
 
 struct Config {
@@ -27,15 +26,12 @@ struct Config {
 
 	// sets value to val or calls function with val for CVarFuncs
 	bool evalVar(uint32_t hash, const StrRef& args, bool hook = false){
-		CVar* cvar = nullptr;
-		bool ret_val = false;
-		
-		for(auto& up : cvars){
-			if(up->name.hash == hash){
-				cvar = up.get();
-			}
+		CVar* cvar;
+		for(cvar = cvar_head; cvar; cvar = cvar->next){
+			if(cvar->name.hash == hash) break;
 		}
 
+		bool ret_val = false;
 		if(cvar){
 			cvar->eval(args);
 			ret_val = true; //XXX: return if setting the var to str succeeded or not instead?
@@ -58,7 +54,7 @@ struct Config {
 		cvar_trie.prefixSearch(prefix, output);
 	}
 private:
-	std::vector<UniquePtr<CVar>> cvars;
+	CVar* cvar_head;
 	Trie<CVar*> cvar_trie;
 	
 	ResourceHandle cfg_file;

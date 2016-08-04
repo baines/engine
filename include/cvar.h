@@ -42,6 +42,8 @@ struct CVar {
 	const int type;
 	const str_const name;
 	const char* reload_var;
+
+	CVar* next;
 };
 
 template<> CVar* CVar::get<CVar>();

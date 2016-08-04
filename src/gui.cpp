@@ -83,8 +83,7 @@ static float gui_font_width_fn(nk_handle handle, float h, const char* text, int 
 	Font* font = (Font*)handle.ptr;
 
 	float result = 0.0f;
-	StrMut32 str32 = to_utf32(StrRef(text, len));
-	for(const char32_t& c : str32){
+	for(char32_t c : utf8_iterate(StrRef(text, len))){
 		const Font::GlyphInfo& glyph = font->getGlyphInfo(c);
 		result += glyph.advance;
 	}
@@ -120,6 +119,8 @@ GUI::GUI(Engine& e)
 , cursor      ({ 0, 0 })
 , input_id    (-1)
 , renderables () {
+
+	renderables.reserve(100);
 
 	struct nk_user_font nk_font = {
 		nk_handle_ptr((void*)font.getRawPtr()),
@@ -247,8 +248,7 @@ void GUI::onMotion(int axis, int val){
 }
 
 void GUI::onText(const char* txt){
-	StrMut32 str = to_utf32(txt);
-	for(auto& c : str){
+	for(char32_t c : utf8_iterate(txt)){
 		nk_input_unicode(ctx, c);
 	}
 }
@@ -272,7 +272,7 @@ void GUI::draw(IRenderer& r){
 	}
 
 	struct nk_convert_config cfg = {};
-	cfg.global_alpha = 1.0f;
+	cfg.global_alpha = 0.9f;
 	cfg.circle_segment_count = cfg.arc_segment_count = cfg.curve_segment_count = 22;
 	cfg.null.texture.ptr = (void*)font->getTexture();
 	cfg.null.uv = nk_vec2(0.5f, 0.9f);
@@ -284,7 +284,8 @@ void GUI::draw(IRenderer& r){
 	nk_buffer_init_fixed(&vb, vptr, MAX_VERT_SIZE);
 	nk_buffer_init_fixed(&ib, iptr, MAX_INDX_SIZE);
 
-	nk_buffer_init_default(&cmds);
+	char cmd_buf[4096];
+	nk_buffer_init_fixed(&cmds, cmd_buf, sizeof(cmd_buf));
 
 	nk_convert(ctx, &cmds, &vb, &ib, &cfg);
 

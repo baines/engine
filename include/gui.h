@@ -6,7 +6,6 @@
 #include "vertex_state.h"
 #include "shader.h"
 #include "texture.h"
-#include <list>
 
 struct nk_context;
 
@@ -47,7 +46,8 @@ private:
 
 	bool dirty;
 
-	std::list<Renderable> renderables;
+	// temporary until i rewrite the renderer::addRenderable to not store pointers
+	std::vector<Renderable> renderables;
 };
 
 #endif

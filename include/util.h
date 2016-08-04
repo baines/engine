@@ -1,6 +1,7 @@
 #ifndef UTIL_H_
 #define UTIL_H_
 #include "common.h"
+#include <cassert>
 
 /* Macros */
 
@@ -171,6 +172,62 @@ inline size_t utf8_char_index(const StrRef& str, size_t utf32_index){
 	}
 
 	return str.size();	
+}
+
+inline int utf8_codepoint_bytes(const char* utf8){
+	if(!utf8) return -1;
+	unsigned char c = *utf8;
+	
+	if((c >> 7)   == 0x00) return 1;
+	if((c & 0xE0) == 0xC0) return 2;
+	if((c & 0xF0) == 0xE0) return 3;	
+	if((c & 0xF8) == 0xF0) return 4;
+	return -1;
+}
+
+struct utf8_iterator {
+
+	utf8_iterator(const char* p) : ptr(p){}
+
+	char32_t operator*(){
+		int limit = utf8_codepoint_bytes(ptr);
+		if(limit < 0) return 0;
+		
+		char32_t result = ((unsigned)*ptr << limit) >> (unsigned)limit;
+
+		for(const char* p = ptr + 1; p < ptr + limit; ++p){
+			unsigned char c = *p;
+			assert((c & 0xC0) == 0x80);
+			result <<= 6;
+			result |= (c & 0x3F);
+		}
+		
+		return result;
+	}
+
+	void operator++(){
+		int limit = utf8_codepoint_bytes(ptr);
+		assert(limit != -1);
+		ptr += limit;
+	}
+
+	bool operator!=(const utf8_iterator& other) const {
+		return ptr != other.ptr;
+	}
+private:
+	const char* ptr;
+};
+
+struct utf8_range {
+	utf8_range(const StrRef& str) : str(str){}
+	utf8_iterator begin(){ return utf8_iterator(str.begin()); }
+	utf8_iterator end()  { return utf8_iterator(str.end()); }
+private:
+	const StrRef& str;
+};
+
+inline utf8_range utf8_iterate(const StrRef& str){
+	return utf8_range(str);
 }
 
 /* Pointer that nulls itself on move, so the default move assign/constructors work */

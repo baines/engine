@@ -212,7 +212,7 @@ struct utf8_iterator {
 	}
 
 	bool operator!=(const utf8_iterator& other) const {
-		return ptr != other.ptr;
+		return utf8_codepoint_bytes(ptr) < 0 ? false : ptr != other.ptr;
 	}
 private:
 	const char* ptr;

@@ -188,27 +188,37 @@ void Renderer::handleResize(float w, float h){
 	}
 }
 
+static void set_clip(RenderState& state, int w, int h, SDL_Rect clip = {}){
+	clip.x = clamp(clip.x, 0, w);
+	clip.y = clamp(clip.y, 0, h);
+
+	if(clip.w == 0) clip.w = w;
+	if(clip.h == 0) clip.h = h;
+
+	// scissor is y-up, flip it
+	clip.y = h - (clip.y + clip.h);
+	clip.y = clamp(clip.y, 0, h);
+
+	if(clip.x + clip.w > w) clip.w = w - clip.x;
+	if(clip.y + clip.h > h) clip.h = h - clip.y;
+
+	if(memcmp(&state.clip, &clip, sizeof(clip)) != 0){
+		gl.Scissor(clip.x, clip.y, clip.w, clip.h);
+		//printf("set clip +%d+%d %dx%d\n", clip.x, clip.y, clip.w, clip.h);
+		state.clip = clip;
+	}
+}
+
 void Renderer::drawFrame(){
 
+	set_clip(render_state, window_width->val, window_height->val);
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for(auto* r : renderables){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
 
-		SDL_Rect clip = r->clip;
-		if(clip.x < 0) clip.x = 0;
-		if(clip.y < 0) clip.y = 0;
-
-		if(clip.w <= 0 || clip.w > window_width->val) clip.w = window_width->val;
-		if(clip.h <= 0 || clip.h > window_height->val) clip.h = window_height->val;
-
-		clip.y = window_height->val - (clip.y + clip.h);
-
-		if(memcmp(&render_state.clip, &clip, sizeof(clip)) != 0){
-			gl.Scissor(clip.x, clip.y, clip.w, clip.h);
-			render_state.clip = clip;
-		}
+		set_clip(render_state, window_width->val, window_height->val, r->clip);
 
 		r->blend_mode.bind(render_state);
 		

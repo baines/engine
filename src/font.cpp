@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_MODULE_H
 #include FT_STROKER_H
 
 struct GlyphBitmapInfo {
@@ -53,6 +54,18 @@ static void render_glyph(const GlyphBitmapInfo& glyph, GlyphTextureAtlas& img){
 
 }
 
+static void* ft_malloc(FT_Memory _, long size){ return malloc(size); }
+static void  ft_free(FT_Memory _, void* mem){ free(mem); }
+static void* ft_realloc(FT_Memory _, long __, long new_sz, void* mem){ return realloc(mem, new_sz); }
+
+static FT_Library ft_lib;
+static FT_MemoryRec_ ft_mem = {
+	nullptr,
+	ft_malloc,
+	ft_free,
+	ft_realloc
+};
+
 Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 : glyph_info()
 , height(h)
@@ -61,8 +74,13 @@ Font::Font(MemBlock mem, size_t h, uint16_t utf_lo, uint16_t utf_hi)
 , face(nullptr)
 , atlas() {
 
-	FT_Library ft_lib = nullptr;
-	assert(FT_Init_FreeType(&ft_lib) == 0);
+	if(ft_lib){
+		FT_Reference_Library(ft_lib);
+	} else {
+		FT_New_Library(&ft_mem, &ft_lib);
+		FT_Add_Default_Modules(ft_lib);
+	}
+
 	assert(FT_New_Memory_Face(ft_lib, mem.ptr, mem.size, 0, &face) == 0);
 	FT_Select_Charmap(face, ft_encoding_unicode);
 	assert(FT_IS_SCALABLE(face));
@@ -267,4 +285,9 @@ vec2i Font::getKerning(char32_t a, char32_t b) const {
 		&vec
 	);
 	return vec2i {int(vec.x >> 6), int(vec.y >> 6) };
+}
+
+Font::~Font(){
+	if(face) FT_Done_Face(face);
+	FT_Done_Library(ft_lib);
 }

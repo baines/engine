@@ -3,7 +3,6 @@
 #include "shader_attribs.h"
 #include "gl_context.h"
 #include "vertex_state.h"
-#include "render_state.h"
 #include <algorithm>
 #include <tuple>
 #include <assert.h>
@@ -144,10 +143,10 @@ bool ShaderProgram::link(void){
 	return true;
 }
 
-bool ShaderProgram::bind(RenderState& render_state){
-	if(program_id != render_state.program){
+bool ShaderProgram::bind(){
+	if(program_id != gl.state.program){
 		gl.UseProgram(program_id);
-		render_state.program = program_id;
+		gl.state.program = program_id;
 	}
 	return program_id != 0;
 }
@@ -156,8 +155,8 @@ void ShaderProgram::setUniforms(const ShaderUniforms& su){
 	su.bind(program_id, uniforms);
 }
 
-void ShaderProgram::setAttribs(RenderState& rs, VertexState& vstate){
-	vstate.setAttribArrays(rs, attribs);
+void ShaderProgram::setAttribs(VertexState& vstate){
+	vstate.setAttribArrays(attribs);
 }
 
 void ShaderProgram::onGLContextRecreate(){

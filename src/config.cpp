@@ -216,6 +216,14 @@ Config::Config(Engine& e, int argc, char** argv)
 	ArgContext(argc, argv).parse(*this);
 }
 
+Config::~Config(){
+	CVar *cvar, *cvar_next;
+	for(cvar = cvar_head; cvar; cvar = cvar_next){
+		cvar_next = cvar->next;
+		delete cvar;
+	}
+}
+
 template<class Var>
 Var* Config::getVar(strhash_t hash){
 	CVar* cvar;
@@ -250,8 +258,14 @@ template CVarFunc* Config::getVar<CVarFunc>(const StrRef&);
 template<class Var>
 Var* Config::addVar(Var* v){
 	CVar** list = &cvar_head;
-	while(*list != nullptr) list = &(*list)->next;
+	int count = 0;
+	while(*list != nullptr){
+		++count;
+		list = &(*list)->next;
+	}
 	*list = v;
+
+	log(logging::debug, "Added %s as cvar %d.", v->name.str, count);
 
 	cvar_trie.add(v->name.str, v);
 

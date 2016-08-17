@@ -53,6 +53,8 @@ struct Config {
 	void getVarsWithPrefix(const char* prefix, std::vector<CVar*>& output){
 		cvar_trie.prefixSearch(prefix, output);
 	}
+
+	~Config();
 private:
 	CVar* cvar_head;
 	Trie<CVar*> cvar_trie;

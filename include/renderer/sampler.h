@@ -17,7 +17,7 @@ struct Sampler : public GLObject {
 	void setParam(const Param& p);
 	void setParam(GLenum key, GLint val);
 	
-	void bind(size_t tex_unit, RenderState& rs) const;
+	void bind(size_t tex_unit) const;
 
 	void onGLContextRecreate() override;
 

@@ -45,6 +45,7 @@ struct Resource : ResourceBase {
 	}
 
 	~Resource(){
+		if(ptr) delete ptr;
 	}
 
 private:

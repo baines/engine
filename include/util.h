@@ -157,6 +157,11 @@ inline bool str_to_bool(const StrRef& str){
 	return str[0] == '1' || str.cmp("true");
 }
 
+/* compile time type id */
+template<typename T> struct TypeIDHelper { static void id() { } };
+template<typename T>
+size_t TypeID() { return reinterpret_cast<size_t>(&TypeIDHelper<T>::id); }
+
 /* unicode related things */
 StrMut32 to_utf32(const StrRef& s);
 

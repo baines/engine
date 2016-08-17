@@ -10,8 +10,6 @@
 
 struct FT_LibraryRec_;
 
-//extern template class std::vector<Text*>;
-
 struct TextSystem : public ITextSystem, public BufferInvalidateListener {
 	TextSystem(Engine& e);
 	

@@ -33,6 +33,7 @@ namespace {
 Engine::Engine(int argc, char** argv, const char* name){
 
 	setlocale(LC_ALL, "");
+	setlocale(LC_NUMERIC, "C");
 
 	SDL_Init(0);
 

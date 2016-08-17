@@ -1,7 +1,6 @@
 #include "texture.h"
 #include "sampler.h"
 #include "resource_system.h"
-#include "render_state.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
@@ -126,6 +125,8 @@ void texture2d_init(GLuint& id, GLenum type, GLenum int_fmt, int w, int h, const
 
 	gl.GenTextures(1, &id);
 	gl.BindTexture(GL_TEXTURE_2D, id);
+	gl.state.tex[gl.state.active_tex_index] = id;
+
 	if(gl.TexStorage2D){
 		gl.TexStorage2D(GL_TEXTURE_2D, 1, int_fmt, w, h);
 		gl.TexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, w, h, get_base_fmt(int_fmt), type, data);
@@ -181,7 +182,12 @@ bool Texture2D::setSwizzle(const Array<GLint, 4>& swizzle){
 		log(logging::error, "Can't set swizzle: not supported by OpenGL driver.");
 		return false;
 	}
-	//XXX: assume texture is already bound
+
+	if(gl.state.tex[gl.state.active_tex_index] != id){
+		gl.BindTexture(GL_TEXTURE_2D, id);
+		gl.state.tex[gl.state.active_tex_index] = id;
+	}
+
 	gl.TexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_RGBA, swizzle.data());
 	return true;
 }
@@ -198,14 +204,14 @@ std::tuple<int, int> Texture2D::getSize() const {
 	return std::make_tuple(w, h);
 }
 
-bool Texture2D::bind(size_t tex_unit, RenderState& rs) const {
-	if(id && id != rs.tex[tex_unit]){
-		if(rs.active_tex != tex_unit){
+bool Texture2D::bind(size_t tex_unit) const {
+	if(id && id != gl.state.tex[tex_unit]){
+		if(gl.state.active_tex_index != tex_unit){
 			gl.ActiveTexture(GL_TEXTURE0 + tex_unit);
-			rs.active_tex = tex_unit;
+			gl.state.active_tex_index = tex_unit;
 		}
 		gl.BindTexture(GL_TEXTURE_2D, id);
-		rs.tex[tex_unit] = id;
+		gl.state.tex[tex_unit] = id;
 	}
 	return true;
 }
@@ -218,7 +224,12 @@ void Texture2D::onGLContextRecreate(){
 }
 
 Texture2D::~Texture2D(){
-	if(id && gl.initialized()) gl.DeleteTextures(1, &id);
+	if(id && gl.initialized()){
+		gl.DeleteTextures(1, &id);
+		for(auto& id2 : gl.state.tex){
+			if(id2 == id) id2 = 0;
+		}
+	}
 }
 
 Sampler::Sampler()
@@ -250,10 +261,10 @@ void Sampler::setParam(GLenum key, GLint val){
 	}
 }
 
-void Sampler::bind(size_t tex_unit, RenderState& rs) const {
-	if(gl.BindSampler && rs.samp[tex_unit] != id){
+void Sampler::bind(size_t tex_unit) const {
+	if(gl.BindSampler && gl.state.samp[tex_unit] != id){
 		gl.BindSampler(tex_unit, id);
-		rs.samp[tex_unit] = id;
+		gl.state.samp[tex_unit] = id;
 	}
 }
 

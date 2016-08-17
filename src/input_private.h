@@ -68,11 +68,5 @@ private:
 	GameState* current_state;
 };
 
-//extern template class std::multimap<strhash_t, Input::Binding>;
-//extern template class std::map<Input::StateBind, int>;
-//extern template class std::multimap<strhash_t, Input::StateAction>;
-//extern template class std::map<strhash_t, StrMut>;
-//extern template class std::unordered_map<GameState*, SDL_Rect>;
-
 #endif
 

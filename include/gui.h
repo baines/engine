@@ -8,6 +8,7 @@
 #include "texture.h"
 
 struct nk_context;
+struct nk_buffer;
 
 struct GUI {
 	GUI  (Engine& e);

@@ -35,14 +35,14 @@ ResourceSystem::ResourceSystem(const char* argv0){
 }
 
 ResourceHandle ResourceSystem::load(const char* name){
-	auto it = resources.find(str_hash(name));
-	if(it != resources.end()){
+	auto it = res_data.find(str_hash(name));
+	if(it != res_data.end()){
 		DEBUGF("Resource '%s' loaded from map.", name);
 		return it->second;
 	} else {
 		DEBUGF("Resource '%s' not in map, loading via PHYSFS.", name);
-		ResourceHandle h = import(name);
-		resources.emplace(str_hash(name), h);
+		ResourceHandle h = load_uncached(name);
+		res_data.emplace(str_hash(name), h);
 		return h;
 	}
 }
@@ -51,7 +51,7 @@ size_t ResourceSystem::getUseCount(const char* name){
 	return 0; //FIXME
 }
 
-ResourceHandle ResourceSystem::import(const char* name){
+ResourceHandle ResourceSystem::load_uncached(const char* name){
 	uint8_t* file_data = nullptr;
 	size_t file_size = 0;
 
@@ -70,5 +70,8 @@ ResourceHandle ResourceSystem::import(const char* name){
 
 ResourceSystem::~ResourceSystem(){
 	PHYSFS_deinit();
+	for(auto& pair : res_data){
+		delete [] pair.second.data;
+	}
 }
 

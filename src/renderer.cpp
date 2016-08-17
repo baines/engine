@@ -15,7 +15,6 @@
 
 Renderer::Renderer(Engine& e, const char* name)
 : renderables      ()
-, render_state     ()
 , gl_debug         (e.cfg->addVar<CVarBool>   ("gl_debug",          true))
 , gl_fwd_compat    (e.cfg->addVar<CVarBool>   ("gl_fwd_compat",     true))
 , gl_core_profile  (e.cfg->addVar<CVarBool>   ("gl_core_profile",   true))
@@ -89,8 +88,6 @@ void Renderer::reload(Engine& e){
 	if(SDL_GL_LoadLibrary(libgl->str.empty() ? nullptr : libgl->str.c_str()) < 0){
 		log(logging::fatal, "Couldn't load OpenGL library! (%s).", SDL_GetError());
 	}
-
-	render_state = {};
 
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE     , 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE   , 8);
@@ -188,7 +185,7 @@ void Renderer::handleResize(float w, float h){
 	}
 }
 
-static void set_clip(RenderState& state, int w, int h, SDL_Rect clip = {}){
+static void set_clip(int w, int h, SDL_Rect clip = {}){
 	clip.x = clamp(clip.x, 0, w);
 	clip.y = clamp(clip.y, 0, h);
 
@@ -202,29 +199,29 @@ static void set_clip(RenderState& state, int w, int h, SDL_Rect clip = {}){
 	if(clip.x + clip.w > w) clip.w = w - clip.x;
 	if(clip.y + clip.h > h) clip.h = h - clip.y;
 
-	if(memcmp(&state.clip, &clip, sizeof(clip)) != 0){
+	if(memcmp(&gl.state.clip, &clip, sizeof(clip)) != 0){
 		gl.Scissor(clip.x, clip.y, clip.w, clip.h);
 		//printf("set clip +%d+%d %dx%d\n", clip.x, clip.y, clip.w, clip.h);
-		state.clip = clip;
+		gl.state.clip = clip;
 	}
 }
 
 void Renderer::drawFrame(){
 
-	set_clip(render_state, window_width->val, window_height->val);
+	set_clip(window_width->val, window_height->val);
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for(auto* r : renderables){
 		VertexState* v = r->vertex_state;
 		if(!v) continue;
 
-		set_clip(render_state, window_width->val, window_height->val, r->clip);
+		set_clip(window_width->val, window_height->val, r->clip);
 
-		r->blend_mode.bind(render_state);
+		r->blend_mode.bind();
 		
 		if(ShaderProgram* s = r->shader){
-			s->bind(render_state);
-			s->setAttribs(render_state, *v);
+			s->bind();
+			s->setAttribs(*v);
 			s->setUniforms(main_uniforms);
 			
 			if(ShaderUniforms* u = r->uniforms){
@@ -234,14 +231,14 @@ void Renderer::drawFrame(){
 		
 		for(size_t i = 0; i < r->textures.size(); ++i){
 			if(const Texture* t = r->textures[i]){
-				t->bind(i, render_state);
+				t->bind(i);
 			}
 			if(const Sampler* s = r->samplers[i]){
-				s->bind(i, render_state);
+				s->bind(i);
 			}
 		}
 		
-		v->bind(render_state);
+		v->bind();
 				
 		if(IndexBuffer* ib = v->getIndexBuffer()){
 			gl.DrawElements(r->prim_type, r->count, ib->getType(), reinterpret_cast<GLvoid*>(r->offset));
@@ -266,7 +263,7 @@ Renderer::~Renderer(){
 		SDL_DestroyWindow(window);
 	}
 
-	SDL_GL_UnloadLibrary();
+//	SDL_GL_UnloadLibrary();
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 

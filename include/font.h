@@ -21,6 +21,7 @@ struct Font : public GLObject {
 	const GlyphInfo& getGlyphInfo(char32_t c) const;
 	const Texture2D* getTexture() const;
 
+	~Font();
 private:
 	std::vector<GlyphInfo> glyph_info;
 	

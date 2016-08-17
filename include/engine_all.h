@@ -17,7 +17,6 @@
 #include "renderer/material.h"
 #include "renderer/vertex_state.h"
 #include "renderer/sprite.h"
-#include "renderer/render_state.h"
 #include "renderer/gl_functions.h"
 #include "renderer/vertex_buffer.h"
 #include "renderer/shader_attribs.h"

@@ -5,13 +5,11 @@
 #include "gl_context.h"
 #include <tuple>
 
-struct RenderState;
-
 struct Texture {
 	virtual GLenum getType(void) const = 0;
 	virtual bool isValid(void) const = 0;
 	virtual std::tuple<int, int> getSize() const = 0;
-	virtual bool bind(size_t tex_unit, RenderState& rs) const = 0;
+	virtual bool bind(size_t tex_unit) const = 0;
 	virtual bool setSwizzle(const Array<GLint, 4>& swizzle) = 0;
 	virtual ~Texture(){}
 };
@@ -26,7 +24,7 @@ struct Texture2D : public Texture, public GLObject {
 	GLenum getType(void) const;
 	bool isValid(void) const;
 	std::tuple<int, int> getSize() const;
-	bool bind(size_t tex_unit, RenderState& rs) const;
+	bool bind(size_t tex_unit) const;
 	bool setSwizzle(const Array<GLint, 4>& swizzle);
 	virtual void onGLContextRecreate();	
 	virtual ~Texture2D();

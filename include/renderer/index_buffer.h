@@ -6,10 +6,10 @@
 #include "resource_system.h"
 
 struct IndexBuffer : public GLObject {
-	virtual void   bind(RenderState&)  = 0;
+	virtual void   bind()              = 0;
 	virtual GLenum getType() const     = 0;
 	virtual GLuint getID()   const     = 0;
-	virtual void update(RenderState&)  = 0;
+	virtual void update()              = 0;
 	virtual void onGLContextRecreate() = 0;
 	virtual ~IndexBuffer(){}
 };
@@ -17,10 +17,10 @@ struct IndexBuffer : public GLObject {
 struct StaticIndexBuffer : public IndexBuffer {
 	StaticIndexBuffer();
 	StaticIndexBuffer(const MemBlock& data, GLenum type);
-	void bind(RenderState&);
+	void bind();
 	GLenum getType() const;
 	GLuint getID() const;
-	void update(RenderState&){};
+	void update(){};
 	void onGLContextRecreate();
 	~StaticIndexBuffer();
 private:
@@ -42,8 +42,8 @@ struct DynamicIndexBuffer : public IndexBuffer {
 	GLenum getType() const ;
 	GLuint getID() const ;
 	size_t getSize() const ;
-	void bind(RenderState& rs);
-	void update(RenderState& rs);
+	void bind();
+	void update();
 	virtual void onGLContextRecreate();
 private:
 	std::vector<uint8_t> indices;

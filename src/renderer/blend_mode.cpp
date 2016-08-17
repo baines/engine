@@ -1,5 +1,4 @@
-#include "blend_mode.h"
-#include "render_state.h"
+#include "gl_context.h"
 
 BlendMode::BlendMode()
 : funcs {{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA }}
@@ -19,15 +18,15 @@ BlendMode::BlendMode(const Array<GLenum, 4>& fns, const Array<GLenum, 2>& eqs)
 	}
 }
 	
-void BlendMode::bind(RenderState& state) const {
-	if(funcs != state.blend_mode.funcs){
+void BlendMode::bind() const {
+	if(funcs != gl.state.blend_mode.funcs){
 		gl.BlendFuncSeparate(funcs[0], funcs[1], funcs[2], funcs[3]);
 	}
 	
-	if(equations != state.blend_mode.equations){
+	if(equations != gl.state.blend_mode.equations){
 		gl.BlendEquationSeparate(equations[0], equations[1]);
 	}
 	
-	state.blend_mode = *this;
+	gl.state.blend_mode = *this;
 }
 

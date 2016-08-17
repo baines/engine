@@ -28,9 +28,9 @@ struct FragShader : ShaderBase {
 struct ShaderProgram : public GLObject {
 	ShaderProgram(Proxy<VertShader> v, Proxy<FragShader> f);
 	bool link(void);
-	bool bind(RenderState& rs);
+	bool bind();
 	void setUniforms(const ShaderUniforms& uniforms);
-	void setAttribs(RenderState& rs, VertexState& vstate);
+	void setAttribs(VertexState& vstate);
 	virtual void onGLContextRecreate();
 
 	~ShaderProgram();

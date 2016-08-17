@@ -20,7 +20,7 @@ struct StreamingBuffer : public GLObject {
 	void mark();
 	void invalidate(BufferRange&& range);
 	void invalidateAll();
-	void update(RenderState& rs);
+	void update();
 	void onGLContextRecreate();
 	GLuint getID() const {
 		return id;

@@ -36,7 +36,7 @@ static const struct nk_color gui_style[NK_COLOR_COUNT] = {
 	col_white   , // text
 	col_darker  , // window
 	col_light   , // header
-	col_white   , // border
+	col_light   , // border
 	col_base    , // button
 	col_light   , // button hover
 	col_lighter , // button active
@@ -132,7 +132,7 @@ GUI::GUI(Engine& e)
 
 	ctx = new nk_context();
 	nk_init_default(ctx, &nk_font);
-
+	
 	nk_style_from_table(ctx, gui_style);
 
 	ctx->style.button.rounding = 0;
@@ -162,9 +162,11 @@ GUI::GUI(Engine& e)
 	ctx->style.menu_button.normal = nk_style_item_color(col_base);
 
 	shader.link();
+
 }
 
 GUI::~GUI(){
+	nk_free(ctx);
 	delete ctx;
 }
 
@@ -255,7 +257,6 @@ void GUI::onText(const char* txt){
 
 nk_context* GUI::begin(){
 	nk_input_end(ctx);
-	nk_clear(ctx);
 	dirty = true;
 	return ctx;
 }
@@ -319,6 +320,8 @@ void GUI::draw(IRenderer& r){
 
 		obj.offset += obj.count * 2;
 	}
+
+	nk_clear(ctx);
 
 	dirty = false;
 }

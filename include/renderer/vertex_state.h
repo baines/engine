@@ -11,12 +11,14 @@ struct VertexState : public GLObject {
 	void setVertexBuffers(std::initializer_list<VertexBuffer*> buffers);
 	void setIndexBuffer(IndexBuffer* buff);
 	IndexBuffer* getIndexBuffer(void);
-	void setAttribArrays(RenderState& rs, const ShaderAttribs& attrs);
-	void bind(RenderState& rs);
+	void setAttribArrays(const ShaderAttribs& attrs);
+	void bind();
+	GLuint getID() const;
+	uint16_t getEnabledArrays() const;
 	void onGLContextRecreate();
 	~VertexState();
 private:
-	uint16_t enabled_arrays; //TODO: use vector<bool> + lookup GL_MAX_VERTEX_ATTRIBS
+	uint16_t enabled_arrays;
 	ShaderAttribs active_attribs;
 	std::vector<VertexBuffer*> vertex_buffers;
 	IndexBuffer* index_buffer;

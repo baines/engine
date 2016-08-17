@@ -2,7 +2,6 @@
 #include "vertex_buffer.h"
 #include "index_buffer.h"
 #include "enums.h"
-#include "render_state.h"
 #include "cvar.h"
 #include <algorithm>
 #include <numeric>
@@ -71,23 +70,23 @@ void StreamingBuffer::invalidateAll(){
 	dirty = true;
 }
 
-void StreamingBuffer::update(RenderState& rs){
+void StreamingBuffer::update(){
 /* TODO: more efficient buffer streaming
 	https://www.opengl.org/wiki/Buffer_Object_Streaming
 	http://www.seas.upenn.edu/~pcozzi/OpenGLInsights/OpenGLInsights-AsynchronousBufferTransfers.pdf
 */
 	if(!dirty) return;
 	
-	GLuint* rs_buffer = nullptr;
+	GLuint* buffer = nullptr;
 
 	switch(type){
-		case GL_ELEMENT_ARRAY_BUFFER: rs_buffer = &rs.ibo; break;
-		case GL_ARRAY_BUFFER:         rs_buffer = &rs.vbo; break;
+		case GL_ELEMENT_ARRAY_BUFFER: buffer = &gl.state.ibo; break;
+		case GL_ARRAY_BUFFER:         buffer = &gl.state.vbo; break;
 	};
 
-	if(rs_buffer && *rs_buffer != id){
+	if(buffer && *buffer != id){
 		gl.BindBuffer(type, id);
-		*rs_buffer = id;
+		*buffer = id;
 	}
 
 	bool done = false;
@@ -152,7 +151,7 @@ void StreamingBuffer::update(RenderState& rs){
 		}
 	}
 	
-	if(gl.streaming_mode->get() == BUFFER_INVALIDATE || (no_async && !done)){
+	if(gl.streaming_mode->get() == BUFFER_INVALIDATE && (no_async || !done)){
 	
 		if(gl.InvalidateBufferData){
 			gl.InvalidateBufferData(id);	
@@ -313,11 +312,11 @@ static void parse_attribs(const char* fmt, ShaderAttribs& attrs, GLint& stride) 
 
 }
 
-void VertexBuffer::bind(RenderState& rs){
+void VertexBuffer::bind(){
 	auto id = getID();
-	if(id && rs.vbo != id){
+	if(id && gl.state.vbo != id){
 		gl.BindBuffer(GL_ARRAY_BUFFER, id);
-		rs.vbo = id;
+		gl.state.vbo = id;
 	}
 }
 
@@ -357,7 +356,7 @@ GLuint StaticVertexBuffer::getID(void) const {
 	return id;
 }
 
-void StaticVertexBuffer::update(RenderState&){
+void StaticVertexBuffer::update(){
 
 }
 
@@ -434,8 +433,8 @@ GLuint DynamicVertexBuffer::getID() const {
 	return stream_buf.getID();
 }
 
-void DynamicVertexBuffer::update(RenderState& rs){
-	stream_buf.update(rs);
+void DynamicVertexBuffer::update(){
+	stream_buf.update();
 }
 
 StaticIndexBuffer::StaticIndexBuffer()
@@ -454,10 +453,10 @@ StaticIndexBuffer::StaticIndexBuffer(const MemBlock& data, GLenum type)
 	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
 }
 
-void StaticIndexBuffer::bind(RenderState& rs){
-	if(rs.ibo != id){
+void StaticIndexBuffer::bind(){
+	if(gl.state.ibo != id){
 		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-		rs.ibo = id;
+		gl.state.ibo = id;
 	}
 }
 
@@ -547,17 +546,17 @@ size_t DynamicIndexBuffer<T>::getSize() const {
 }
 
 template<class T>
-void DynamicIndexBuffer<T>::bind(RenderState& rs){
+void DynamicIndexBuffer<T>::bind(){
 	auto id = stream_buf.getID();
-	if(rs.ibo != id){
+	if(gl.state.ibo != id){
 		gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
-		rs.ibo = id;
+		gl.state.ibo = id;
 	}
 }
 
 template<class T>
-void DynamicIndexBuffer<T>::update(RenderState& rs){
-	stream_buf.update(rs);
+void DynamicIndexBuffer<T>::update(){
+	stream_buf.update();
 }
 
 template<class T>

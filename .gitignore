@@ -21,3 +21,6 @@ engine.bc
 # put this here yourself
 include/nuklear.h
 
+# this too, from the nuklear repo in demo/
+test/overview.c
+

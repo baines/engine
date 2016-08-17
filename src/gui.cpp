@@ -10,6 +10,7 @@
 #define NK_INCLUDE_DEFAULT_ALLOCATOR
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
 #define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
 #define NK_BUTTON_TRIGGER_ON_RELEASE
 #define NK_MEMSET memset
@@ -109,6 +110,7 @@ static void gui_font_glyph_fn(nk_handle handle, float h, struct nk_user_font_gly
 
 GUI::GUI(Engine& e)
 : ctx         (nullptr)
+, nk_font     ()
 , verts       ("a_pos:2f|a_tex:2f|a_col:4BN", MAX_VERT_SIZE)
 , indices     ()
 , state       ({ &verts }, &indices)
@@ -118,17 +120,16 @@ GUI::GUI(Engine& e)
 , font        (e, {"DejaVuSansMono.ttf"}, 16)
 , cursor      ({ 0, 0 })
 , input_id    (-1)
+, dirty       (false)
 , renderables () {
 
 	renderables.reserve(100);
 
-	struct nk_user_font nk_font = {
-		nk_handle_ptr((void*)font.getRawPtr()),
-		16.0f,
-		&gui_font_width_fn,
-		&gui_font_glyph_fn,
-		nk_handle_ptr((void*)font->getTexture())
-	};
+	nk_font.userdata = nk_handle_ptr((void*)font.getRawPtr());
+	nk_font.height = 16.0f;
+	nk_font.width = &gui_font_width_fn;
+	nk_font.query = &gui_font_glyph_fn;
+	nk_font.texture = nk_handle_ptr((void*)font->getTexture());
 
 	ctx = new nk_context();
 	nk_init_default(ctx, &nk_font);

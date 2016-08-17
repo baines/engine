@@ -9,11 +9,7 @@
 #define MAX(a,b) ((a) < (b) ? (b) : (a))
 #define LEN(a) (sizeof(a)/sizeof(a)[0])
 
-#define NK_INCLUDE_STANDARD_IO
-#define NK_INCLUDE_FIXED_TYPES
-#include "nuklear.h"
-
-#include "../../nuklear/demo/overview.c"
+#include "overview.c"
 
 static const constexpr struct {
 	float x, y;

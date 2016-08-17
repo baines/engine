@@ -7,8 +7,18 @@
 #include "shader.h"
 #include "texture.h"
 
-struct nk_context;
-struct nk_buffer;
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_BUTTON_TRIGGER_ON_RELEASE
+#define NK_MEMSET memset
+#define NK_MEMCOPY memcpy
+#define NK_SQRT sqrt
+#define NK_SIN sin
+#define NK_COS cos
+#include "nuklear.h"
 
 struct GUI {
 	GUI  (Engine& e);
@@ -30,6 +40,7 @@ struct GUI {
 
 private:
 	nk_context* ctx;
+	nk_user_font nk_font;
 
 	DynamicVertexBuffer verts;
 	DynamicIndexBuffer<uint16_t> indices;

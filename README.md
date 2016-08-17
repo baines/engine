@@ -4,12 +4,10 @@ time to time recently.
 The old version from a couple years back that I used to make Castle of Cowardice
 and other stuff is still available in the master branch of this repo.
 
-License: WTFPL (http://www.wtfpl.net/)
+License: WTFPL2 (https://www.tldrlegal.com/l/wtfpl)
 
 Dependencies:    
 + SDL2
-+ glm
-+ boost-preprocessor
 + physfs-devel
 + freetype2
 

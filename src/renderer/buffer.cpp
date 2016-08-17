@@ -52,8 +52,10 @@ StreamingBuffer::StreamingBuffer(GLenum type, std::vector<uint8_t>& buff, bool a
 , dirty(buff.size() != 0)
 , no_async(!append_only) {
 	gl.GenBuffers(1, &id);
-	gl.BindBuffer(type, id);
-	if(prev_capacity) gl.BufferData(type, prev_capacity, nullptr, GL_STREAM_DRAW);
+	if(prev_capacity){
+		gl.BindBuffer(type, id);
+		gl.BufferData(type, prev_capacity, nullptr, GL_STREAM_DRAW);
+	}
 }
 
 void StreamingBuffer::mark(){
@@ -338,6 +340,7 @@ StaticVertexBuffer::StaticVertexBuffer(const MemBlock& data, const char* fmt)
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ARRAY_BUFFER, id);
 	gl.BufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
+	gl.state.vbo = id;
 }
 
 const ShaderAttribs& StaticVertexBuffer::getShaderAttribs(void) const {
@@ -367,6 +370,7 @@ void StaticVertexBuffer::onGLContextRecreate() {
 	id = new_id;
 	gl.BindBuffer(GL_ARRAY_BUFFER, id);
 	gl.BufferData(GL_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
+	gl.state.vbo = id;
 }
 
 StaticVertexBuffer::~StaticVertexBuffer(){
@@ -451,6 +455,7 @@ StaticIndexBuffer::StaticIndexBuffer(const MemBlock& data, GLenum type)
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
+	gl.state.vbo = id;
 }
 
 void StaticIndexBuffer::bind(){
@@ -472,7 +477,7 @@ void StaticIndexBuffer::onGLContextRecreate(){
 	gl.GenBuffers(1, &id);
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, id);
 	gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, data.size, data.ptr, GL_STATIC_DRAW);
-
+	gl.state.ibo = id;
 }
 
 StaticIndexBuffer::~StaticIndexBuffer(){
